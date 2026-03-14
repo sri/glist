@@ -88,7 +88,6 @@
         border: 1px solid rgba(255, 255, 255, 0.5);
         border-radius: 34px;
         box-shadow: var(--shadow);
-        overflow: hidden;
         backdrop-filter: blur(10px);
       }
 
@@ -1794,11 +1793,11 @@
           const btn = document.createElement("button");
           btn.type = "button";
           const onList = shoppingSet.has(item.id);
-          btn.className = `quick-add-item${onList ? " on-list" : ""}`;
+          const onListAndActive = onList && !item.done;
+          btn.className = `quick-add-item${onListAndActive ? " on-list" : ""}`;
           btn.addEventListener("click", () => {
-            if (!onList) {
-              addToShoppingList(item.id);
-            }
+            // Always call addToShoppingList - it will unmark if already on list
+            addToShoppingList(item.id);
             quickAddInput.value = "";
             renderQuickAddSuggestions();
           });
