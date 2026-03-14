@@ -460,6 +460,46 @@
         padding: 0 16px;
       }
 
+      .store-tab-desc {
+        margin: 0;
+        font-size: 0.95rem;
+        color: var(--muted);
+        line-height: 1.4;
+      }
+
+      .store-suggestions {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+      }
+
+      .store-suggestion {
+        padding: 10px 16px;
+        border: 0;
+        border-radius: 999px;
+        background: var(--panel-soft);
+        color: var(--ink);
+        font: inherit;
+        font-size: 0.9rem;
+        cursor: pointer;
+        transition: transform 150ms ease, background 150ms ease;
+        -webkit-tap-highlight-color: transparent;
+      }
+
+      .store-suggestion:active {
+        transform: scale(0.985);
+      }
+
+      .store-suggestion:hover {
+        background: var(--fresh-soft);
+        color: var(--fresh);
+      }
+
+      .store-suggestion:focus-visible {
+        outline: 3px solid rgba(41, 99, 71, 0.24);
+        outline-offset: 3px;
+      }
+
       .add-field {
         display: flex;
         align-items: center;
@@ -1021,23 +1061,26 @@
               </section>
 
               <section id="tab-content-stores" class="tab-content" role="tabpanel" aria-labelledby="tab-stores">
+                <div class="store-tab-intro search-wrap">
+                  <p class="store-tab-desc">Select the stores you shop at regularly. This helps organize your shopping list by store.</p>
+                </div>
+
                 <div class="search-wrap">
                   <div id="store-list" class="store-list"></div>
                 </div>
 
-                <form id="store-form" class="store-form">
-                  <label class="add-field" for="new-store">
+                <div class="search-wrap">
+                  <label class="search-box" for="store-search">
                     <input
-                      id="new-store"
+                      id="store-search"
                       type="text"
-                      placeholder="add store..."
-                      aria-label="Add store"
-                      list="brand-store-suggestions"
+                      placeholder="Search or add store..."
+                      aria-label="Search or add store"
                     />
                   </label>
-                  <button class="action-btn alt" type="submit">Add store</button>
-                </form>
-                <datalist id="brand-store-suggestions"></datalist>
+                </div>
+
+                <div id="store-suggestions" class="store-suggestions search-wrap"></div>
               </section>
             </section>
           </div>
@@ -1330,9 +1373,9 @@
       const catalogCount = document.getElementById("catalog-count");
       const storeCount = document.getElementById("store-count");
       const newItemInput = document.getElementById("new-item");
-      const newStoreInput = document.getElementById("new-store");
+      const storeSearchInput = document.getElementById("store-search");
+      const storeSuggestions = document.getElementById("store-suggestions");
       const addForm = document.getElementById("add-form");
-      const storeForm = document.getElementById("store-form");
       const clearShoppingButton = document.getElementById("clear-shopping");
       const moveMarkedButton = document.getElementById("move-marked");
       const showCatalogButton = document.getElementById("show-catalog");
@@ -1419,24 +1462,6 @@
         element.style.background = brand.bg;
         element.style.color = brand.fg;
         element.style.borderColor = brand.bg;
-      }
-
-      function renderStoreSuggestions() {
-        const suggestions = document.getElementById("brand-store-suggestions");
-        if (!suggestions) {
-          return;
-        }
-
-        const optionNodes = TOP_GROCERY_BRANDS
-          .map((brand) => brand.name)
-          .sort((a, b) => a.localeCompare(b))
-          .map((name) => {
-            const option = document.createElement("option");
-            option.value = name;
-            return option;
-          });
-
-        suggestions.replaceChildren(...optionNodes);
       }
 
       function formatRelativePurchase(dateString) {
@@ -1553,7 +1578,77 @@
 
         storeList.replaceChildren(fragment);
         storeCount.textContent = stores.length;
+        renderStoreSuggestions();
         syncStageHeight();
+      }
+
+      function renderStoreSuggestions() {
+        const query = storeSearchInput.value.trim().toLowerCase();
+        const existingStoreKeys = new Set(stores.map((s) => s.brandKey).filter(Boolean));
+        const existingStoreNames = new Set(stores.map((s) => s.name.toLowerCase()));
+
+        const filteredBrands = TOP_GROCERY_BRANDS
+          .filter((brand) => {
+            if (existingStoreKeys.has(brand.key)) return false;
+            if (existingStoreNames.has(brand.name.toLowerCase())) return false;
+            if (!query) return true;
+            return brand.name.toLowerCase().includes(query);
+          })
+          .sort((a, b) => a.name.localeCompare(b.name));
+
+        const fragment = document.createDocumentFragment();
+
+        // If user typed something that doesn't match any brand, show "Add custom" option
+        if (query && !filteredBrands.some((b) => b.name.toLowerCase() === query)) {
+          const customBtn = document.createElement("button");
+          customBtn.type = "button";
+          customBtn.className = "store-suggestion";
+          customBtn.textContent = `Add "${storeSearchInput.value.trim()}"`;
+          customBtn.addEventListener("click", () => {
+            addStoreByName(storeSearchInput.value.trim());
+          });
+          fragment.append(customBtn);
+        }
+
+        filteredBrands.forEach((brand) => {
+          const btn = document.createElement("button");
+          btn.type = "button";
+          btn.className = "store-suggestion";
+          btn.textContent = brand.name;
+          btn.addEventListener("click", () => {
+            addStoreByName(brand.name);
+          });
+          fragment.append(btn);
+        });
+
+        storeSuggestions.replaceChildren(fragment);
+      }
+
+      function addStoreByName(rawName) {
+        const name = rawName.trim();
+        if (!name) return;
+
+        const matchedBrand = inferStoreBrand(name);
+        const resolvedName = matchedBrand?.name || name;
+
+        const existingStore = stores.find((store) => {
+          if (matchedBrand && store.brandKey === matchedBrand.key) return true;
+          return store.name.toLowerCase() === resolvedName.toLowerCase();
+        });
+
+        if (!existingStore) {
+          const store = {
+            id: nextStoreId++,
+            name: resolvedName,
+            brandKey: matchedBrand?.key || null
+          };
+          stores.push(store);
+        }
+
+        storeSearchInput.value = "";
+        renderStoreList();
+        refreshCatalogPurchaseLabels();
+        persistState();
       }
 
       function renderCatalogSection() {
@@ -1747,7 +1842,7 @@
           event.stopPropagation();
           if (stores.length === 0) {
             switchTab("stores");
-            newStoreInput.focus();
+            storeSearchInput.focus();
             return;
           }
 
@@ -2107,39 +2202,7 @@
         switchTab("stores");
       });
 
-      storeForm.addEventListener("submit", (event) => {
-        event.preventDefault();
-
-        const rawName = newStoreInput.value.trim();
-        if (!rawName) {
-          return;
-        }
-
-        const matchedBrand = inferStoreBrand(rawName);
-        const resolvedName = matchedBrand?.name || rawName;
-
-        const existingStore = stores.find((store) => {
-          if (matchedBrand && store.brandKey === matchedBrand.key) {
-            return true;
-          }
-
-          return store.name.toLowerCase() === resolvedName.toLowerCase();
-        });
-        if (!existingStore) {
-          const store = {
-            id: nextStoreId++,
-            name: resolvedName,
-            brandKey: matchedBrand?.key || null
-          };
-          stores.push(store);
-        }
-
-        renderStoreList();
-        refreshCatalogPurchaseLabels();
-        persistState();
-        newStoreInput.value = "";
-        newStoreInput.focus();
-      });
+      storeSearchInput.addEventListener("input", renderStoreSuggestions);
 
       clearShoppingButton.addEventListener("click", () => {
         const hasUnmarkedItems = shoppingOrder.some((id) => !itemsById.get(id).done);
