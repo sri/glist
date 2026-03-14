@@ -89,36 +89,22 @@
       }
 
       .flip-stage {
-        position: relative;
-        overflow: hidden;
-        perspective: 1600px;
-        transition: height 260ms ease;
+        display: block;
       }
 
       .flip-card {
-        position: relative;
-        height: 100%;
-        transform-style: preserve-3d;
-        transition: transform 520ms cubic-bezier(0.2, 0.8, 0.2, 1);
-      }
-
-      .shell.is-flipped .flip-card {
-        transform: rotateY(180deg);
+        display: block;
       }
 
       .panel {
-        position: absolute;
-        inset: 0;
         display: flex;
         flex-direction: column;
         gap: 14px;
         padding-bottom: 20px;
-        backface-visibility: hidden;
-        -webkit-backface-visibility: hidden;
       }
 
       .panel-back {
-        transform: rotateY(180deg);
+        transform: none;
       }
 
       .panel-header {
@@ -947,7 +933,7 @@
               </div>
             </section>
 
-            <section id="catalog-panel" class="panel panel-back" aria-label="All items">
+            <section id="catalog-panel" class="panel panel-back" aria-label="All items" hidden>
               <div class="panel-header">
                 <div class="panel-actions">
                   <button id="show-shopping" class="action-btn alt" type="button" aria-label="Home">⌂</button>
@@ -1296,8 +1282,6 @@
       let nextId = state.nextId;
       let nextStoreId = state.nextStoreId;
 
-      const shell = document.getElementById("shell");
-      const flipStage = document.getElementById("flip-stage");
       const shoppingPanel = document.getElementById("shopping-panel");
       const catalogPanel = document.getElementById("catalog-panel");
       const shoppingSearch = document.getElementById("shopping-search");
@@ -1472,10 +1456,7 @@
         return `Last purchased ${years} year${years === 1 ? "" : "s"} ago`;
       }
 
-      function syncStageHeight() {
-        const activePanel = shell.classList.contains("is-flipped") ? catalogPanel : shoppingPanel;
-        flipStage.style.height = `${activePanel.scrollHeight}px`;
-      }
+      function syncStageHeight() {}
 
       function shoppingItems() {
         const query = shoppingSearch.value.trim().toLowerCase();
@@ -2051,12 +2032,12 @@
 
       function setFlipped(isFlipped, updateUrl = true) {
         setOpenStoreMenu(null);
-        shell.classList.toggle("is-flipped", isFlipped);
+        shoppingPanel.hidden = isFlipped;
+        catalogPanel.hidden = !isFlipped;
         if (updateUrl) {
           navigateToPanel(isFlipped);
           return;
         }
-        syncStageHeight();
       }
 
       catalog.forEach((item) => {
