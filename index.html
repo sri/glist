@@ -1675,8 +1675,6 @@
           return;
         }
 
-        const primaryStoreId = getPrimaryStoreId(item);
-
         parts.li.classList.toggle("done", item.done);
         parts.button.setAttribute("aria-pressed", String(item.done));
         parts.button.setAttribute(
@@ -1685,8 +1683,7 @@
         );
         parts.note.hidden = !item.note;
         parts.note.textContent = item.note;
-        parts.store.hidden = primaryStoreId === null;
-        parts.store.textContent = primaryStoreId === null ? "" : `Buy at ${getStoreName(primaryStoreId)}`;
+        parts.store.hidden = true;
       }
 
       function updateCatalogItemElement(item) {
@@ -1896,25 +1893,53 @@
         const groups = new Map();
 
         shoppingItems().forEach((item) => {
-          const primaryStoreId = getPrimaryStoreId(item);
-          const key = storeGroupKey(primaryStoreId);
-          if (!groups.has(key)) {
-            groups.set(key, {
-              key,
-              storeId: primaryStoreId,
-              name: storeGroupName(primaryStoreId),
-              items: []
+          const storeIds = getItemStoreIds(item);
+
+          // If item has no stores, put in "Any Store" group
+          if (storeIds.length === 0) {
+            const key = storeGroupKey(null);
+            if (!groups.has(key)) {
+              groups.set(key, {
+                key,
+                storeId: null,
+                name: storeGroupName(null),
+                items: []
+              });
+            }
+            groups.get(key).items.push(item);
+          } else {
+            // Add item to ALL its store groups
+            storeIds.forEach((storeId) => {
+              const key = storeGroupKey(storeId);
+              if (!groups.has(key)) {
+                groups.set(key, {
+                  key,
+                  storeId: storeId,
+                  name: storeGroupName(storeId),
+                  items: []
+                });
+              }
+              groups.get(key).items.push(item);
             });
           }
-
-          groups.get(key).items.push(item);
         });
 
-        return [...groups.values()];
+        // Sort groups: "Any Store" first, then alphabetically by store name
+        return [...groups.values()].sort((a, b) => {
+          if (a.storeId === null) return -1;
+          if (b.storeId === null) return 1;
+          return a.name.localeCompare(b.name);
+        });
       }
 
       function moveStoreToTop(storeId) {
-        const targetIds = shoppingOrder.filter((id) => getPrimaryStoreId(itemsById.get(id)) === storeId);
+        const targetIds = shoppingOrder.filter((id) => {
+          const item = itemsById.get(id);
+          if (storeId === null) {
+            return getItemStoreIds(item).length === 0;
+          }
+          return getItemStoreIds(item).includes(storeId);
+        });
         if (targetIds.length === 0) {
           return;
         }
@@ -1980,7 +2005,29 @@
 
           const items = document.createElement("ul");
           items.className = "store-group-items";
-          items.append(...group.items.map((item) => shoppingElements.get(item.id).li));
+          items.append(...group.items.map((item) => {
+            const parts = shoppingElements.get(item.id);
+            // Clone the element and re-attach click handler since cloneNode doesn't clone event listeners
+            const li = parts.li.cloneNode(true);
+            li.querySelector(".shopping-row").addEventListener("click", () => {
+              const wasDone = item.done;
+              item.done = !item.done;
+
+              if (!wasDone && item.done) {
+                item.purchaseHistory.push(new Date().toISOString());
+                updateCatalogItemElement(item);
+                persistState();
+              } else if (wasDone && !item.done) {
+                persistState();
+              }
+
+              // Update master element before re-rendering (so clones are up to date)
+              updateShoppingItemElement(item);
+              syncShoppingVisibleList();
+              refreshShoppingButtons();
+            });
+            return li;
+          }));
 
           body.append(items);
           section.append(header, body);
