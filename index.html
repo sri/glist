@@ -153,7 +153,8 @@
       }
 
       .search-box input,
-      .add-form input {
+      .add-form input,
+      .store-form input {
         width: 100%;
         border: 0;
         outline: 0;
@@ -165,7 +166,8 @@
       }
 
       .search-box input::placeholder,
-      .add-form input::placeholder {
+      .add-form input::placeholder,
+      .store-form input::placeholder {
         color: #7c8677;
       }
 
@@ -215,6 +217,66 @@
         padding: 0 16px;
       }
 
+      .store-section {
+        display: grid;
+        gap: 10px;
+        padding: 0 16px;
+      }
+
+      .store-bar {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        flex-wrap: wrap;
+      }
+
+      .store-list {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        flex-wrap: wrap;
+      }
+
+      .store-circle {
+        width: 42px;
+        height: 42px;
+        border: 0;
+        border-radius: 50%;
+        display: grid;
+        place-items: center;
+        background: rgba(41, 99, 71, 0.1);
+        color: var(--fresh);
+        font: inherit;
+        font-weight: 900;
+        cursor: pointer;
+        transition: transform 150ms ease, background 150ms ease, color 150ms ease;
+        -webkit-tap-highlight-color: transparent;
+      }
+
+      .store-circle.active {
+        background: rgba(217, 111, 50, 0.18);
+        color: var(--warm);
+      }
+
+      .store-circle.add-circle {
+        background: var(--warm-soft);
+        color: var(--warm);
+      }
+
+      .store-circle:active {
+        transform: scale(0.985);
+      }
+
+      .store-form[hidden] {
+        display: none;
+      }
+
+      .store-form {
+        display: grid;
+        grid-template-columns: 1fr auto;
+        gap: 10px;
+      }
+
       .add-field {
         display: flex;
         align-items: center;
@@ -236,7 +298,8 @@
         margin-bottom: 12px;
       }
 
-      .item button {
+      .shopping-row,
+      .catalog-main {
         width: 100%;
         display: grid;
         grid-template-columns: 1fr auto;
@@ -254,16 +317,28 @@
         -webkit-tap-highlight-color: transparent;
       }
 
-      .item button:active {
+      .shopping-row:active,
+      .catalog-main:active,
+      .catalog-action:active {
         transform: scale(0.985);
       }
 
-      .item button:focus-visible,
-      .action-btn:focus-visible,
-      .search-box input:focus-visible,
-      .add-form input:focus-visible {
+      .shopping-row:focus-visible,
+      .catalog-main:focus-visible,
+      .catalog-action:focus-visible,
+      .store-circle:focus-visible,
+      .store-group-icon:focus-visible,
+      .action-btn:focus-visible {
         outline: 3px solid rgba(41, 99, 71, 0.24);
         outline-offset: 3px;
+      }
+
+      .shopping-item:not(.done) .shopping-row:hover,
+      .catalog-main:hover,
+      .catalog-action:hover,
+      .store-circle:hover,
+      .store-group-icon:hover {
+        transform: translateY(-1px);
       }
 
       .item-main {
@@ -289,8 +364,7 @@
         opacity: 0.92;
       }
 
-      .toggle,
-      .catalog-state {
+      .toggle {
         min-width: 52px;
         height: 52px;
         border-radius: 50%;
@@ -303,17 +377,152 @@
         padding: 0 12px;
       }
 
-      .catalog-state {
-        min-width: 84px;
-        border-radius: 999px;
-        font-size: 0.92rem;
+      .catalog-card {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) auto;
+        gap: 10px;
+      }
+
+      .catalog-main {
+        grid-template-columns: 1fr;
+      }
+
+      .catalog-actions {
+        display: grid;
+        gap: 10px;
+        align-content: stretch;
+        align-items: end;
+      }
+
+      .catalog-action {
+        min-width: 102px;
+        padding: 0 14px;
+        border: 0;
+        border-radius: 18px;
+        background: rgba(41, 99, 71, 0.1);
+        color: var(--fresh);
+        font: inherit;
+        font-weight: 800;
+        box-shadow: 0 12px 26px rgba(90, 72, 40, 0.08);
+        cursor: pointer;
+        transition: transform 150ms ease, box-shadow 150ms ease, background 150ms ease;
+        -webkit-tap-highlight-color: transparent;
+      }
+
+      .catalog-action.shopping-action {
+        background: rgba(217, 111, 50, 0.14);
+        color: var(--warm);
+      }
+
+      .catalog-store-choices {
+        display: flex;
+        justify-content: flex-end;
+        gap: 8px;
+        flex-wrap: wrap;
+        max-width: 160px;
+      }
+
+      .item-store-choice {
+        width: 36px;
+        height: 36px;
+      }
+
+      .shopping-groups {
+        display: grid;
+        gap: 14px;
+        padding: 0 16px;
+      }
+
+      .store-group {
+        border-radius: var(--radius-lg);
+        background: rgba(255, 255, 255, 0.14);
+        border: 1px solid rgba(68, 81, 66, 0.08);
+        overflow: hidden;
+      }
+
+      .store-group-header {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        padding: 12px 14px 0;
+      }
+
+      .store-group-toggle {
+        width: 100%;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 12px;
+        padding: 4px 4px 12px;
+        border: 0;
+        background: transparent;
+        color: inherit;
+        text-align: left;
+        font: inherit;
+        cursor: pointer;
+      }
+
+      .store-group-icon {
+        width: 36px;
+        height: 36px;
+        border: 0;
+        border-radius: 50%;
+        display: grid;
+        place-items: center;
+        background: rgba(41, 99, 71, 0.1);
+        color: var(--fresh);
+        font: inherit;
+        font-size: 1rem;
+        font-weight: 900;
+        cursor: pointer;
+        transition: transform 150ms ease, background 150ms ease, color 150ms ease;
+        -webkit-tap-highlight-color: transparent;
+      }
+
+      .store-group-title {
+        display: flex;
+        align-items: baseline;
+        gap: 8px;
+        flex-wrap: wrap;
+      }
+
+      .store-group-title strong {
+        font-size: 1.05rem;
+        letter-spacing: -0.01em;
+      }
+
+      .store-group-title span {
+        font-size: 0.85rem;
+        color: var(--muted);
+      }
+
+      .store-group-chevron {
+        font-size: 1rem;
+        color: var(--muted);
+      }
+
+      .store-group-body {
+        display: grid;
+        padding: 0 14px 14px;
+      }
+
+      .store-group.collapsed .store-group-body {
+        display: none;
+      }
+
+      .store-group-items {
+        list-style: none;
+        margin: 0;
+        padding: 0;
+        display: grid;
+        gap: 12px;
       }
 
       .item.done {
         opacity: 0.84;
       }
 
-      .item.done button {
+      .shopping-item.done .shopping-row {
         background: rgba(247, 240, 228, 0.86);
       }
 
@@ -333,9 +542,8 @@
         color: var(--warm);
       }
 
-      .catalog-item.on-list .catalog-state {
-        background: rgba(217, 111, 50, 0.14);
-        color: var(--warm);
+      .catalog-item.on-list .catalog-action.shopping-action {
+        background: rgba(217, 111, 50, 0.22);
       }
 
       .empty {
@@ -360,14 +568,17 @@
 
         .panel-header,
         .search-wrap,
+        .store-section,
         .toolbar,
         .add-form,
-        .list {
+        .list,
+        .shopping-groups {
           padding-left: 12px;
           padding-right: 12px;
         }
 
-        .item button {
+        .shopping-row,
+        .catalog-main {
           padding: 17px 16px 17px 18px;
         }
 
@@ -377,6 +588,27 @@
 
         .add-form {
           grid-template-columns: 1fr;
+        }
+
+        .store-form {
+          grid-template-columns: 1fr;
+        }
+
+        .catalog-card {
+          grid-template-columns: 1fr;
+        }
+
+        .catalog-actions {
+          grid-template-columns: 1fr;
+        }
+
+        .catalog-action {
+          min-height: 48px;
+        }
+
+        .catalog-store-choices {
+          justify-content: flex-start;
+          max-width: none;
         }
       }
 
@@ -409,16 +641,45 @@
         .shell,
         .search-box,
         .add-field,
-        .item button,
+        .shopping-row,
+        .catalog-main,
+        .catalog-action,
         .empty {
           border-color: rgba(181, 209, 255, 0.08);
         }
 
         .search-box,
         .add-field,
-        .item button,
+        .shopping-row,
+        .catalog-main,
+        .catalog-action,
         .empty {
           box-shadow: 0 18px 32px rgba(0, 0, 0, 0.24);
+        }
+
+        .store-circle {
+          background: rgba(130, 169, 224, 0.12);
+          color: #98afd1;
+        }
+
+        .store-circle.active {
+          background: rgba(135, 216, 199, 0.16);
+          color: var(--fresh);
+        }
+
+        .store-circle.add-circle {
+          background: rgba(255, 179, 110, 0.14);
+          color: var(--warm);
+        }
+
+        .store-group {
+          background: rgba(17, 30, 54, 0.42);
+          border-color: rgba(181, 209, 255, 0.08);
+        }
+
+        .store-group-icon {
+          background: rgba(130, 169, 224, 0.12);
+          color: #98afd1;
         }
 
         .empty {
@@ -426,7 +687,7 @@
           color: #90a7cb;
         }
 
-        .item.done button {
+        .shopping-item.done .shopping-row {
           background: rgba(12, 24, 44, 0.92);
         }
 
@@ -435,7 +696,8 @@
         }
 
         .search-box input::placeholder,
-        .add-form input::placeholder {
+        .add-form input::placeholder,
+        .store-form input::placeholder {
           color: #7d94b7;
         }
       }
@@ -466,7 +728,7 @@
                 </label>
               </div>
 
-              <ul id="shopping-list" class="list" aria-live="polite"></ul>
+              <div id="shopping-list" class="shopping-groups" aria-live="polite"></div>
               <div id="shopping-empty" class="empty" hidden>No matching items.</div>
             </section>
 
@@ -488,6 +750,22 @@
                 </label>
               </div>
 
+              <section class="store-section" aria-label="Stores">
+                <div class="store-bar">
+                  <div id="store-list" class="store-list"></div>
+                  <button id="show-store-form" class="store-circle add-circle" type="button" aria-label="Add store">
+                    +
+                  </button>
+                </div>
+
+                <form id="store-form" class="store-form" hidden>
+                  <label class="add-field" for="new-store">
+                    <input id="new-store" type="text" placeholder="add store..." aria-label="Add store" />
+                  </label>
+                  <button class="action-btn alt" type="submit">Add store</button>
+                </form>
+              </section>
+
               <form id="add-form" class="add-form">
                 <label class="add-field" for="new-item">
                   <input id="new-item" type="text" placeholder="add item..." aria-label="Add item" />
@@ -504,45 +782,55 @@
     </main>
 
     <script>
-      const STORAGE_KEY = "glist-state-v1";
+      const STORAGE_KEY = "glist-state-v2";
+      const LEGACY_STORAGE_KEY = "glist-state-v1";
       const seedCatalog = [
-        { id: 1, name: "Bananas", note: "6 ripe ones", done: false, purchaseHistory: [] },
-        { id: 2, name: "Whole milk", note: "1 gallon", done: false, purchaseHistory: [] },
-        { id: 3, name: "Eggs", note: "Large, 12 count", done: false, purchaseHistory: [] },
-        { id: 4, name: "Sourdough bread", note: "Bakery section", done: false, purchaseHistory: [] },
-        { id: 5, name: "Spinach", note: "One big tub", done: false, purchaseHistory: [] },
-        { id: 6, name: "Chicken thighs", note: "About 2 pounds", done: false, purchaseHistory: [] },
-        { id: 7, name: "Greek yogurt", note: "Plain", done: false, purchaseHistory: [] },
+        { id: 1, name: "Bananas", note: "6 ripe ones", done: false, purchaseHistory: [], preferredStoreId: null },
+        { id: 2, name: "Whole milk", note: "1 gallon", done: false, purchaseHistory: [], preferredStoreId: null },
+        { id: 3, name: "Eggs", note: "Large, 12 count", done: false, purchaseHistory: [], preferredStoreId: null },
+        { id: 4, name: "Sourdough bread", note: "Bakery section", done: false, purchaseHistory: [], preferredStoreId: null },
+        { id: 5, name: "Spinach", note: "One big tub", done: false, purchaseHistory: [], preferredStoreId: null },
+        { id: 6, name: "Chicken thighs", note: "About 2 pounds", done: false, purchaseHistory: [], preferredStoreId: null },
+        { id: 7, name: "Greek yogurt", note: "Plain", done: false, purchaseHistory: [], preferredStoreId: null },
         {
           id: 8,
           name: "Peanut butter",
           note: "Crunchy if they have it",
           done: true,
-          purchaseHistory: [new Date(Date.now() - 8 * 24 * 60 * 60 * 1000).toISOString()]
+          purchaseHistory: [new Date(Date.now() - 8 * 24 * 60 * 60 * 1000).toISOString()],
+          preferredStoreId: null
         },
         {
           id: 9,
           name: "Apples",
           note: "Honeycrisp",
           done: false,
-          purchaseHistory: [new Date(Date.now() - 3 * 24 * 60 * 60 * 1000).toISOString()]
+          purchaseHistory: [new Date(Date.now() - 3 * 24 * 60 * 60 * 1000).toISOString()],
+          preferredStoreId: null
         },
-        { id: 10, name: "Rice", note: "Jasmine", done: false, purchaseHistory: [] },
+        { id: 10, name: "Rice", note: "Jasmine", done: false, purchaseHistory: [], preferredStoreId: null },
         {
           id: 11,
           name: "Pasta sauce",
           note: "Tomato basil",
           done: false,
-          purchaseHistory: [new Date(Date.now() - 14 * 24 * 60 * 60 * 1000).toISOString()]
+          purchaseHistory: [new Date(Date.now() - 14 * 24 * 60 * 60 * 1000).toISOString()],
+          preferredStoreId: null
         },
-        { id: 12, name: "Coffee beans", note: "Medium roast", done: false, purchaseHistory: [] }
+        { id: 12, name: "Coffee beans", note: "Medium roast", done: false, purchaseHistory: [], preferredStoreId: null }
       ];
       const seedShoppingOrder = [1, 2, 3, 4, 5, 6, 7, 8];
+      const seedStores = [];
 
       function safeReadState() {
         try {
           const raw = window.localStorage.getItem(STORAGE_KEY);
-          return raw ? JSON.parse(raw) : null;
+          if (raw) {
+            return JSON.parse(raw);
+          }
+
+          const legacyRaw = window.localStorage.getItem(LEGACY_STORAGE_KEY);
+          return legacyRaw ? JSON.parse(legacyRaw) : null;
         } catch (error) {
           return null;
         }
@@ -556,7 +844,20 @@
           done: Boolean(item.done),
           purchaseHistory: Array.isArray(item.purchaseHistory)
             ? item.purchaseHistory.filter((entry) => !Number.isNaN(Date.parse(entry)))
-            : []
+            : [],
+          preferredStoreId:
+            item.preferredStoreId === null || item.preferredStoreId === undefined
+              ? null
+              : Number.isNaN(Number(item.preferredStoreId))
+                ? null
+                : Number(item.preferredStoreId)
+        };
+      }
+
+      function normalizeStore(store) {
+        return {
+          id: Number(store.id),
+          name: String(store.name || "").trim()
         };
       }
 
@@ -564,6 +865,16 @@
         const saved = safeReadState();
         const savedCatalog = Array.isArray(saved?.catalog) ? saved.catalog.map(normalizeItem) : null;
         const catalog = savedCatalog && savedCatalog.length > 0 ? savedCatalog : seedCatalog.map(normalizeItem);
+        const savedStores = Array.isArray(saved?.stores) ? saved.stores.map(normalizeStore) : null;
+        const stores = savedStores
+          ? savedStores.filter((store) => store.name)
+          : seedStores.map(normalizeStore);
+        const validStoreIds = new Set(stores.map((store) => store.id));
+        catalog.forEach((item) => {
+          if (item.preferredStoreId !== null && !validStoreIds.has(item.preferredStoreId)) {
+            item.preferredStoreId = null;
+          }
+        });
         const validIds = new Set(catalog.map((item) => item.id));
         const savedOrder = Array.isArray(saved?.shoppingOrder)
           ? saved.shoppingOrder.map(Number).filter((id) => validIds.has(id))
@@ -572,8 +883,9 @@
           ? savedOrder
           : seedShoppingOrder.filter((id) => validIds.has(id));
         const nextId = Math.max(0, ...catalog.map((item) => item.id)) + 1;
+        const nextStoreId = Math.max(0, ...stores.map((store) => store.id)) + 1;
 
-        return { catalog, shoppingOrder, nextId };
+        return { catalog, shoppingOrder, stores, nextId, nextStoreId };
       }
 
       const state = buildInitialState();
@@ -581,7 +893,9 @@
       const itemsById = new Map(catalog.map((item) => [item.id, item]));
       const shoppingOrder = state.shoppingOrder;
       const shoppingSet = new Set(shoppingOrder);
+      const stores = state.stores;
       let nextId = state.nextId;
+      let nextStoreId = state.nextStoreId;
 
       const shell = document.getElementById("shell");
       const flipStage = document.getElementById("flip-stage");
@@ -590,18 +904,24 @@
       const shoppingSearch = document.getElementById("shopping-search");
       const catalogSearch = document.getElementById("catalog-search");
       const newItemInput = document.getElementById("new-item");
+      const newStoreInput = document.getElementById("new-store");
       const addForm = document.getElementById("add-form");
+      const showStoreFormButton = document.getElementById("show-store-form");
+      const storeForm = document.getElementById("store-form");
       const clearShoppingButton = document.getElementById("clear-shopping");
       const moveMarkedButton = document.getElementById("move-marked");
       const showCatalogButton = document.getElementById("show-catalog");
       const showShoppingButton = document.getElementById("show-shopping");
       const shoppingList = document.getElementById("shopping-list");
       const catalogList = document.getElementById("catalog-list");
+      const storeList = document.getElementById("store-list");
       const shoppingEmpty = document.getElementById("shopping-empty");
       const catalogEmpty = document.getElementById("catalog-empty");
 
       const shoppingElements = new Map();
       const catalogElements = new Map();
+      const collapsedGroups = new Set();
+      let isStoreFormOpen = stores.length === 0;
 
       function persistState() {
         try {
@@ -609,7 +929,8 @@
             STORAGE_KEY,
             JSON.stringify({
               catalog,
-              shoppingOrder
+              shoppingOrder,
+              stores
             })
           );
         } catch (error) {
@@ -619,6 +940,14 @@
 
       function getLastPurchased(item) {
         return item.purchaseHistory[item.purchaseHistory.length - 1] || null;
+      }
+
+      function getStoreName(storeId) {
+        if (storeId === null || storeId === undefined) {
+          return "";
+        }
+
+        return stores.find((store) => store.id === storeId)?.name || "";
       }
 
       function formatRelativePurchase(dateString) {
@@ -689,7 +1018,8 @@
 
             return (
               item.name.toLowerCase().includes(query) ||
-              item.note.toLowerCase().includes(query)
+              item.note.toLowerCase().includes(query) ||
+              getStoreName(item.preferredStoreId).toLowerCase().includes(query)
             );
           });
       }
@@ -703,7 +1033,8 @@
 
           return (
             item.name.toLowerCase().includes(query) ||
-            item.note.toLowerCase().includes(query)
+            item.note.toLowerCase().includes(query) ||
+            getStoreName(item.preferredStoreId).toLowerCase().includes(query)
           );
         });
       }
@@ -711,6 +1042,32 @@
       function refreshShoppingButtons() {
         clearShoppingButton.disabled = shoppingOrder.length === 0;
         moveMarkedButton.disabled = !shoppingOrder.some((id) => itemsById.get(id)?.done);
+      }
+
+      function storeLabel(item) {
+        const preferredStoreName = getStoreName(item.preferredStoreId);
+        return preferredStoreName ? `Store: ${preferredStoreName}` : "Store: Any store";
+      }
+
+      function sortedStores() {
+        return [...stores].sort((a, b) => a.name.localeCompare(b.name));
+      }
+
+      function renderStoreList() {
+        const fragment = document.createDocumentFragment();
+
+        sortedStores().forEach((store) => {
+          const bubble = document.createElement("div");
+          bubble.className = "store-circle";
+          bubble.title = store.name;
+          bubble.setAttribute("aria-label", store.name);
+          bubble.textContent = store.name.charAt(0).toUpperCase();
+          fragment.append(bubble);
+        });
+
+        storeList.replaceChildren(fragment);
+        storeForm.hidden = !isStoreFormOpen;
+        syncStageHeight();
       }
 
       function updateShoppingItemElement(item) {
@@ -726,6 +1083,10 @@
           `${item.done ? "Unmark" : "Mark"} ${item.name} ${item.done ? "as not done" : "done"}`
         );
         parts.toggle.textContent = item.done ? "↺" : "✓";
+        parts.note.hidden = !item.note;
+        parts.note.textContent = item.note;
+        parts.store.hidden = item.preferredStoreId === null;
+        parts.store.textContent = item.preferredStoreId === null ? "" : `Buy at ${getStoreName(item.preferredStoreId)}`;
       }
 
       function updateCatalogItemElement(item) {
@@ -736,20 +1097,44 @@
 
         const onList = shoppingSet.has(item.id);
         parts.li.classList.toggle("on-list", onList);
-        parts.button.setAttribute(
+        parts.mainButton.setAttribute(
           "aria-label",
           onList ? `Remove ${item.name} from shopping list` : `Add ${item.name} to shopping list`
         );
-        parts.note.textContent = item.note || "Tap to add or remove this item";
+        parts.shoppingButton.setAttribute(
+          "aria-label",
+          onList ? `Remove ${item.name} from shopping list` : `Add ${item.name} to shopping list`
+        );
+        parts.note.hidden = !item.note;
+        parts.note.textContent = item.note;
         parts.meta.textContent = formatRelativePurchase(getLastPurchased(item));
-        parts.state.textContent = onList ? "Remove" : "Add";
+        parts.store.textContent = storeLabel(item);
+        parts.shoppingButton.textContent = onList ? "Remove" : "Add";
+
+        const storeChoices = document.createDocumentFragment();
+        sortedStores().forEach((store) => {
+          const button = document.createElement("button");
+          button.type = "button";
+          button.className = `store-circle item-store-choice${
+            item.preferredStoreId === store.id ? " active" : ""
+          }`;
+          button.title = `Buy ${item.name} from ${store.name}`;
+          button.setAttribute("aria-label", `Buy ${item.name} from ${store.name}`);
+          button.textContent = store.name.charAt(0).toUpperCase();
+          button.addEventListener("click", () => {
+            setPreferredStore(item.id, item.preferredStoreId === store.id ? null : store.id);
+          });
+          storeChoices.append(button);
+        });
+        parts.storeChoices.replaceChildren(storeChoices);
       }
 
       function createShoppingItemElement(item) {
         const li = document.createElement("li");
-        li.className = `item${item.done ? " done" : ""}`;
+        li.className = `item shopping-item${item.done ? " done" : ""}`;
 
         const button = document.createElement("button");
+        button.className = "shopping-row";
         button.type = "button";
         button.addEventListener("click", () => {
           const wasDone = item.done;
@@ -776,17 +1161,19 @@
 
         const note = document.createElement("div");
         note.className = "item-note";
-        note.textContent = item.note;
+
+        const store = document.createElement("div");
+        store.className = "item-meta";
 
         const toggle = document.createElement("div");
         toggle.className = "toggle";
         toggle.setAttribute("aria-hidden", "true");
 
-        main.append(name, note);
+        main.append(name, note, store);
         button.append(main, toggle);
         li.append(button);
 
-        shoppingElements.set(item.id, { li, button, toggle });
+        shoppingElements.set(item.id, { li, button, note, store, toggle });
         updateShoppingItemElement(item);
       }
 
@@ -794,11 +1181,28 @@
         const li = document.createElement("li");
         li.className = "item catalog-item";
 
-        const button = document.createElement("button");
-        button.type = "button";
-        button.addEventListener("click", () => {
+        const card = document.createElement("div");
+        card.className = "catalog-card";
+
+        const mainButton = document.createElement("button");
+        mainButton.className = "catalog-main";
+        mainButton.type = "button";
+        mainButton.addEventListener("click", () => {
           toggleShoppingListItem(item.id);
         });
+
+        const actions = document.createElement("div");
+        actions.className = "catalog-actions";
+
+        const shoppingButton = document.createElement("button");
+        shoppingButton.className = "catalog-action shopping-action";
+        shoppingButton.type = "button";
+        shoppingButton.addEventListener("click", () => {
+          toggleShoppingListItem(item.id);
+        });
+
+        const storeChoices = document.createElement("div");
+        storeChoices.className = "catalog-store-choices";
 
         const main = document.createElement("div");
         main.className = "item-main";
@@ -813,15 +1217,24 @@
         const meta = document.createElement("div");
         meta.className = "item-meta";
 
-        const state = document.createElement("div");
-        state.className = "catalog-state";
-        state.setAttribute("aria-hidden", "true");
+        const store = document.createElement("div");
+        store.className = "item-meta";
 
-        main.append(name, note, meta);
-        button.append(main, state);
-        li.append(button);
+        main.append(name, note, meta, store);
+        mainButton.append(main);
+        actions.append(shoppingButton, storeChoices);
+        card.append(mainButton, actions);
+        li.append(card);
 
-        catalogElements.set(item.id, { li, button, note, meta, state });
+        catalogElements.set(item.id, {
+          li,
+          mainButton,
+          shoppingButton,
+          note,
+          meta,
+          store,
+          storeChoices
+        });
         updateCatalogItemElement(item);
       }
 
@@ -831,8 +1244,108 @@
         });
       }
 
+      function storeGroupKey(storeId) {
+        return storeId === null ? "any" : `store-${storeId}`;
+      }
+
+      function storeGroupName(storeId) {
+        return storeId === null ? "Any Store" : getStoreName(storeId);
+      }
+
+      function groupedShoppingItems() {
+        const groups = new Map();
+
+        shoppingItems().forEach((item) => {
+          const key = storeGroupKey(item.preferredStoreId);
+          if (!groups.has(key)) {
+            groups.set(key, {
+              key,
+              storeId: item.preferredStoreId,
+              name: storeGroupName(item.preferredStoreId),
+              items: []
+            });
+          }
+
+          groups.get(key).items.push(item);
+        });
+
+        return [...groups.values()];
+      }
+
+      function moveStoreToTop(storeId) {
+        const targetIds = shoppingOrder.filter((id) => itemsById.get(id)?.preferredStoreId === storeId);
+        if (targetIds.length === 0) {
+          return;
+        }
+
+        const targetSet = new Set(targetIds);
+        const remainingIds = shoppingOrder.filter((id) => !targetSet.has(id));
+        shoppingOrder.splice(0, shoppingOrder.length, ...targetIds, ...remainingIds);
+        persistState();
+        syncShoppingVisibleList();
+      }
+
       function syncShoppingVisibleList() {
-        const nodes = shoppingItems().map((item) => shoppingElements.get(item.id).li);
+        const groups = groupedShoppingItems();
+        const nodes = groups.map((group) => {
+          const section = document.createElement("section");
+          section.className = `store-group${collapsedGroups.has(group.key) ? " collapsed" : ""}`;
+
+          const header = document.createElement("div");
+          header.className = "store-group-header";
+
+          const toggle = document.createElement("button");
+          toggle.type = "button";
+          toggle.className = "store-group-toggle";
+          toggle.addEventListener("click", () => {
+            if (collapsedGroups.has(group.key)) {
+              collapsedGroups.delete(group.key);
+            } else {
+              collapsedGroups.add(group.key);
+            }
+            syncShoppingVisibleList();
+          });
+
+          const title = document.createElement("div");
+          title.className = "store-group-title";
+
+          const strong = document.createElement("strong");
+          strong.textContent = group.name;
+
+          const count = document.createElement("span");
+          count.textContent = `${group.items.length} item${group.items.length === 1 ? "" : "s"}`;
+
+          const chevron = document.createElement("div");
+          chevron.className = "store-group-chevron";
+          chevron.textContent = collapsedGroups.has(group.key) ? "+" : "-";
+
+          title.append(strong, count);
+          toggle.append(title, chevron);
+
+          const moveButton = document.createElement("button");
+          moveButton.type = "button";
+          moveButton.className = "store-group-icon";
+          moveButton.textContent = "↑";
+          moveButton.title = `Move ${group.name} to top`;
+          moveButton.setAttribute("aria-label", `Move ${group.name} to top`);
+          moveButton.addEventListener("click", () => {
+            moveStoreToTop(group.storeId);
+          });
+
+          header.append(toggle, moveButton);
+
+          const body = document.createElement("div");
+          body.className = "store-group-body";
+
+          const items = document.createElement("ul");
+          items.className = "store-group-items";
+          items.append(...group.items.map((item) => shoppingElements.get(item.id).li));
+
+          body.append(items);
+          section.append(header, body);
+          return section;
+        });
+
         shoppingList.replaceChildren(...nodes);
         shoppingEmpty.hidden = nodes.length > 0;
         refreshShoppingButtons();
@@ -877,6 +1390,20 @@
         updateShoppingItemElement(item);
         updateCatalogItemElement(item);
         persistState();
+      }
+
+      function setPreferredStore(id, storeId) {
+        const item = itemsById.get(id);
+        if (!item) {
+          return;
+        }
+
+        item.preferredStoreId =
+          storeId === null || stores.some((store) => store.id === storeId) ? storeId ?? null : null;
+        updateCatalogItemElement(item);
+        updateShoppingItemElement(item);
+        persistState();
+        syncShoppingVisibleList();
       }
 
       function addToShoppingList(id) {
@@ -926,11 +1453,41 @@
         }
       });
 
+      renderStoreList();
       syncShoppingVisibleList();
       syncCatalogVisibleList();
 
       shoppingSearch.addEventListener("input", syncShoppingVisibleList);
       catalogSearch.addEventListener("input", syncCatalogVisibleList);
+
+      showStoreFormButton.addEventListener("click", () => {
+        isStoreFormOpen = !isStoreFormOpen;
+        renderStoreList();
+        if (isStoreFormOpen) {
+          newStoreInput.focus();
+        }
+      });
+
+      storeForm.addEventListener("submit", (event) => {
+        event.preventDefault();
+
+        const name = newStoreInput.value.trim();
+        if (!name) {
+          return;
+        }
+
+        const existingStore = stores.find((store) => store.name.toLowerCase() === name.toLowerCase());
+        if (!existingStore) {
+          const store = { id: nextStoreId++, name };
+          stores.push(store);
+        }
+
+        isStoreFormOpen = false;
+        renderStoreList();
+        refreshCatalogPurchaseLabels();
+        persistState();
+        newStoreInput.value = "";
+      });
 
       clearShoppingButton.addEventListener("click", () => {
         const hasUnmarkedItems = shoppingOrder.some((id) => !itemsById.get(id).done);
@@ -986,7 +1543,8 @@
           name,
           note: "",
           done: false,
-          purchaseHistory: []
+          purchaseHistory: [],
+          preferredStoreId: null
         };
 
         catalog.unshift(item);
