@@ -1324,6 +1324,8 @@
       const shoppingElements = new Map();
       const catalogElements = new Map();
       const collapsedGroups = new Set();
+      const SHOPPING_HASH = "#shopping-list";
+      const CATALOG_HASH = "#all-items";
       let isStoreSectionExpanded = stores.length === 0;
       let isCatalogSectionExpanded = true;
       let openStoreMenuItemId = null;
@@ -2012,9 +2014,31 @@
         addToShoppingList(id);
       }
 
-      function setFlipped(isFlipped) {
+      function isCatalogHash(hash) {
+        return hash === CATALOG_HASH;
+      }
+
+      function syncPanelFromLocation() {
+        setFlipped(isCatalogHash(window.location.hash), false);
+      }
+
+      function navigateToPanel(isFlipped) {
+        const nextHash = isFlipped ? CATALOG_HASH : SHOPPING_HASH;
+        if (window.location.hash === nextHash) {
+          setFlipped(isFlipped, false);
+          return;
+        }
+
+        window.location.hash = nextHash;
+      }
+
+      function setFlipped(isFlipped, updateUrl = true) {
         setOpenStoreMenu(null);
         shell.classList.toggle("is-flipped", isFlipped);
+        if (updateUrl) {
+          navigateToPanel(isFlipped);
+          return;
+        }
         syncStageHeight();
       }
 
@@ -2031,9 +2055,14 @@
       renderCatalogSection();
       syncShoppingVisibleList();
       syncCatalogVisibleList();
+      if (window.location.hash !== CATALOG_HASH && window.location.hash !== SHOPPING_HASH) {
+        window.history.replaceState(null, "", `${window.location.pathname}${window.location.search}${SHOPPING_HASH}`);
+      }
+      syncPanelFromLocation();
 
       shoppingSearch.addEventListener("input", syncShoppingVisibleList);
       catalogSearch.addEventListener("input", syncCatalogVisibleList);
+      window.addEventListener("hashchange", syncPanelFromLocation);
       document.addEventListener("click", () => {
         if (openStoreMenuItemId !== null) {
           setOpenStoreMenu(null);
