@@ -499,18 +499,51 @@
         outline-offset: 3px;
       }
 
-      .quick-add-section {
-        display: grid;
-        gap: 10px;
+      .store-group-add {
+        padding: 0 14px 14px;
       }
 
-      .quick-add-suggestions {
+      .store-group-add-btn {
+        width: 100%;
+        min-height: 48px;
+        padding: 12px 16px;
+        border: 2px dashed rgba(98, 112, 96, 0.2);
+        border-radius: var(--radius-lg);
+        background: transparent;
+        color: var(--muted);
+        font: inherit;
+        font-size: 0.95rem;
+        cursor: pointer;
+        transition: border-color 150ms ease, color 150ms ease, background 150ms ease;
+        -webkit-tap-highlight-color: transparent;
+      }
+
+      .store-group-add-btn:hover {
+        border-color: var(--fresh);
+        color: var(--fresh);
+        background: var(--fresh-soft);
+      }
+
+      .store-group-add-btn:focus-visible {
+        outline: 3px solid rgba(41, 99, 71, 0.24);
+        outline-offset: 3px;
+      }
+
+      .store-group-add-form {
+        display: none;
+      }
+
+      .store-group-add-form.active {
         display: grid;
         gap: 8px;
-        padding: 0 16px;
       }
 
-      .quick-add-suggestions:empty {
+      .store-group-add-suggestions {
+        display: grid;
+        gap: 8px;
+      }
+
+      .store-group-add-suggestions:empty {
         display: none;
       }
 
@@ -990,7 +1023,6 @@
         .tab-bar,
         .list,
         .shopping-groups,
-        .quick-add-suggestions,
         .bottom-actions {
           padding-left: 12px;
           padding-right: 12px;
@@ -1136,20 +1168,6 @@
                   />
                 </label>
               </div>
-
-              <section id="quick-add-section" class="quick-add-section">
-                <div class="search-wrap">
-                  <label class="search-box" for="quick-add-input">
-                    <input
-                      id="quick-add-input"
-                      type="text"
-                      placeholder="Add item to list..."
-                      aria-label="Add item to shopping list"
-                    />
-                  </label>
-                </div>
-                <div id="quick-add-suggestions" class="quick-add-suggestions"></div>
-              </section>
 
               <div id="shopping-list" class="shopping-groups" aria-live="polite"></div>
               <div id="shopping-empty" class="empty" hidden>No matching items.</div>
@@ -1510,9 +1528,8 @@
       const newItemInput = document.getElementById("new-item");
       const storeSearchInput = document.getElementById("store-search");
       const storeSuggestions = document.getElementById("store-suggestions");
-      const quickAddInput = document.getElementById("quick-add-input");
-      const quickAddSuggestions = document.getElementById("quick-add-suggestions");
       const addForm = document.getElementById("add-form");
+      let activeStoreAddKey = null;
       const clearShoppingButton = document.getElementById("clear-shopping");
       const moveMarkedButton = document.getElementById("move-marked");
       const showCatalogButton = document.getElementById("show-catalog");
@@ -1526,6 +1543,7 @@
       const shoppingElements = new Map();
       const catalogElements = new Map();
       const collapsedGroups = new Set();
+      const autoCollapsedGroups = new Set();
       const SHOPPING_HASH = "#shopping";
       const CATALOG_HASH = "#all";
       let activeTab = "items";
@@ -1788,11 +1806,11 @@
         persistState();
       }
 
-      function renderQuickAddSuggestions() {
-        const query = quickAddInput.value.trim().toLowerCase();
+      function renderStoreAddSuggestions(input, suggestionsContainer, storeId) {
+        const query = input.value.trim().toLowerCase();
 
         if (!query) {
-          quickAddSuggestions.replaceChildren();
+          suggestionsContainer.replaceChildren();
           return;
         }
 
@@ -1801,7 +1819,7 @@
         // Find matching catalog items
         const matchingItems = catalog
           .filter((item) => item.name.toLowerCase().includes(query))
-          .slice(0, 5); // Limit to 5 suggestions
+          .slice(0, 5);
 
         matchingItems.forEach((item) => {
           const btn = document.createElement("button");
@@ -1810,10 +1828,13 @@
           const onListAndActive = onList && !item.done;
           btn.className = `quick-add-item${onListAndActive ? " on-list" : ""}`;
           btn.addEventListener("click", () => {
-            // Always call addToShoppingList - it will unmark if already on list
+            // Add store to item if not already assigned
+            if (storeId !== null && !getItemStoreIds(item).includes(storeId)) {
+              item.selectedStoreIds = [...getItemStoreIds(item), storeId];
+            }
             addToShoppingList(item.id);
-            quickAddInput.value = "";
-            renderQuickAddSuggestions();
+            activeStoreAddKey = null;
+            syncShoppingVisibleList();
           });
 
           const info = document.createElement("div");
@@ -1828,29 +1849,18 @@
           meta.textContent = item.note || formatRelativePurchase(getLastPurchased(item));
 
           info.append(name, meta);
-
-          const storeChips = document.createElement("div");
-          storeChips.className = "quick-add-item-stores";
-          getItemStores(item).forEach((store) => {
-            const chip = document.createElement("div");
-            chip.className = "store-circle catalog-store-chip";
-            chip.textContent = store.name.charAt(0).toUpperCase();
-            applyStoreCircleStyle(chip, store);
-            storeChips.append(chip);
-          });
-
-          btn.append(info, storeChips);
+          btn.append(info);
           fragment.append(btn);
         });
 
-        // Show "Add new item" option if query doesn't exactly match an existing item
+        // Show "Add new item" option
         const exactMatch = catalog.some((item) => item.name.toLowerCase() === query);
         if (!exactMatch) {
           const addNewBtn = document.createElement("button");
           addNewBtn.type = "button";
           addNewBtn.className = "quick-add-item quick-add-new";
           addNewBtn.addEventListener("click", () => {
-            quickAddNewItem(quickAddInput.value.trim());
+            storeAddNewItem(input.value.trim(), storeId);
           });
 
           const info = document.createElement("div");
@@ -1858,52 +1868,21 @@
 
           const name = document.createElement("div");
           name.className = "quick-add-item-name";
-          name.textContent = `Add "${quickAddInput.value.trim()}"`;
+          name.textContent = `Add "${input.value.trim()}"`;
 
-          const meta = document.createElement("div");
-          meta.className = "quick-add-item-meta";
-          meta.textContent = "Create new item and add to list";
-
-          info.append(name, meta);
-
-          // Show store buttons for quick selection
-          const storeChips = document.createElement("div");
-          storeChips.className = "quick-add-item-stores";
-          sortedStores().forEach((store) => {
-            const chip = document.createElement("button");
-            chip.type = "button";
-            chip.className = "store-circle catalog-store-chip";
-            chip.title = store.name;
-            chip.textContent = store.name.charAt(0).toUpperCase();
-            chip.addEventListener("click", (e) => {
-              e.stopPropagation();
-              chip.classList.toggle("selected");
-            });
-            applyStoreCircleStyle(chip, store);
-            storeChips.append(chip);
-          });
-
-          addNewBtn.append(info, storeChips);
+          info.append(name);
+          addNewBtn.append(info);
           fragment.append(addNewBtn);
         }
 
-        quickAddSuggestions.replaceChildren(fragment);
+        suggestionsContainer.replaceChildren(fragment);
       }
 
-      function quickAddNewItem(name) {
+      function storeAddNewItem(name, storeId) {
         if (!name) return;
 
-        // Get selected stores from the chips
-        const selectedStoreIds = [];
-        quickAddSuggestions.querySelectorAll(".quick-add-new .store-circle.selected").forEach((chip) => {
-          const storeName = chip.title;
-          const store = stores.find((s) => s.name === storeName);
-          if (store) {
-            selectedStoreIds.push(store.id);
-          }
-        });
+        const selectedStoreIds = storeId !== null ? [storeId] : [];
 
-        // Create new item
         const item = {
           id: nextId++,
           name,
@@ -1918,18 +1897,15 @@
         createCatalogItemElement(item);
         createShoppingItemElement(item);
 
-        // Add to shopping list
         shoppingSet.add(item.id);
         shoppingOrder.unshift(item.id);
 
         persistState();
         renderCatalogSection();
         syncCatalogVisibleList();
+        activeStoreAddKey = null;
         syncShoppingVisibleList();
         refreshShoppingButtons();
-
-        quickAddInput.value = "";
-        renderQuickAddSuggestions();
       }
 
       function renderCatalogSection() {
@@ -2237,9 +2213,15 @@
           const totalCount = group.items.length;
           const allDone = completedCount === totalCount && totalCount > 0;
 
-          // Auto-collapse when all items are done
-          if (allDone && !collapsedGroups.has(group.key)) {
+          // Auto-collapse when all items are done (only once per group)
+          if (allDone && !autoCollapsedGroups.has(group.key)) {
+            autoCollapsedGroups.add(group.key);
             collapsedGroups.add(group.key);
+          }
+
+          // If group is no longer all done, allow auto-collapse again next time
+          if (!allDone) {
+            autoCollapsedGroups.delete(group.key);
           }
 
           const isCollapsed = collapsedGroups.has(group.key);
@@ -2320,7 +2302,61 @@
           }));
 
           body.append(items);
-          section.append(header, body);
+
+          // Add item button/form
+          const addSection = document.createElement("div");
+          addSection.className = "store-group-add";
+
+          const addBtn = document.createElement("button");
+          addBtn.type = "button";
+          addBtn.className = "store-group-add-btn";
+          addBtn.textContent = "+ Add item";
+          addBtn.addEventListener("click", () => {
+            activeStoreAddKey = group.key;
+            syncShoppingVisibleList();
+            // Focus the input after re-render
+            setTimeout(() => {
+              const input = document.querySelector(`[data-store-key="${group.key}"] .store-group-add input`);
+              if (input) input.focus();
+            }, 0);
+          });
+
+          const addFormContainer = document.createElement("div");
+          addFormContainer.className = `store-group-add-form${activeStoreAddKey === group.key ? " active" : ""}`;
+
+          const addInput = document.createElement("input");
+          addInput.type = "text";
+          addInput.className = "search-box";
+          addInput.placeholder = "Add item...";
+          addInput.style.cssText = "width:100%;padding:14px 16px;border-radius:var(--radius-lg);border:1px solid rgba(68,81,66,0.08);background:var(--panel-strong);font:inherit;color:var(--ink);";
+
+          const addSuggestions = document.createElement("div");
+          addSuggestions.className = "store-group-add-suggestions";
+
+          addInput.addEventListener("input", () => {
+            renderStoreAddSuggestions(addInput, addSuggestions, group.storeId);
+          });
+
+          addInput.addEventListener("blur", (e) => {
+            // Delay to allow click on suggestions
+            setTimeout(() => {
+              if (!addFormContainer.contains(document.activeElement)) {
+                activeStoreAddKey = null;
+                syncShoppingVisibleList();
+              }
+            }, 200);
+          });
+
+          addFormContainer.append(addInput, addSuggestions);
+
+          if (activeStoreAddKey === group.key) {
+            addSection.append(addFormContainer);
+          } else {
+            addSection.append(addBtn);
+          }
+
+          section.setAttribute("data-store-key", group.key);
+          section.append(header, body, addSection);
           return section;
         });
 
@@ -2552,7 +2588,6 @@
       });
 
       storeSearchInput.addEventListener("input", renderStoreSuggestions);
-      quickAddInput.addEventListener("input", renderQuickAddSuggestions);
 
       clearShoppingButton.addEventListener("click", () => {
         const hasUnmarkedItems = shoppingOrder.some((id) => !itemsById.get(id).done);
