@@ -521,8 +521,7 @@
         margin-bottom: 12px;
       }
 
-      .shopping-row,
-      .catalog-main {
+      .shopping-row {
         width: 100%;
         display: grid;
         grid-template-columns: 1fr auto;
@@ -541,12 +540,12 @@
       }
 
       .shopping-row:active,
-      .catalog-main:active {
+      .catalog-card:active {
         transform: scale(0.985);
       }
 
       .shopping-row:focus-visible,
-      .catalog-main:focus-visible,
+      .catalog-card:focus-visible,
       .catalog-section-toggle:focus-visible,
       .store-circle:focus-visible,
       .store-section-toggle:focus-visible,
@@ -559,7 +558,7 @@
       }
 
       .shopping-item:not(.done) .shopping-row:hover,
-      .catalog-main:hover,
+      .catalog-card:hover,
       .catalog-section-toggle:hover,
       .store-section-toggle:hover,
       .store-circle:hover,
@@ -591,6 +590,7 @@
       }
 
       .catalog-card {
+        width: 100%;
         display: grid;
         gap: 10px;
         padding: 18px 18px 18px 20px;
@@ -598,14 +598,16 @@
         background: var(--panel-soft);
         border: 1px solid rgba(68, 81, 66, 0.08);
         box-shadow: 0 12px 26px rgba(90, 72, 40, 0.08);
+        color: inherit;
+        text-align: left;
+        font: inherit;
+        cursor: pointer;
+        transition: transform 150ms ease, box-shadow 150ms ease, background 150ms ease;
+        -webkit-tap-highlight-color: transparent;
       }
 
       .catalog-main {
-        grid-template-columns: 1fr;
-        padding: 0;
-        border-radius: 0;
-        background: transparent;
-        box-shadow: none;
+        display: block;
       }
 
       .catalog-footer {
@@ -1695,7 +1697,7 @@
 
         const onList = shoppingSet.has(item.id);
         parts.li.classList.toggle("on-list", onList);
-        parts.mainButton.setAttribute(
+        parts.card.setAttribute(
           "aria-label",
           onList ? `Remove ${item.name} from shopping list` : `Add ${item.name} to shopping list`
         );
@@ -1800,18 +1802,18 @@
         const li = document.createElement("li");
         li.className = "item catalog-item";
 
-        const card = document.createElement("div");
+        const card = document.createElement("button");
+        card.type = "button";
         card.className = "catalog-card";
-
-        const mainButton = document.createElement("button");
-        mainButton.className = "catalog-main";
-        mainButton.type = "button";
-        mainButton.addEventListener("click", () => {
+        card.addEventListener("click", () => {
           toggleShoppingListItem(item.id);
         });
 
         const main = document.createElement("div");
-        main.className = "item-main";
+        main.className = "catalog-main";
+
+        const itemMain = document.createElement("div");
+        itemMain.className = "item-main";
 
         const name = document.createElement("div");
         name.className = "item-name";
@@ -1858,14 +1860,14 @@
 
         storeTools.append(storeChips, storeButton, storeMenu);
         footer.append(state, storeTools);
-        main.append(name, note, meta);
-        mainButton.append(main);
-        card.append(mainButton, footer);
+        itemMain.append(name, note, meta);
+        main.append(itemMain);
+        card.append(main, footer);
         li.append(card);
 
         catalogElements.set(item.id, {
           li,
-          mainButton,
+          card,
           note,
           meta,
           state,
