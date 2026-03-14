@@ -628,6 +628,11 @@
         position: relative;
       }
 
+      .catalog-item.menu-open {
+        z-index: 50;
+        position: relative;
+      }
+
       .catalog-store-chips {
         display: flex;
         align-items: center;
@@ -688,7 +693,7 @@
         background: var(--panel-strong);
         border: 1px solid rgba(68, 81, 66, 0.12);
         box-shadow: 0 18px 32px rgba(90, 72, 40, 0.16);
-        z-index: 10;
+        z-index: 100;
       }
 
       .catalog-store-menu[hidden] {
@@ -2085,16 +2090,26 @@
         openStoreMenuItemId = itemId;
 
         if (previousId !== null) {
+          const previousParts = catalogElements.get(previousId);
+          if (previousParts) {
+            previousParts.li.classList.remove("menu-open");
+          }
           const previousItem = itemsById.get(previousId);
           if (previousItem) {
             updateCatalogItemElement(previousItem);
           }
         }
 
-        if (itemId !== null && itemId !== previousId) {
-          const currentItem = itemsById.get(itemId);
-          if (currentItem) {
-            updateCatalogItemElement(currentItem);
+        if (itemId !== null) {
+          const currentParts = catalogElements.get(itemId);
+          if (currentParts) {
+            currentParts.li.classList.add("menu-open");
+          }
+          if (itemId !== previousId) {
+            const currentItem = itemsById.get(itemId);
+            if (currentItem) {
+              updateCatalogItemElement(currentItem);
+            }
           }
         }
 
