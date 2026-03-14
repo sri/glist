@@ -141,6 +141,14 @@
         padding: 0 16px;
       }
 
+      .bottom-actions {
+        display: flex;
+        justify-content: flex-end;
+        gap: 10px;
+        flex-wrap: wrap;
+        padding: 0 16px;
+      }
+
       .search-box {
         display: flex;
         align-items: center;
@@ -370,11 +378,12 @@
         border-radius: 50%;
         display: grid;
         place-items: center;
-        background: rgba(98, 112, 96, 0.08);
-        border: 2px solid rgba(98, 112, 96, 0.48);
-        color: #586456;
+        background: transparent;
+        border: 0;
+        color: transparent;
         font-size: 1.3rem;
         font-weight: 900;
+        opacity: 0;
         padding: 0 12px;
       }
 
@@ -540,8 +549,8 @@
 
       .item.done .toggle {
         background: rgba(217, 111, 50, 0.14);
-        border-color: rgba(217, 111, 50, 0.18);
         color: var(--warm);
+        opacity: 1;
       }
 
       .catalog-item.on-list .catalog-action.shopping-action {
@@ -574,7 +583,8 @@
         .toolbar,
         .add-form,
         .list,
-        .shopping-groups {
+        .shopping-groups,
+        .bottom-actions {
           padding-left: 12px;
           padding-right: 12px;
         }
@@ -713,9 +723,7 @@
             <section id="shopping-panel" class="panel panel-front" aria-label="Shopping list">
               <div class="panel-header">
                 <div class="panel-actions">
-                  <button id="clear-shopping" class="action-btn alt" type="button">Clear shopping list</button>
-                  <button id="move-marked" class="action-btn" type="button">Move marked down</button>
-                  <button id="show-catalog" class="action-btn alt" type="button">All items</button>
+                  <button id="show-catalog" class="action-btn alt" type="button" aria-label="All items">☰</button>
                 </div>
               </div>
 
@@ -732,6 +740,11 @@
 
               <div id="shopping-list" class="shopping-groups" aria-live="polite"></div>
               <div id="shopping-empty" class="empty" hidden>No matching items.</div>
+
+              <div class="bottom-actions">
+                <button id="move-marked" class="action-btn" type="button">Move check items down</button>
+                <button id="clear-shopping" class="action-btn alt" type="button">Clear Items</button>
+              </div>
             </section>
 
             <section id="catalog-panel" class="panel panel-back" aria-label="All items">
