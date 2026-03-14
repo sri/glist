@@ -556,6 +556,9 @@
       .catalog-store-chip {
         width: 32px;
         height: 32px;
+        padding: 0;
+        border: 0;
+        cursor: pointer;
         font-size: 0.8rem;
       }
 
@@ -1593,11 +1596,16 @@
 
         const chips = document.createDocumentFragment();
         getItemStores(item).forEach((store) => {
-          const chip = document.createElement("div");
+          const chip = document.createElement("button");
+          chip.type = "button";
           chip.className = "store-circle catalog-store-chip";
-          chip.title = store.name;
-          chip.setAttribute("aria-label", store.name);
+          chip.title = `Remove ${store.name} from ${item.name}`;
+          chip.setAttribute("aria-label", `Remove ${store.name} from ${item.name}`);
           chip.textContent = store.name.charAt(0).toUpperCase();
+          chip.addEventListener("click", (event) => {
+            event.stopPropagation();
+            toggleItemStoreSelection(item.id, store.id);
+          });
           applyStoreCircleStyle(chip, store);
           chips.append(chip);
         });
