@@ -1,0 +1,1006 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+    <title>Grocery List</title>
+    <style>
+      :root {
+        color-scheme: light dark;
+        --bg: #f6f0e3;
+        --bg-accent: #efe0ba;
+        --panel: rgba(255, 251, 244, 0.92);
+        --panel-strong: #fff7eb;
+        --panel-soft: rgba(255, 255, 255, 0.68);
+        --ink: #263127;
+        --muted: #617060;
+        --fresh: #296347;
+        --fresh-soft: rgba(41, 99, 71, 0.12);
+        --warm: #d96f32;
+        --warm-soft: rgba(217, 111, 50, 0.14);
+        --done: #8f978d;
+        --shadow: 0 24px 50px rgba(78, 60, 32, 0.16);
+        --blob-top: rgba(124, 184, 116, 0.22);
+        --blob-bottom: rgba(255, 190, 118, 0.22);
+        --radius-xl: 28px;
+        --radius-lg: 22px;
+        --radius-md: 18px;
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      html,
+      body {
+        margin: 0;
+        min-height: 100%;
+      }
+
+      body {
+        font-family: "Avenir Next Rounded", "Nunito", "Trebuchet MS", sans-serif;
+        color: var(--ink);
+        background:
+          radial-gradient(circle at top right, rgba(255, 255, 255, 0.65), transparent 30%),
+          radial-gradient(circle at bottom left, rgba(217, 111, 50, 0.18), transparent 28%),
+          linear-gradient(160deg, var(--bg) 0%, #f2ebd9 50%, var(--bg-accent) 100%);
+      }
+
+      body::before,
+      body::after {
+        content: "";
+        position: fixed;
+        inset: auto;
+        pointer-events: none;
+        border-radius: 999px;
+        filter: blur(10px);
+        opacity: 0.45;
+      }
+
+      body::before {
+        width: 220px;
+        height: 220px;
+        top: -60px;
+        right: -40px;
+        background: var(--blob-top);
+      }
+
+      body::after {
+        width: 280px;
+        height: 280px;
+        left: -120px;
+        bottom: 8vh;
+        background: var(--blob-bottom);
+      }
+
+      .app {
+        width: min(100%, 640px);
+        margin: 0 auto;
+        padding: max(20px, env(safe-area-inset-top)) 16px max(28px, env(safe-area-inset-bottom));
+      }
+
+      .shell {
+        background: var(--panel);
+        border: 1px solid rgba(255, 255, 255, 0.5);
+        border-radius: 34px;
+        box-shadow: var(--shadow);
+        overflow: hidden;
+        backdrop-filter: blur(10px);
+      }
+
+      .flip-stage {
+        position: relative;
+        overflow: hidden;
+        perspective: 1600px;
+        transition: height 260ms ease;
+      }
+
+      .flip-card {
+        position: relative;
+        height: 100%;
+        transform-style: preserve-3d;
+        transition: transform 520ms cubic-bezier(0.2, 0.8, 0.2, 1);
+      }
+
+      .shell.is-flipped .flip-card {
+        transform: rotateY(180deg);
+      }
+
+      .panel {
+        position: absolute;
+        inset: 0;
+        display: flex;
+        flex-direction: column;
+        gap: 14px;
+        padding-bottom: 20px;
+        backface-visibility: hidden;
+        -webkit-backface-visibility: hidden;
+      }
+
+      .panel-back {
+        transform: rotateY(180deg);
+      }
+
+      .panel-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 12px;
+        padding: 16px 16px 0;
+      }
+
+      .panel-actions {
+        display: flex;
+        gap: 10px;
+        flex-wrap: wrap;
+        justify-content: flex-end;
+        width: 100%;
+      }
+
+      .search-wrap {
+        padding: 0 16px;
+      }
+
+      .search-box {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        padding: 16px 18px;
+        border-radius: var(--radius-xl);
+        background: var(--panel-strong);
+        border: 1px solid rgba(68, 81, 66, 0.08);
+        box-shadow: 0 14px 28px rgba(90, 72, 40, 0.08);
+      }
+
+      .search-box input,
+      .add-form input {
+        width: 100%;
+        border: 0;
+        outline: 0;
+        padding: 0;
+        background: transparent;
+        color: var(--ink);
+        font: inherit;
+        font-size: 1.08rem;
+      }
+
+      .search-box input::placeholder,
+      .add-form input::placeholder {
+        color: #7c8677;
+      }
+
+      .toolbar {
+        display: flex;
+        justify-content: flex-end;
+        align-items: center;
+        padding: 0 16px;
+      }
+
+      .action-btn {
+        min-height: 44px;
+        padding: 10px 15px;
+        border: 0;
+        border-radius: 999px;
+        background: var(--warm-soft);
+        color: var(--warm);
+        font: inherit;
+        font-weight: 900;
+        cursor: pointer;
+        transition: transform 150ms ease, opacity 150ms ease, background 150ms ease;
+        -webkit-tap-highlight-color: transparent;
+      }
+
+      .action-btn.alt {
+        background: var(--fresh-soft);
+        color: var(--fresh);
+      }
+
+      .action-btn:active {
+        transform: scale(0.985);
+      }
+
+      .action-btn:disabled {
+        opacity: 0.45;
+        cursor: default;
+      }
+
+      .action-btn:not(:disabled):hover {
+        transform: translateY(-1px);
+      }
+
+      .add-form {
+        display: grid;
+        grid-template-columns: 1fr auto;
+        gap: 10px;
+        padding: 0 16px;
+      }
+
+      .add-field {
+        display: flex;
+        align-items: center;
+        min-height: 52px;
+        padding: 0 18px;
+        border-radius: var(--radius-xl);
+        background: var(--panel-strong);
+        border: 1px solid rgba(68, 81, 66, 0.08);
+        box-shadow: 0 14px 28px rgba(90, 72, 40, 0.08);
+      }
+
+      .list {
+        list-style: none;
+        margin: 0;
+        padding: 0 16px;
+      }
+
+      .item {
+        margin-bottom: 12px;
+      }
+
+      .item button {
+        width: 100%;
+        display: grid;
+        grid-template-columns: 1fr auto;
+        align-items: center;
+        gap: 14px;
+        padding: 18px 18px 18px 20px;
+        border: 0;
+        border-radius: var(--radius-lg);
+        background: var(--panel-soft);
+        box-shadow: 0 12px 26px rgba(90, 72, 40, 0.08);
+        color: inherit;
+        text-align: left;
+        cursor: pointer;
+        transition: transform 150ms ease, box-shadow 150ms ease, background 150ms ease;
+        -webkit-tap-highlight-color: transparent;
+      }
+
+      .item button:active {
+        transform: scale(0.985);
+      }
+
+      .item button:focus-visible,
+      .action-btn:focus-visible,
+      .search-box input:focus-visible,
+      .add-form input:focus-visible {
+        outline: 3px solid rgba(41, 99, 71, 0.24);
+        outline-offset: 3px;
+      }
+
+      .item-main {
+        display: grid;
+        gap: 6px;
+      }
+
+      .item-name {
+        font-size: 1.3rem;
+        line-height: 1.1;
+        font-weight: 900;
+        letter-spacing: -0.02em;
+      }
+
+      .item-note {
+        font-size: 0.92rem;
+        color: var(--muted);
+      }
+
+      .item-meta {
+        font-size: 0.82rem;
+        color: var(--muted);
+        opacity: 0.92;
+      }
+
+      .toggle,
+      .catalog-state {
+        min-width: 52px;
+        height: 52px;
+        border-radius: 50%;
+        display: grid;
+        place-items: center;
+        background: rgba(41, 99, 71, 0.1);
+        color: var(--fresh);
+        font-size: 1.3rem;
+        font-weight: 900;
+        padding: 0 12px;
+      }
+
+      .catalog-state {
+        min-width: 84px;
+        border-radius: 999px;
+        font-size: 0.92rem;
+      }
+
+      .item.done {
+        opacity: 0.84;
+      }
+
+      .item.done button {
+        background: rgba(247, 240, 228, 0.86);
+      }
+
+      .item.done .item-name {
+        color: var(--done);
+        text-decoration: line-through;
+        text-decoration-thickness: 3px;
+        text-decoration-color: rgba(143, 151, 141, 0.85);
+      }
+
+      .item.done .item-note {
+        color: #8b8f86;
+      }
+
+      .item.done .toggle {
+        background: rgba(217, 111, 50, 0.14);
+        color: var(--warm);
+      }
+
+      .catalog-item.on-list .catalog-state {
+        background: rgba(217, 111, 50, 0.14);
+        color: var(--warm);
+      }
+
+      .empty {
+        margin: 8px 16px 0;
+        padding: 22px 18px;
+        border-radius: var(--radius-md);
+        background: rgba(255, 255, 255, 0.62);
+        color: var(--muted);
+        text-align: center;
+        font-size: 1rem;
+      }
+
+      @media (max-width: 480px) {
+        .app {
+          padding-left: 10px;
+          padding-right: 10px;
+        }
+
+        .shell {
+          border-radius: 28px;
+        }
+
+        .panel-header,
+        .search-wrap,
+        .toolbar,
+        .add-form,
+        .list {
+          padding-left: 12px;
+          padding-right: 12px;
+        }
+
+        .item button {
+          padding: 17px 16px 17px 18px;
+        }
+
+        .item-name {
+          font-size: 1.18rem;
+        }
+
+        .add-form {
+          grid-template-columns: 1fr;
+        }
+      }
+
+      @media (prefers-color-scheme: dark) {
+        :root {
+          --bg: #081120;
+          --bg-accent: #0d213d;
+          --panel: rgba(10, 22, 42, 0.9);
+          --panel-strong: rgba(16, 31, 58, 0.98);
+          --panel-soft: rgba(17, 30, 54, 0.78);
+          --ink: #edf4ff;
+          --muted: #9bb0cf;
+          --fresh: #87d8c7;
+          --fresh-soft: rgba(135, 216, 199, 0.16);
+          --warm: #ffb36e;
+          --warm-soft: rgba(255, 179, 110, 0.14);
+          --done: #7f8da7;
+          --shadow: 0 26px 60px rgba(0, 0, 0, 0.38);
+          --blob-top: rgba(70, 136, 255, 0.22);
+          --blob-bottom: rgba(13, 103, 168, 0.24);
+        }
+
+        body {
+          background:
+            radial-gradient(circle at top right, rgba(129, 180, 255, 0.14), transparent 30%),
+            radial-gradient(circle at bottom left, rgba(20, 116, 194, 0.2), transparent 28%),
+            linear-gradient(160deg, var(--bg) 0%, #07182d 45%, var(--bg-accent) 100%);
+        }
+
+        .shell,
+        .search-box,
+        .add-field,
+        .item button,
+        .empty {
+          border-color: rgba(181, 209, 255, 0.08);
+        }
+
+        .search-box,
+        .add-field,
+        .item button,
+        .empty {
+          box-shadow: 0 18px 32px rgba(0, 0, 0, 0.24);
+        }
+
+        .empty {
+          background: rgba(20, 34, 60, 0.92);
+          color: #90a7cb;
+        }
+
+        .item.done button {
+          background: rgba(12, 24, 44, 0.92);
+        }
+
+        .item.done .item-note {
+          color: #7988a2;
+        }
+
+        .search-box input::placeholder,
+        .add-form input::placeholder {
+          color: #7d94b7;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <main class="app">
+      <section id="shell" class="shell">
+        <div id="flip-stage" class="flip-stage">
+          <div class="flip-card">
+            <section id="shopping-panel" class="panel panel-front" aria-label="Shopping list">
+              <div class="panel-header">
+                <div class="panel-actions">
+                  <button id="clear-shopping" class="action-btn alt" type="button">Clear shopping list</button>
+                  <button id="move-marked" class="action-btn" type="button">Move marked down</button>
+                  <button id="show-catalog" class="action-btn alt" type="button">All items</button>
+                </div>
+              </div>
+
+              <div class="search-wrap">
+                <label class="search-box" for="shopping-search">
+                  <input
+                    id="shopping-search"
+                    type="search"
+                    placeholder="search..."
+                    aria-label="Search shopping list"
+                  />
+                </label>
+              </div>
+
+              <ul id="shopping-list" class="list" aria-live="polite"></ul>
+              <div id="shopping-empty" class="empty" hidden>No matching items.</div>
+            </section>
+
+            <section id="catalog-panel" class="panel panel-back" aria-label="All items">
+              <div class="panel-header">
+                <div class="panel-actions">
+                  <button id="show-shopping" class="action-btn alt" type="button">Shopping list</button>
+                </div>
+              </div>
+
+              <div class="search-wrap">
+                <label class="search-box" for="catalog-search">
+                  <input
+                    id="catalog-search"
+                    type="search"
+                    placeholder="search..."
+                    aria-label="Search all items"
+                  />
+                </label>
+              </div>
+
+              <form id="add-form" class="add-form">
+                <label class="add-field" for="new-item">
+                  <input id="new-item" type="text" placeholder="add item..." aria-label="Add item" />
+                </label>
+                <button class="action-btn" type="submit">Add item</button>
+              </form>
+
+              <ul id="catalog-list" class="list"></ul>
+              <div id="catalog-empty" class="empty" hidden>No matching items.</div>
+            </section>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <script>
+      const STORAGE_KEY = "glist-state-v1";
+      const seedCatalog = [
+        { id: 1, name: "Bananas", note: "6 ripe ones", done: false, purchaseHistory: [] },
+        { id: 2, name: "Whole milk", note: "1 gallon", done: false, purchaseHistory: [] },
+        { id: 3, name: "Eggs", note: "Large, 12 count", done: false, purchaseHistory: [] },
+        { id: 4, name: "Sourdough bread", note: "Bakery section", done: false, purchaseHistory: [] },
+        { id: 5, name: "Spinach", note: "One big tub", done: false, purchaseHistory: [] },
+        { id: 6, name: "Chicken thighs", note: "About 2 pounds", done: false, purchaseHistory: [] },
+        { id: 7, name: "Greek yogurt", note: "Plain", done: false, purchaseHistory: [] },
+        {
+          id: 8,
+          name: "Peanut butter",
+          note: "Crunchy if they have it",
+          done: true,
+          purchaseHistory: [new Date(Date.now() - 8 * 24 * 60 * 60 * 1000).toISOString()]
+        },
+        {
+          id: 9,
+          name: "Apples",
+          note: "Honeycrisp",
+          done: false,
+          purchaseHistory: [new Date(Date.now() - 3 * 24 * 60 * 60 * 1000).toISOString()]
+        },
+        { id: 10, name: "Rice", note: "Jasmine", done: false, purchaseHistory: [] },
+        {
+          id: 11,
+          name: "Pasta sauce",
+          note: "Tomato basil",
+          done: false,
+          purchaseHistory: [new Date(Date.now() - 14 * 24 * 60 * 60 * 1000).toISOString()]
+        },
+        { id: 12, name: "Coffee beans", note: "Medium roast", done: false, purchaseHistory: [] }
+      ];
+      const seedShoppingOrder = [1, 2, 3, 4, 5, 6, 7, 8];
+
+      function safeReadState() {
+        try {
+          const raw = window.localStorage.getItem(STORAGE_KEY);
+          return raw ? JSON.parse(raw) : null;
+        } catch (error) {
+          return null;
+        }
+      }
+
+      function normalizeItem(item) {
+        return {
+          id: Number(item.id),
+          name: String(item.name || "").trim(),
+          note: String(item.note || "").trim(),
+          done: Boolean(item.done),
+          purchaseHistory: Array.isArray(item.purchaseHistory)
+            ? item.purchaseHistory.filter((entry) => !Number.isNaN(Date.parse(entry)))
+            : []
+        };
+      }
+
+      function buildInitialState() {
+        const saved = safeReadState();
+        const savedCatalog = Array.isArray(saved?.catalog) ? saved.catalog.map(normalizeItem) : null;
+        const catalog = savedCatalog && savedCatalog.length > 0 ? savedCatalog : seedCatalog.map(normalizeItem);
+        const validIds = new Set(catalog.map((item) => item.id));
+        const savedOrder = Array.isArray(saved?.shoppingOrder)
+          ? saved.shoppingOrder.map(Number).filter((id) => validIds.has(id))
+          : [];
+        const shoppingOrder = Array.isArray(saved?.shoppingOrder)
+          ? savedOrder
+          : seedShoppingOrder.filter((id) => validIds.has(id));
+        const nextId = Math.max(0, ...catalog.map((item) => item.id)) + 1;
+
+        return { catalog, shoppingOrder, nextId };
+      }
+
+      const state = buildInitialState();
+      const catalog = state.catalog;
+      const itemsById = new Map(catalog.map((item) => [item.id, item]));
+      const shoppingOrder = state.shoppingOrder;
+      const shoppingSet = new Set(shoppingOrder);
+      let nextId = state.nextId;
+
+      const shell = document.getElementById("shell");
+      const flipStage = document.getElementById("flip-stage");
+      const shoppingPanel = document.getElementById("shopping-panel");
+      const catalogPanel = document.getElementById("catalog-panel");
+      const shoppingSearch = document.getElementById("shopping-search");
+      const catalogSearch = document.getElementById("catalog-search");
+      const newItemInput = document.getElementById("new-item");
+      const addForm = document.getElementById("add-form");
+      const clearShoppingButton = document.getElementById("clear-shopping");
+      const moveMarkedButton = document.getElementById("move-marked");
+      const showCatalogButton = document.getElementById("show-catalog");
+      const showShoppingButton = document.getElementById("show-shopping");
+      const shoppingList = document.getElementById("shopping-list");
+      const catalogList = document.getElementById("catalog-list");
+      const shoppingEmpty = document.getElementById("shopping-empty");
+      const catalogEmpty = document.getElementById("catalog-empty");
+
+      const shoppingElements = new Map();
+      const catalogElements = new Map();
+
+      function persistState() {
+        try {
+          window.localStorage.setItem(
+            STORAGE_KEY,
+            JSON.stringify({
+              catalog,
+              shoppingOrder
+            })
+          );
+        } catch (error) {
+          // Ignore storage failures and keep the UI responsive.
+        }
+      }
+
+      function getLastPurchased(item) {
+        return item.purchaseHistory[item.purchaseHistory.length - 1] || null;
+      }
+
+      function formatRelativePurchase(dateString) {
+        if (!dateString) {
+          return "Never purchased";
+        }
+
+        const timestamp = Date.parse(dateString);
+        if (Number.isNaN(timestamp)) {
+          return "Never purchased";
+        }
+
+        const elapsed = Date.now() - timestamp;
+        const minute = 60 * 1000;
+        const hour = 60 * minute;
+        const day = 24 * hour;
+        const week = 7 * day;
+        const month = 30 * day;
+        const year = 365 * day;
+
+        if (elapsed < minute) {
+          return "Last purchased just now";
+        }
+
+        if (elapsed < hour) {
+          const minutes = Math.floor(elapsed / minute);
+          return `Last purchased ${minutes} minute${minutes === 1 ? "" : "s"} ago`;
+        }
+
+        if (elapsed < day) {
+          const hours = Math.floor(elapsed / hour);
+          return `Last purchased ${hours} hour${hours === 1 ? "" : "s"} ago`;
+        }
+
+        if (elapsed < week) {
+          const days = Math.floor(elapsed / day);
+          return `Last purchased ${days} day${days === 1 ? "" : "s"} ago`;
+        }
+
+        if (elapsed < month) {
+          const weeks = Math.floor(elapsed / week);
+          return `Last purchased ${weeks} week${weeks === 1 ? "" : "s"} ago`;
+        }
+
+        if (elapsed < year) {
+          const months = Math.floor(elapsed / month);
+          return `Last purchased ${months} month${months === 1 ? "" : "s"} ago`;
+        }
+
+        const years = Math.floor(elapsed / year);
+        return `Last purchased ${years} year${years === 1 ? "" : "s"} ago`;
+      }
+
+      function syncStageHeight() {
+        const activePanel = shell.classList.contains("is-flipped") ? catalogPanel : shoppingPanel;
+        flipStage.style.height = `${activePanel.scrollHeight}px`;
+      }
+
+      function shoppingItems() {
+        const query = shoppingSearch.value.trim().toLowerCase();
+        return shoppingOrder
+          .map((id) => itemsById.get(id))
+          .filter(Boolean)
+          .filter((item) => {
+            if (!query) {
+              return true;
+            }
+
+            return (
+              item.name.toLowerCase().includes(query) ||
+              item.note.toLowerCase().includes(query)
+            );
+          });
+      }
+
+      function catalogItems() {
+        const query = catalogSearch.value.trim().toLowerCase();
+        return catalog.filter((item) => {
+          if (!query) {
+            return true;
+          }
+
+          return (
+            item.name.toLowerCase().includes(query) ||
+            item.note.toLowerCase().includes(query)
+          );
+        });
+      }
+
+      function refreshShoppingButtons() {
+        clearShoppingButton.disabled = shoppingOrder.length === 0;
+        moveMarkedButton.disabled = !shoppingOrder.some((id) => itemsById.get(id)?.done);
+      }
+
+      function updateShoppingItemElement(item) {
+        const parts = shoppingElements.get(item.id);
+        if (!parts) {
+          return;
+        }
+
+        parts.li.classList.toggle("done", item.done);
+        parts.button.setAttribute("aria-pressed", String(item.done));
+        parts.button.setAttribute(
+          "aria-label",
+          `${item.done ? "Unmark" : "Mark"} ${item.name} ${item.done ? "as not done" : "done"}`
+        );
+        parts.toggle.textContent = item.done ? "↺" : "✓";
+      }
+
+      function updateCatalogItemElement(item) {
+        const parts = catalogElements.get(item.id);
+        if (!parts) {
+          return;
+        }
+
+        const onList = shoppingSet.has(item.id);
+        parts.li.classList.toggle("on-list", onList);
+        parts.button.setAttribute(
+          "aria-label",
+          onList ? `Remove ${item.name} from shopping list` : `Add ${item.name} to shopping list`
+        );
+        parts.note.textContent = item.note || "Tap to add or remove this item";
+        parts.meta.textContent = formatRelativePurchase(getLastPurchased(item));
+        parts.state.textContent = onList ? "Remove" : "Add";
+      }
+
+      function createShoppingItemElement(item) {
+        const li = document.createElement("li");
+        li.className = `item${item.done ? " done" : ""}`;
+
+        const button = document.createElement("button");
+        button.type = "button";
+        button.addEventListener("click", () => {
+          const wasDone = item.done;
+          item.done = !item.done;
+
+          if (!wasDone && item.done) {
+            item.purchaseHistory.push(new Date().toISOString());
+            updateCatalogItemElement(item);
+            persistState();
+          } else if (wasDone && !item.done) {
+            persistState();
+          }
+
+          updateShoppingItemElement(item);
+          refreshShoppingButtons();
+        });
+
+        const main = document.createElement("div");
+        main.className = "item-main";
+
+        const name = document.createElement("div");
+        name.className = "item-name";
+        name.textContent = item.name;
+
+        const note = document.createElement("div");
+        note.className = "item-note";
+        note.textContent = item.note;
+
+        const toggle = document.createElement("div");
+        toggle.className = "toggle";
+        toggle.setAttribute("aria-hidden", "true");
+
+        main.append(name, note);
+        button.append(main, toggle);
+        li.append(button);
+
+        shoppingElements.set(item.id, { li, button, toggle });
+        updateShoppingItemElement(item);
+      }
+
+      function createCatalogItemElement(item) {
+        const li = document.createElement("li");
+        li.className = "item catalog-item";
+
+        const button = document.createElement("button");
+        button.type = "button";
+        button.addEventListener("click", () => {
+          toggleShoppingListItem(item.id);
+        });
+
+        const main = document.createElement("div");
+        main.className = "item-main";
+
+        const name = document.createElement("div");
+        name.className = "item-name";
+        name.textContent = item.name;
+
+        const note = document.createElement("div");
+        note.className = "item-note";
+
+        const meta = document.createElement("div");
+        meta.className = "item-meta";
+
+        const state = document.createElement("div");
+        state.className = "catalog-state";
+        state.setAttribute("aria-hidden", "true");
+
+        main.append(name, note, meta);
+        button.append(main, state);
+        li.append(button);
+
+        catalogElements.set(item.id, { li, button, note, meta, state });
+        updateCatalogItemElement(item);
+      }
+
+      function refreshCatalogPurchaseLabels() {
+        catalog.forEach((item) => {
+          updateCatalogItemElement(item);
+        });
+      }
+
+      function syncShoppingVisibleList() {
+        const nodes = shoppingItems().map((item) => shoppingElements.get(item.id).li);
+        shoppingList.replaceChildren(...nodes);
+        shoppingEmpty.hidden = nodes.length > 0;
+        refreshShoppingButtons();
+        syncStageHeight();
+      }
+
+      function syncCatalogVisibleList() {
+        const nodes = catalogItems().map((item) => catalogElements.get(item.id).li);
+        catalogList.replaceChildren(...nodes);
+        catalogEmpty.hidden = nodes.length > 0;
+        syncStageHeight();
+      }
+
+      function moveItemToTop(id) {
+        const index = shoppingOrder.indexOf(id);
+        if (index <= 0) {
+          return;
+        }
+
+        shoppingOrder.splice(index, 1);
+        shoppingOrder.unshift(id);
+      }
+
+      function removeFromShoppingList(id) {
+        if (!shoppingSet.has(id)) {
+          return;
+        }
+
+        const item = itemsById.get(id);
+        if (!item) {
+          return;
+        }
+
+        item.done = false;
+        shoppingSet.delete(id);
+
+        const index = shoppingOrder.indexOf(id);
+        if (index !== -1) {
+          shoppingOrder.splice(index, 1);
+        }
+
+        updateShoppingItemElement(item);
+        updateCatalogItemElement(item);
+        persistState();
+      }
+
+      function addToShoppingList(id) {
+        const item = itemsById.get(id);
+        if (!item) {
+          return;
+        }
+
+        item.done = false;
+
+        if (shoppingSet.has(id)) {
+          moveItemToTop(id);
+        } else {
+          shoppingSet.add(id);
+          shoppingOrder.unshift(id);
+          if (!shoppingElements.has(id)) {
+            createShoppingItemElement(item);
+          }
+        }
+
+        updateShoppingItemElement(item);
+        updateCatalogItemElement(item);
+        persistState();
+        syncShoppingVisibleList();
+      }
+
+      function toggleShoppingListItem(id) {
+        if (shoppingSet.has(id)) {
+          removeFromShoppingList(id);
+          syncShoppingVisibleList();
+          return;
+        }
+
+        addToShoppingList(id);
+      }
+
+      function setFlipped(isFlipped) {
+        shell.classList.toggle("is-flipped", isFlipped);
+        syncStageHeight();
+      }
+
+      catalog.forEach((item) => {
+        createCatalogItemElement(item);
+
+        if (shoppingSet.has(item.id)) {
+          createShoppingItemElement(item);
+        }
+      });
+
+      syncShoppingVisibleList();
+      syncCatalogVisibleList();
+
+      shoppingSearch.addEventListener("input", syncShoppingVisibleList);
+      catalogSearch.addEventListener("input", syncCatalogVisibleList);
+
+      clearShoppingButton.addEventListener("click", () => {
+        const hasUnmarkedItems = shoppingOrder.some((id) => !itemsById.get(id).done);
+        if (hasUnmarkedItems) {
+          const confirmed = window.confirm("Clear the shopping list? You still have unmarked items.");
+          if (!confirmed) {
+            return;
+          }
+        }
+
+        shoppingOrder.splice(0, shoppingOrder.length);
+        shoppingSet.clear();
+
+        catalog.forEach((item) => {
+          item.done = false;
+          updateCatalogItemElement(item);
+        });
+
+        persistState();
+        syncShoppingVisibleList();
+      });
+
+      moveMarkedButton.addEventListener("click", () => {
+        if (!shoppingOrder.some((id) => itemsById.get(id).done)) {
+          return;
+        }
+
+        const openItems = shoppingOrder.filter((id) => !itemsById.get(id).done);
+        const doneItems = shoppingOrder.filter((id) => itemsById.get(id).done);
+        shoppingOrder.splice(0, shoppingOrder.length, ...openItems, ...doneItems);
+        persistState();
+        syncShoppingVisibleList();
+      });
+
+      showCatalogButton.addEventListener("click", () => {
+        setFlipped(true);
+      });
+
+      showShoppingButton.addEventListener("click", () => {
+        setFlipped(false);
+      });
+
+      addForm.addEventListener("submit", (event) => {
+        event.preventDefault();
+
+        const name = newItemInput.value.trim();
+        if (!name) {
+          return;
+        }
+
+        const item = {
+          id: nextId++,
+          name,
+          note: "",
+          done: false,
+          purchaseHistory: []
+        };
+
+        catalog.unshift(item);
+        itemsById.set(item.id, item);
+        createCatalogItemElement(item);
+        persistState();
+        newItemInput.value = "";
+        syncCatalogVisibleList();
+        newItemInput.focus();
+      });
+
+      window.addEventListener("resize", syncStageHeight);
+      window.setInterval(refreshCatalogPurchaseLabels, 60 * 1000);
+      syncStageHeight();
+    </script>
+  </body>
+</html>
