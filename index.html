@@ -1324,8 +1324,8 @@
       const shoppingElements = new Map();
       const catalogElements = new Map();
       const collapsedGroups = new Set();
-      const SHOPPING_HASH = "#shopping-list";
-      const CATALOG_HASH = "#all-items";
+      const SHOPPING_HASH = "#shopping";
+      const CATALOG_HASH = "#all";
       let isStoreSectionExpanded = stores.length === 0;
       let isCatalogSectionExpanded = true;
       let openStoreMenuItemId = null;
@@ -2015,11 +2015,20 @@
       }
 
       function isCatalogHash(hash) {
-        return hash === CATALOG_HASH;
+        return hash === CATALOG_HASH || hash === "#all-items";
+      }
+
+      function isShoppingHash(hash) {
+        return hash === SHOPPING_HASH || hash === "#shopping-list";
       }
 
       function syncPanelFromLocation() {
-        setFlipped(isCatalogHash(window.location.hash), false);
+        const currentHash = window.location.hash;
+        setFlipped(isCatalogHash(currentHash), false);
+        const normalizedHash = isCatalogHash(currentHash) ? CATALOG_HASH : SHOPPING_HASH;
+        if (currentHash !== normalizedHash) {
+          window.history.replaceState(null, "", `${window.location.pathname}${window.location.search}${normalizedHash}`);
+        }
       }
 
       function navigateToPanel(isFlipped) {
@@ -2055,7 +2064,7 @@
       renderCatalogSection();
       syncShoppingVisibleList();
       syncCatalogVisibleList();
-      if (window.location.hash !== CATALOG_HASH && window.location.hash !== SHOPPING_HASH) {
+      if (!isCatalogHash(window.location.hash) && !isShoppingHash(window.location.hash)) {
         window.history.replaceState(null, "", `${window.location.pathname}${window.location.search}${SHOPPING_HASH}`);
       }
       syncPanelFromLocation();
