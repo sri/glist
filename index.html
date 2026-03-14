@@ -500,6 +500,106 @@
         outline-offset: 3px;
       }
 
+      .quick-add-section {
+        display: grid;
+        gap: 10px;
+      }
+
+      .quick-add-suggestions {
+        display: grid;
+        gap: 8px;
+        padding: 0 16px;
+      }
+
+      .quick-add-suggestions:empty {
+        display: none;
+      }
+
+      .quick-add-item {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        padding: 14px 16px;
+        border: 0;
+        border-radius: var(--radius-lg);
+        background: var(--panel-soft);
+        color: inherit;
+        text-align: left;
+        font: inherit;
+        cursor: pointer;
+        transition: transform 150ms ease, background 150ms ease;
+        -webkit-tap-highlight-color: transparent;
+      }
+
+      .quick-add-item:active {
+        transform: scale(0.985);
+      }
+
+      .quick-add-item:hover {
+        background: var(--fresh-soft);
+      }
+
+      .quick-add-item:focus-visible {
+        outline: 3px solid rgba(41, 99, 71, 0.24);
+        outline-offset: 3px;
+      }
+
+      .quick-add-item-info {
+        flex: 1;
+        min-width: 0;
+      }
+
+      .quick-add-item-name {
+        font-weight: 700;
+        font-size: 1.05rem;
+      }
+
+      .quick-add-item-meta {
+        font-size: 0.85rem;
+        color: var(--muted);
+        margin-top: 2px;
+      }
+
+      .quick-add-item-stores {
+        display: flex;
+        gap: 6px;
+        flex-wrap: wrap;
+      }
+
+      .quick-add-item.on-list {
+        opacity: 0.5;
+      }
+
+      .quick-add-item.on-list .quick-add-item-name::after {
+        content: " (on list)";
+        font-weight: 400;
+        color: var(--muted);
+      }
+
+      .quick-add-new {
+        background: var(--warm-soft);
+        color: var(--warm);
+      }
+
+      .quick-add-new:hover {
+        background: var(--warm-soft);
+        filter: brightness(0.95);
+      }
+
+      .quick-add-new .store-circle {
+        opacity: 0.4;
+        transition: opacity 150ms ease, transform 150ms ease;
+      }
+
+      .quick-add-new .store-circle:hover {
+        opacity: 0.7;
+      }
+
+      .quick-add-new .store-circle.selected {
+        opacity: 1;
+        box-shadow: 0 0 0 3px var(--warm);
+      }
+
       .add-field {
         display: flex;
         align-items: center;
@@ -877,6 +977,7 @@
         .tab-bar,
         .list,
         .shopping-groups,
+        .quick-add-suggestions,
         .bottom-actions {
           padding-left: 12px;
           padding-right: 12px;
@@ -1022,6 +1123,20 @@
                   />
                 </label>
               </div>
+
+              <section id="quick-add-section" class="quick-add-section">
+                <div class="search-wrap">
+                  <label class="search-box" for="quick-add-input">
+                    <input
+                      id="quick-add-input"
+                      type="text"
+                      placeholder="Add item to list..."
+                      aria-label="Add item to shopping list"
+                    />
+                  </label>
+                </div>
+                <div id="quick-add-suggestions" class="quick-add-suggestions"></div>
+              </section>
 
               <div id="shopping-list" class="shopping-groups" aria-live="polite"></div>
               <div id="shopping-empty" class="empty" hidden>No matching items.</div>
@@ -1382,6 +1497,8 @@
       const newItemInput = document.getElementById("new-item");
       const storeSearchInput = document.getElementById("store-search");
       const storeSuggestions = document.getElementById("store-suggestions");
+      const quickAddInput = document.getElementById("quick-add-input");
+      const quickAddSuggestions = document.getElementById("quick-add-suggestions");
       const addForm = document.getElementById("add-form");
       const clearShoppingButton = document.getElementById("clear-shopping");
       const moveMarkedButton = document.getElementById("move-marked");
@@ -1656,6 +1773,150 @@
         renderStoreList();
         refreshCatalogPurchaseLabels();
         persistState();
+      }
+
+      function renderQuickAddSuggestions() {
+        const query = quickAddInput.value.trim().toLowerCase();
+
+        if (!query) {
+          quickAddSuggestions.replaceChildren();
+          return;
+        }
+
+        const fragment = document.createDocumentFragment();
+
+        // Find matching catalog items
+        const matchingItems = catalog
+          .filter((item) => item.name.toLowerCase().includes(query))
+          .slice(0, 5); // Limit to 5 suggestions
+
+        matchingItems.forEach((item) => {
+          const btn = document.createElement("button");
+          btn.type = "button";
+          const onList = shoppingSet.has(item.id);
+          btn.className = `quick-add-item${onList ? " on-list" : ""}`;
+          btn.addEventListener("click", () => {
+            if (!onList) {
+              addToShoppingList(item.id);
+            }
+            quickAddInput.value = "";
+            renderQuickAddSuggestions();
+          });
+
+          const info = document.createElement("div");
+          info.className = "quick-add-item-info";
+
+          const name = document.createElement("div");
+          name.className = "quick-add-item-name";
+          name.textContent = item.name;
+
+          const meta = document.createElement("div");
+          meta.className = "quick-add-item-meta";
+          meta.textContent = item.note || formatRelativePurchase(getLastPurchased(item));
+
+          info.append(name, meta);
+
+          const storeChips = document.createElement("div");
+          storeChips.className = "quick-add-item-stores";
+          getItemStores(item).forEach((store) => {
+            const chip = document.createElement("div");
+            chip.className = "store-circle catalog-store-chip";
+            chip.textContent = store.name.charAt(0).toUpperCase();
+            applyStoreCircleStyle(chip, store);
+            storeChips.append(chip);
+          });
+
+          btn.append(info, storeChips);
+          fragment.append(btn);
+        });
+
+        // Show "Add new item" option if query doesn't exactly match an existing item
+        const exactMatch = catalog.some((item) => item.name.toLowerCase() === query);
+        if (!exactMatch) {
+          const addNewBtn = document.createElement("button");
+          addNewBtn.type = "button";
+          addNewBtn.className = "quick-add-item quick-add-new";
+          addNewBtn.addEventListener("click", () => {
+            quickAddNewItem(quickAddInput.value.trim());
+          });
+
+          const info = document.createElement("div");
+          info.className = "quick-add-item-info";
+
+          const name = document.createElement("div");
+          name.className = "quick-add-item-name";
+          name.textContent = `Add "${quickAddInput.value.trim()}"`;
+
+          const meta = document.createElement("div");
+          meta.className = "quick-add-item-meta";
+          meta.textContent = "Create new item and add to list";
+
+          info.append(name, meta);
+
+          // Show store buttons for quick selection
+          const storeChips = document.createElement("div");
+          storeChips.className = "quick-add-item-stores";
+          sortedStores().forEach((store) => {
+            const chip = document.createElement("button");
+            chip.type = "button";
+            chip.className = "store-circle catalog-store-chip";
+            chip.title = store.name;
+            chip.textContent = store.name.charAt(0).toUpperCase();
+            chip.addEventListener("click", (e) => {
+              e.stopPropagation();
+              chip.classList.toggle("selected");
+            });
+            applyStoreCircleStyle(chip, store);
+            storeChips.append(chip);
+          });
+
+          addNewBtn.append(info, storeChips);
+          fragment.append(addNewBtn);
+        }
+
+        quickAddSuggestions.replaceChildren(fragment);
+      }
+
+      function quickAddNewItem(name) {
+        if (!name) return;
+
+        // Get selected stores from the chips
+        const selectedStoreIds = [];
+        quickAddSuggestions.querySelectorAll(".quick-add-new .store-circle.selected").forEach((chip) => {
+          const storeName = chip.title;
+          const store = stores.find((s) => s.name === storeName);
+          if (store) {
+            selectedStoreIds.push(store.id);
+          }
+        });
+
+        // Create new item
+        const item = {
+          id: nextId++,
+          name,
+          note: "",
+          done: false,
+          purchaseHistory: [],
+          selectedStoreIds
+        };
+
+        catalog.unshift(item);
+        itemsById.set(item.id, item);
+        createCatalogItemElement(item);
+        createShoppingItemElement(item);
+
+        // Add to shopping list
+        shoppingSet.add(item.id);
+        shoppingOrder.unshift(item.id);
+
+        persistState();
+        renderCatalogSection();
+        syncCatalogVisibleList();
+        syncShoppingVisibleList();
+        refreshShoppingButtons();
+
+        quickAddInput.value = "";
+        renderQuickAddSuggestions();
       }
 
       function renderCatalogSection() {
@@ -2267,6 +2528,7 @@
       });
 
       storeSearchInput.addEventListener("input", renderStoreSuggestions);
+      quickAddInput.addEventListener("input", renderQuickAddSuggestions);
 
       clearShoppingButton.addEventListener("click", () => {
         const hasUnmarkedItems = shoppingOrder.some((id) => !itemsById.get(id).done);
