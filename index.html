@@ -131,10 +131,16 @@
 
       .panel-actions {
         display: flex;
+        align-items: center;
         gap: 10px;
         flex-wrap: wrap;
         justify-content: flex-end;
         width: 100%;
+      }
+
+      .panel-actions .search-box {
+        flex: 1 1 auto;
+        min-width: 0;
       }
 
       .search-wrap {
@@ -142,11 +148,18 @@
       }
 
       .bottom-actions {
-        display: flex;
-        justify-content: flex-end;
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
         gap: 10px;
-        flex-wrap: wrap;
         padding: 0 16px;
+      }
+
+      .bottom-actions .action-btn {
+        width: 100%;
+        min-height: 72px;
+        border-radius: var(--radius-lg);
+        box-shadow: 0 12px 26px rgba(90, 72, 40, 0.08);
+        font-size: 1rem;
       }
 
       .search-box {
@@ -606,6 +619,10 @@
           grid-template-columns: 1fr;
         }
 
+        .bottom-actions {
+          grid-template-columns: 1fr;
+        }
+
         .catalog-card {
           grid-template-columns: 1fr;
         }
@@ -656,6 +673,7 @@
         .shopping-row,
         .catalog-main,
         .catalog-action,
+        .bottom-actions .action-btn,
         .empty {
           border-color: rgba(181, 209, 255, 0.08);
         }
@@ -665,6 +683,7 @@
         .shopping-row,
         .catalog-main,
         .catalog-action,
+        .bottom-actions .action-btn,
         .empty {
           box-shadow: 0 18px 32px rgba(0, 0, 0, 0.24);
         }
@@ -723,19 +742,16 @@
             <section id="shopping-panel" class="panel panel-front" aria-label="Shopping list">
               <div class="panel-header">
                 <div class="panel-actions">
+                  <label class="search-box" for="shopping-search">
+                    <input
+                      id="shopping-search"
+                      type="search"
+                      placeholder="search..."
+                      aria-label="Search shopping list"
+                    />
+                  </label>
                   <button id="show-catalog" class="action-btn alt" type="button" aria-label="All items">☰</button>
                 </div>
-              </div>
-
-              <div class="search-wrap">
-                <label class="search-box" for="shopping-search">
-                  <input
-                    id="shopping-search"
-                    type="search"
-                    placeholder="search..."
-                    aria-label="Search shopping list"
-                  />
-                </label>
               </div>
 
               <div id="shopping-list" class="shopping-groups" aria-live="polite"></div>
