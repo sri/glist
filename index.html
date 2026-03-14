@@ -4,1023 +4,119 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
     <title>Grocery List</title>
-    <style>
-      :root {
-        color-scheme: light dark;
-        --bg: #f6f0e3;
-        --bg-accent: #efe0ba;
-        --panel: rgba(255, 251, 244, 0.92);
-        --panel-strong: #fff7eb;
-        --panel-soft: rgba(255, 255, 255, 0.68);
-        --ink: #263127;
-        --muted: #617060;
-        --fresh: #296347;
-        --fresh-soft: rgba(41, 99, 71, 0.12);
-        --warm: #d96f32;
-        --warm-soft: rgba(217, 111, 50, 0.14);
-        --done: #8f978d;
-        --shadow: 0 24px 50px rgba(78, 60, 32, 0.16);
-        --blob-top: rgba(124, 184, 116, 0.22);
-        --blob-bottom: rgba(255, 190, 118, 0.22);
-        --radius-xl: 28px;
-        --radius-lg: 22px;
-        --radius-md: 18px;
-      }
-
-      * {
-        box-sizing: border-box;
-      }
-
-      html,
-      body {
-        margin: 0;
-        min-height: 100%;
-      }
-
-      body {
-        font-family: "Avenir Next Rounded", "Nunito", "Trebuchet MS", sans-serif;
-        color: var(--ink);
-        background:
-          radial-gradient(circle at top right, rgba(255, 255, 255, 0.65), transparent 30%),
-          radial-gradient(circle at bottom left, rgba(217, 111, 50, 0.18), transparent 28%),
-          linear-gradient(160deg, var(--bg) 0%, #f2ebd9 50%, var(--bg-accent) 100%);
-      }
-
-      body::before,
-      body::after {
-        content: "";
-        position: fixed;
-        inset: auto;
-        pointer-events: none;
-        border-radius: 999px;
-        filter: blur(10px);
-        opacity: 0.45;
-      }
-
-      body::before {
-        width: 220px;
-        height: 220px;
-        top: -60px;
-        right: -40px;
-        background: var(--blob-top);
-      }
-
-      body::after {
-        width: 280px;
-        height: 280px;
-        left: -120px;
-        bottom: 8vh;
-        background: var(--blob-bottom);
-      }
-
-      .app {
-        width: min(100%, 640px);
-        margin: 0 auto;
-        padding: max(20px, env(safe-area-inset-top)) 16px max(28px, env(safe-area-inset-bottom));
-      }
-
-      .shell {
-        background: var(--panel);
-        border: 1px solid rgba(255, 255, 255, 0.5);
-        border-radius: 34px;
-        box-shadow: var(--shadow);
-        overflow: hidden;
-        backdrop-filter: blur(10px);
-      }
-
-      .flip-stage {
-        position: relative;
-        overflow: hidden;
-        perspective: 1600px;
-        transition: height 260ms ease;
-      }
-
-      .flip-card {
-        position: relative;
-        height: 100%;
-        transform-style: preserve-3d;
-        transition: transform 520ms cubic-bezier(0.2, 0.8, 0.2, 1);
-      }
-
-      .shell.is-flipped .flip-card {
-        transform: rotateY(180deg);
-      }
-
-      .panel {
-        position: absolute;
-        inset: 0;
-        display: flex;
-        flex-direction: column;
-        gap: 14px;
-        padding-bottom: 20px;
-        backface-visibility: hidden;
-        -webkit-backface-visibility: hidden;
-      }
-
-      .panel-back {
-        transform: rotateY(180deg);
-      }
-
-      .panel-header {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        gap: 12px;
-        padding: 16px 16px 0;
-      }
-
-      .panel-actions {
-        display: flex;
-        align-items: center;
-        gap: 10px;
-        flex-wrap: wrap;
-        justify-content: flex-end;
-        width: 100%;
-      }
-
-      .panel-actions .search-box {
-        flex: 1 1 auto;
-        min-width: 0;
-      }
-
-      .search-wrap {
-        padding: 0 16px;
-      }
-
-      .bottom-actions {
-        display: grid;
-        grid-template-columns: repeat(2, minmax(0, 1fr));
-        gap: 10px;
-        padding: 0 16px;
-      }
-
-      .bottom-actions .action-btn {
-        width: 100%;
-        min-height: 72px;
-        border-radius: var(--radius-lg);
-        box-shadow: 0 12px 26px rgba(90, 72, 40, 0.08);
-        font-size: 1rem;
-      }
-
-      .search-box {
-        display: flex;
-        align-items: center;
-        gap: 12px;
-        padding: 16px 18px;
-        border-radius: var(--radius-xl);
-        background: var(--panel-strong);
-        border: 1px solid rgba(68, 81, 66, 0.08);
-        box-shadow: 0 14px 28px rgba(90, 72, 40, 0.08);
-      }
-
-      .search-box input,
-      .add-form input,
-      .store-form input {
-        width: 100%;
-        border: 0;
-        outline: 0;
-        padding: 0;
-        background: transparent;
-        color: var(--ink);
-        font: inherit;
-        font-size: 1.08rem;
-      }
-
-      .search-box input::placeholder,
-      .add-form input::placeholder,
-      .store-form input::placeholder {
-        color: #7c8677;
-      }
-
-      .toolbar {
-        display: flex;
-        justify-content: flex-end;
-        align-items: center;
-        padding: 0 16px;
-      }
-
-      .action-btn {
-        min-height: 44px;
-        padding: 10px 15px;
-        border: 0;
-        border-radius: 999px;
-        background: var(--warm-soft);
-        color: var(--warm);
-        font: inherit;
-        font-weight: 900;
-        cursor: pointer;
-        transition: transform 150ms ease, opacity 150ms ease, background 150ms ease;
-        -webkit-tap-highlight-color: transparent;
-      }
-
-      .action-btn.alt {
-        background: var(--fresh-soft);
-        color: var(--fresh);
-      }
-
-      .action-btn:active {
-        transform: scale(0.985);
-      }
-
-      .action-btn:disabled {
-        opacity: 0.45;
-        cursor: default;
-      }
-
-      .action-btn:not(:disabled):hover {
-        transform: translateY(-1px);
-      }
-
-      .add-form {
-        display: grid;
-        grid-template-columns: 1fr auto;
-        gap: 10px;
-        padding: 0 16px;
-      }
-
-      .store-section {
-        display: grid;
-        gap: 10px;
-        padding: 0 16px;
-      }
-
-      .catalog-section {
-        display: grid;
-        gap: 10px;
-        padding: 0 16px;
-      }
-
-      .catalog-section-toggle {
-        width: 100%;
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        gap: 12px;
-        padding: 16px 18px;
-        border: 0;
-        border-radius: var(--radius-lg);
-        background: var(--panel-soft);
-        box-shadow: 0 12px 26px rgba(90, 72, 40, 0.08);
-        color: inherit;
-        text-align: left;
-        font: inherit;
-        cursor: pointer;
-      }
-
-      .catalog-section-title {
-        display: flex;
-        align-items: baseline;
-        gap: 8px;
-        flex-wrap: wrap;
-      }
-
-      .catalog-section-title strong {
-        font-size: 1.05rem;
-        letter-spacing: -0.01em;
-      }
-
-      .catalog-section-title span {
-        font-size: 0.85rem;
-        color: var(--muted);
-      }
-
-      .catalog-section-chevron {
-        font-size: 1rem;
-        color: var(--muted);
-      }
-
-      .catalog-section-body {
-        display: grid;
-        gap: 10px;
-      }
-
-      .catalog-section.collapsed .catalog-section-body {
-        display: none;
-      }
-
-      .store-section-toggle {
-        width: 100%;
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        gap: 12px;
-        padding: 16px 18px;
-        border: 0;
-        border-radius: var(--radius-lg);
-        background: var(--panel-soft);
-        box-shadow: 0 12px 26px rgba(90, 72, 40, 0.08);
-        color: inherit;
-        text-align: left;
-        font: inherit;
-        cursor: pointer;
-      }
-
-      .store-section-title {
-        display: flex;
-        align-items: baseline;
-        gap: 8px;
-        flex-wrap: wrap;
-      }
-
-      .store-section-title strong {
-        font-size: 1.05rem;
-        letter-spacing: -0.01em;
-      }
-
-      .store-section-title span {
-        font-size: 0.85rem;
-        color: var(--muted);
-      }
-
-      .store-section-chevron {
-        font-size: 1rem;
-        color: var(--muted);
-      }
-
-      .store-section-body {
-        display: grid;
-        gap: 10px;
-      }
-
-      .store-section.collapsed .store-section-body {
-        display: none;
-      }
-
-      .store-bar {
-        display: flex;
-        align-items: center;
-        gap: 10px;
-        flex-wrap: wrap;
-      }
-
-      .store-list {
-        display: flex;
-        align-items: center;
-        gap: 10px;
-        flex-wrap: wrap;
-      }
-
-      .store-circle {
-        width: 42px;
-        height: 42px;
-        border: 0;
-        border-radius: 50%;
-        display: grid;
-        place-items: center;
-        background: rgba(41, 99, 71, 0.1);
-        color: var(--fresh);
-        font: inherit;
-        font-weight: 900;
-        cursor: pointer;
-        transition: transform 150ms ease, background 150ms ease, color 150ms ease;
-        -webkit-tap-highlight-color: transparent;
-      }
-
-      .store-circle.active {
-        box-shadow: 0 0 0 3px rgba(217, 111, 50, 0.32);
-      }
-
-      .store-circle.add-circle {
-        background: var(--warm-soft);
-        color: var(--warm);
-      }
-
-      .store-circle:active {
-        transform: scale(0.985);
-      }
-
-      .store-pill {
-        width: auto;
-        min-width: 42px;
-        padding: 0 14px;
-        border-radius: 999px;
-      }
-
-      .store-form[hidden] {
-        display: none;
-      }
-
-      .store-form {
-        display: grid;
-        grid-template-columns: 1fr auto;
-        gap: 10px;
-      }
-
-      .add-field {
-        display: flex;
-        align-items: center;
-        min-height: 52px;
-        padding: 0 18px;
-        border-radius: var(--radius-xl);
-        background: var(--panel-strong);
-        border: 1px solid rgba(68, 81, 66, 0.08);
-        box-shadow: 0 14px 28px rgba(90, 72, 40, 0.08);
-      }
-
-      .list {
-        list-style: none;
-        margin: 0;
-        padding: 0 16px;
-      }
-
-      .item {
-        margin-bottom: 12px;
-      }
-
-      .shopping-row,
-      .catalog-main {
-        width: 100%;
-        display: grid;
-        grid-template-columns: 1fr auto;
-        align-items: center;
-        gap: 14px;
-        padding: 18px 18px 18px 20px;
-        border: 0;
-        border-radius: var(--radius-lg);
-        background: var(--panel-soft);
-        box-shadow: 0 12px 26px rgba(90, 72, 40, 0.08);
-        color: inherit;
-        text-align: left;
-        cursor: pointer;
-        transition: transform 150ms ease, box-shadow 150ms ease, background 150ms ease;
-        -webkit-tap-highlight-color: transparent;
-      }
-
-      .shopping-row:active,
-      .catalog-main:active {
-        transform: scale(0.985);
-      }
-
-      .shopping-row:focus-visible,
-      .catalog-main:focus-visible,
-      .catalog-section-toggle:focus-visible,
-      .store-circle:focus-visible,
-      .store-section-toggle:focus-visible,
-      .store-group-icon:focus-visible,
-      .action-btn:focus-visible {
-        outline: 3px solid rgba(41, 99, 71, 0.24);
-        outline-offset: 3px;
-      }
-
-      .shopping-item:not(.done) .shopping-row:hover,
-      .catalog-main:hover,
-      .catalog-section-toggle:hover,
-      .store-section-toggle:hover,
-      .store-circle:hover,
-      .store-group-icon:hover {
-        transform: translateY(-1px);
-      }
-
-      .item-main {
-        display: grid;
-        gap: 6px;
-      }
-
-      .item-name {
-        font-size: 1.3rem;
-        line-height: 1.1;
-        font-weight: 900;
-        letter-spacing: -0.02em;
-      }
-
-      .item-note {
-        font-size: 0.92rem;
-        color: var(--muted);
-      }
-
-      .item-meta {
-        font-size: 0.82rem;
-        color: var(--muted);
-        opacity: 0.92;
-      }
-
-      .toggle {
-        min-width: 52px;
-        height: 52px;
-        border-radius: 50%;
-        display: grid;
-        place-items: center;
-        background: transparent;
-        border: 0;
-        color: transparent;
-        font-size: 1.3rem;
-        font-weight: 900;
-        opacity: 0;
-        padding: 0 12px;
-      }
-
-      .catalog-card {
-        display: grid;
-        gap: 10px;
-        padding: 18px 18px 18px 20px;
-        border-radius: var(--radius-lg);
-        background: var(--panel-soft);
-        border: 1px solid rgba(68, 81, 66, 0.08);
-        box-shadow: 0 12px 26px rgba(90, 72, 40, 0.08);
-      }
-
-      .catalog-main {
-        grid-template-columns: 1fr;
-        padding: 0;
-        border-radius: 0;
-        background: transparent;
-        box-shadow: none;
-      }
-
-      .catalog-footer {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        gap: 8px;
-        flex-wrap: wrap;
-      }
-
-      .catalog-store-tools {
-        display: flex;
-        align-items: center;
-        justify-content: flex-end;
-        gap: 8px;
-        margin-left: auto;
-        flex-wrap: wrap;
-        position: relative;
-      }
-
-      .catalog-store-chips {
-        display: flex;
-        align-items: center;
-        justify-content: flex-end;
-        gap: 6px;
-        flex-wrap: wrap;
-      }
-
-      .catalog-store-chip {
-        width: 32px;
-        height: 32px;
-        padding: 0;
-        border: 0;
-        cursor: pointer;
-        font-size: 0.8rem;
-      }
-
-      .catalog-state {
-        min-height: 34px;
-        padding: 8px 12px;
-        border-radius: 999px;
-        background: rgba(41, 99, 71, 0.1);
-        color: var(--fresh);
-        font-size: 0.86rem;
-        font-weight: 800;
-      }
-
-      .catalog-state.off {
-        background: rgba(98, 112, 96, 0.08);
-        color: var(--muted);
-      }
-
-      .catalog-store-button {
-        max-width: 100%;
-        min-height: 38px;
-        padding: 8px 14px;
-        border: 0;
-        border-radius: 999px;
-        background: rgba(217, 111, 50, 0.14);
-        color: var(--warm);
-        font: inherit;
-        font-size: 0.86rem;
-        font-weight: 800;
-        cursor: pointer;
-        transition: transform 150ms ease, background 150ms ease, color 150ms ease;
-        -webkit-tap-highlight-color: transparent;
-      }
-
-      .catalog-store-menu {
-        position: absolute;
-        top: calc(100% + 8px);
-        right: 0;
-        min-width: 190px;
-        display: grid;
-        gap: 8px;
-        padding: 10px;
-        border-radius: 20px;
-        background: var(--panel-strong);
-        border: 1px solid rgba(68, 81, 66, 0.12);
-        box-shadow: 0 18px 32px rgba(90, 72, 40, 0.16);
-        z-index: 10;
-      }
-
-      .catalog-store-menu[hidden] {
-        display: none;
-      }
-
-      .catalog-store-option {
-        width: 100%;
-        display: flex;
-        align-items: center;
-        gap: 10px;
-        padding: 10px 12px;
-        border: 0;
-        border-radius: 16px;
-        background: rgba(98, 112, 96, 0.08);
-        color: inherit;
-        font: inherit;
-        text-align: left;
-        cursor: pointer;
-        transition: transform 150ms ease, background 150ms ease, color 150ms ease;
-        -webkit-tap-highlight-color: transparent;
-      }
-
-      .catalog-store-option:active {
-        transform: scale(0.985);
-      }
-
-      .catalog-store-option:hover {
-        transform: translateY(-1px);
-      }
-
-      .catalog-store-option.active {
-        background: rgba(217, 111, 50, 0.14);
-        color: var(--warm);
-      }
-
-      .catalog-store-option-label {
-        min-width: 0;
-        overflow: hidden;
-        text-overflow: ellipsis;
-        white-space: nowrap;
-      }
-
-      .shopping-groups {
-        display: grid;
-        gap: 14px;
-        padding: 0 16px;
-      }
-
-      .store-group {
-        border-radius: var(--radius-lg);
-        background: rgba(255, 255, 255, 0.14);
-        border: 1px solid rgba(68, 81, 66, 0.08);
-        overflow: hidden;
-      }
-
-      .store-group-header {
-        display: flex;
-        align-items: center;
-        gap: 10px;
-        padding: 12px 14px 0;
-      }
-
-      .store-group-toggle {
-        width: 100%;
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        gap: 12px;
-        padding: 4px 4px 12px;
-        border: 0;
-        background: transparent;
-        color: inherit;
-        text-align: left;
-        font: inherit;
-        cursor: pointer;
-      }
-
-      .store-group-icon {
-        width: 36px;
-        height: 36px;
-        border: 0;
-        border-radius: 50%;
-        display: grid;
-        place-items: center;
-        background: rgba(41, 99, 71, 0.1);
-        color: var(--fresh);
-        font: inherit;
-        font-size: 1rem;
-        font-weight: 900;
-        cursor: pointer;
-        transition: transform 150ms ease, background 150ms ease, color 150ms ease;
-        -webkit-tap-highlight-color: transparent;
-      }
-
-      .store-group-title {
-        display: flex;
-        align-items: baseline;
-        gap: 8px;
-        flex-wrap: wrap;
-      }
-
-      .store-group-title strong {
-        font-size: 1.05rem;
-        letter-spacing: -0.01em;
-      }
-
-      .store-group-title span {
-        font-size: 0.85rem;
-        color: var(--muted);
-      }
-
-      .store-group-chevron {
-        font-size: 1rem;
-        color: var(--muted);
-      }
-
-      .store-group-body {
-        display: grid;
-        padding: 0 14px 14px;
-      }
-
-      .store-group.collapsed .store-group-body {
-        display: none;
-      }
-
-      .store-group-items {
-        list-style: none;
-        margin: 0;
-        padding: 0;
-        display: grid;
-        gap: 12px;
-      }
-
-      .item.done {
-        opacity: 0.84;
-      }
-
-      .shopping-item.done .shopping-row {
-        background: rgba(247, 240, 228, 0.86);
-      }
-
-      .item.done .item-name {
-        color: var(--done);
-        text-decoration: line-through;
-        text-decoration-thickness: 3px;
-        text-decoration-color: rgba(143, 151, 141, 0.85);
-      }
-
-      .item.done .item-note {
-        color: #8b8f86;
-      }
-
-      .item.done .toggle {
-        background: rgba(217, 111, 50, 0.14);
-        color: var(--warm);
-        opacity: 1;
-      }
-
-      .empty {
-        margin: 8px 16px 0;
-        padding: 22px 18px;
-        border-radius: var(--radius-md);
-        background: rgba(255, 255, 255, 0.62);
-        color: var(--muted);
-        text-align: center;
-        font-size: 1rem;
-      }
-
-      @media (max-width: 480px) {
-        .app {
-          padding-left: 10px;
-          padding-right: 10px;
-        }
-
-        .shell {
-          border-radius: 28px;
-        }
-
-        .panel-header,
-        .catalog-section,
-        .search-wrap,
-        .store-section,
-        .toolbar,
-        .add-form,
-        .list,
-        .shopping-groups,
-        .bottom-actions {
-          padding-left: 12px;
-          padding-right: 12px;
-        }
-
-        .shopping-row,
-        .catalog-card {
-          padding: 17px 16px 17px 18px;
-        }
-
-        .item-name {
-          font-size: 1.18rem;
-        }
-
-        .add-form {
-          grid-template-columns: 1fr;
-        }
-
-        .store-form {
-          grid-template-columns: 1fr;
-        }
-
-        .bottom-actions {
-          grid-template-columns: 1fr;
-        }
-
-        .catalog-card {
-          grid-template-columns: 1fr;
-        }
-      }
-
-      @media (prefers-color-scheme: dark) {
-        :root {
-          --bg: #081120;
-          --bg-accent: #0d213d;
-          --panel: rgba(10, 22, 42, 0.9);
-          --panel-strong: rgba(16, 31, 58, 0.98);
-          --panel-soft: rgba(17, 30, 54, 0.78);
-          --ink: #edf4ff;
-          --muted: #9bb0cf;
-          --fresh: #87d8c7;
-          --fresh-soft: rgba(135, 216, 199, 0.16);
-          --warm: #ffb36e;
-          --warm-soft: rgba(255, 179, 110, 0.14);
-          --done: #7f8da7;
-          --shadow: 0 26px 60px rgba(0, 0, 0, 0.38);
-          --blob-top: rgba(70, 136, 255, 0.22);
-          --blob-bottom: rgba(13, 103, 168, 0.24);
-        }
-
-        body {
-          background:
-            radial-gradient(circle at top right, rgba(129, 180, 255, 0.14), transparent 30%),
-            radial-gradient(circle at bottom left, rgba(20, 116, 194, 0.2), transparent 28%),
-            linear-gradient(160deg, var(--bg) 0%, #07182d 45%, var(--bg-accent) 100%);
-        }
-
-        .shell,
-        .search-box,
-        .add-field,
-        .shopping-row,
-        .catalog-card,
-        .catalog-store-button,
-        .catalog-section-toggle,
-        .bottom-actions .action-btn,
-        .empty {
-          border-color: rgba(181, 209, 255, 0.08);
-        }
-
-        .search-box,
-        .add-field,
-        .shopping-row,
-        .catalog-card,
-        .catalog-store-button,
-        .catalog-section-toggle,
-        .bottom-actions .action-btn,
-        .empty {
-          box-shadow: 0 18px 32px rgba(0, 0, 0, 0.24);
-        }
-
-        .store-circle {
-          background: rgba(130, 169, 224, 0.12);
-          color: #98afd1;
-        }
-
-        .store-circle.active {
-          box-shadow: 0 0 0 3px rgba(135, 216, 199, 0.28);
-        }
-
-        .store-circle.add-circle {
-          background: rgba(255, 179, 110, 0.14);
-          color: var(--warm);
-        }
-
-        .store-group {
-          background: rgba(17, 30, 54, 0.42);
-          border-color: rgba(181, 209, 255, 0.08);
-        }
-
-        .store-group-icon {
-          background: rgba(130, 169, 224, 0.12);
-          color: #98afd1;
-        }
-
-        .empty {
-          background: rgba(20, 34, 60, 0.92);
-          color: #90a7cb;
-        }
-
-        .shopping-item.done .shopping-row {
-          background: rgba(12, 24, 44, 0.92);
-        }
-
-        .item.done .item-note {
-          color: #7988a2;
-        }
-
-        .search-box input::placeholder,
-        .add-form input::placeholder,
-        .store-form input::placeholder {
-          color: #7d94b7;
-        }
-      }
-    </style>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bulma@1.0.4/css/bulma.min.css" />
   </head>
   <body>
-    <main class="app">
-      <section id="shell" class="shell">
-        <div id="flip-stage" class="flip-stage">
-          <div class="flip-card">
-            <section id="shopping-panel" class="panel panel-front" aria-label="Shopping list">
-              <div class="panel-header">
-                <div class="panel-actions">
-                  <label class="search-box" for="shopping-search">
+    <section class="section">
+      <div class="container is-max-desktop">
+        <div id="shell" class="box">
+          <section id="shopping-panel" aria-label="Shopping list">
+            <div class="field has-addons mb-5">
+              <div class="control is-expanded">
+                <input
+                  id="shopping-search"
+                  class="input is-large"
+                  type="search"
+                  placeholder="search..."
+                  aria-label="Search shopping list"
+                />
+              </div>
+              <div class="control">
+                <button id="show-catalog" class="button is-large" type="button" aria-label="All items">⚙</button>
+              </div>
+            </div>
+
+            <div id="shopping-list" aria-live="polite"></div>
+            <article id="shopping-empty" class="message" hidden>
+              <div class="message-body">No matching items.</div>
+            </article>
+
+            <div class="columns is-mobile mt-5">
+              <div class="column">
+                <button id="move-marked" class="button is-fullwidth is-large" type="button">Move check items down</button>
+              </div>
+              <div class="column">
+                <button id="clear-shopping" class="button is-fullwidth is-large" type="button">Clear Items</button>
+              </div>
+            </div>
+          </section>
+
+          <section id="catalog-panel" aria-label="All items" hidden>
+            <div class="level is-mobile mb-5">
+              <div class="level-left">
+                <div>
+                  <p class="title is-4 mb-1">All Items</p>
+                </div>
+              </div>
+              <div class="level-right">
+                <button id="show-shopping" class="button is-large" type="button" aria-label="Shopping list">⌂</button>
+              </div>
+            </div>
+
+            <div class="tabs is-boxed is-fullwidth mb-4">
+              <ul>
+                <li id="stores-tab" class="is-active"><a href="#stores" id="stores-tab-link">Stores</a></li>
+                <li id="items-tab"><a href="#items" id="items-tab-link">Items</a></li>
+              </ul>
+            </div>
+
+            <section id="stores-panel">
+              <p id="store-count" class="is-size-6 has-text-grey mb-4">0 stores</p>
+              <form id="store-form">
+                <div class="field has-addons mb-4">
+                  <div class="control is-expanded">
                     <input
-                      id="shopping-search"
-                      type="search"
-                      placeholder="search..."
-                      aria-label="Search shopping list"
+                      id="new-store"
+                      class="input is-large"
+                      type="text"
+                      placeholder="add store..."
+                      aria-label="Add store"
+                      list="brand-store-suggestions"
                     />
-                  </label>
-                  <button id="show-catalog" class="action-btn alt" type="button" aria-label="All items">☰</button>
+                  </div>
+                  <div class="control">
+                    <button class="button is-large" type="submit">Add store</button>
+                  </div>
                 </div>
-              </div>
-
-              <div id="shopping-list" class="shopping-groups" aria-live="polite"></div>
-              <div id="shopping-empty" class="empty" hidden>No matching items.</div>
-
-              <div class="bottom-actions">
-                <button id="move-marked" class="action-btn" type="button">Move check items down</button>
-                <button id="clear-shopping" class="action-btn alt" type="button">Clear Items</button>
-              </div>
+              </form>
+              <div id="store-list" class="tags are-medium"></div>
+              <datalist id="brand-store-suggestions"></datalist>
             </section>
 
-            <section id="catalog-panel" class="panel panel-back" aria-label="All items">
-              <div class="panel-header">
-                <div class="panel-actions">
-                  <button id="show-shopping" class="action-btn alt" type="button" aria-label="Home">⌂</button>
+            <section id="items-panel" hidden>
+              <p id="catalog-count" class="is-size-6 has-text-grey mb-4">0 items</p>
+              <div class="field mb-4">
+                <div class="control">
+                  <input
+                    id="catalog-search"
+                    class="input is-large"
+                    type="search"
+                    placeholder="search..."
+                    aria-label="Search all items"
+                  />
                 </div>
               </div>
 
-              <section id="store-section" class="store-section" aria-label="Stores">
-                <button id="store-section-toggle" class="store-section-toggle" type="button" aria-expanded="false">
-                  <div class="store-section-title">
-                    <strong>Stores</strong>
-                    <span id="store-count">0 stores</span>
+              <form id="add-form">
+                <div class="field has-addons mb-4">
+                  <div class="control is-expanded">
+                    <input id="new-item" class="input is-large" type="text" placeholder="add item..." aria-label="Add item" />
                   </div>
-                  <div id="store-section-chevron" class="store-section-chevron">+</div>
-                </button>
-
-                <div id="store-section-body" class="store-section-body">
-                  <div class="store-bar">
-                    <div id="store-list" class="store-list"></div>
+                  <div class="control">
+                    <button class="button is-large" type="submit">Add</button>
                   </div>
-
-                  <form id="store-form" class="store-form">
-                    <label class="add-field" for="new-store">
-                      <input
-                        id="new-store"
-                        type="text"
-                        placeholder="add store..."
-                        aria-label="Add store"
-                        list="brand-store-suggestions"
-                      />
-                    </label>
-                    <button class="action-btn alt" type="submit">Add store</button>
-                  </form>
                 </div>
-                <datalist id="brand-store-suggestions"></datalist>
-              </section>
+              </form>
 
-              <section id="catalog-section" class="catalog-section" aria-label="All items">
-                <button id="catalog-section-toggle" class="catalog-section-toggle" type="button" aria-expanded="true">
-                  <div class="catalog-section-title">
-                    <strong>All Items</strong>
-                    <span id="catalog-count">0 items</span>
-                  </div>
-                  <div id="catalog-section-chevron" class="catalog-section-chevron">-</div>
-                </button>
-
-                <div class="catalog-section-body">
-                  <div class="search-wrap">
-                    <label class="search-box" for="catalog-search">
-                      <input
-                        id="catalog-search"
-                        type="search"
-                        placeholder="search..."
-                        aria-label="Search all items"
-                      />
-                    </label>
-                  </div>
-
-                  <form id="add-form" class="add-form">
-                    <label class="add-field" for="new-item">
-                      <input id="new-item" type="text" placeholder="add item..." aria-label="Add item" />
-                    </label>
-                    <button class="action-btn" type="submit">Add</button>
-                  </form>
-
-                  <ul id="catalog-list" class="list"></ul>
-                  <div id="catalog-empty" class="empty" hidden>No matching items.</div>
-                </div>
-              </section>
+              <div id="catalog-list"></div>
+              <article id="catalog-empty" class="message" hidden>
+                <div class="message-body">No matching items.</div>
+              </article>
             </section>
-          </div>
+          </section>
         </div>
-      </section>
-    </main>
+      </div>
+    </section>
 
     <script>
       const STORAGE_KEY = "glist-state-v2";
@@ -1296,19 +392,17 @@
       let nextId = state.nextId;
       let nextStoreId = state.nextStoreId;
 
-      const shell = document.getElementById("shell");
-      const flipStage = document.getElementById("flip-stage");
       const shoppingPanel = document.getElementById("shopping-panel");
       const catalogPanel = document.getElementById("catalog-panel");
       const shoppingSearch = document.getElementById("shopping-search");
       const catalogSearch = document.getElementById("catalog-search");
-      const catalogSection = document.getElementById("catalog-section");
-      const catalogSectionToggle = document.getElementById("catalog-section-toggle");
-      const catalogSectionChevron = document.getElementById("catalog-section-chevron");
+      const storesTab = document.getElementById("stores-tab");
+      const itemsTab = document.getElementById("items-tab");
+      const storesTabLink = document.getElementById("stores-tab-link");
+      const itemsTabLink = document.getElementById("items-tab-link");
+      const storesPanel = document.getElementById("stores-panel");
+      const itemsPanel = document.getElementById("items-panel");
       const catalogCount = document.getElementById("catalog-count");
-      const storeSection = document.getElementById("store-section");
-      const storeSectionToggle = document.getElementById("store-section-toggle");
-      const storeSectionChevron = document.getElementById("store-section-chevron");
       const storeCount = document.getElementById("store-count");
       const newItemInput = document.getElementById("new-item");
       const newStoreInput = document.getElementById("new-store");
@@ -1329,8 +423,7 @@
       const collapsedGroups = new Set();
       const SHOPPING_HASH = "#shopping";
       const CATALOG_HASH = "#all";
-      let isStoreSectionExpanded = stores.length === 0;
-      let isCatalogSectionExpanded = true;
+      let activeCatalogTab = stores.length === 0 ? "stores" : "items";
       let openStoreMenuItemId = null;
 
       function persistState() {
@@ -1346,6 +439,10 @@
         } catch (error) {
           // Ignore storage failures and keep the UI responsive.
         }
+      }
+
+      function getFieldValue(field) {
+        return typeof field?.value === "string" ? field.value : "";
       }
 
       function getLastPurchased(item) {
@@ -1390,17 +487,8 @@
       }
 
       function applyStoreCircleStyle(element, store) {
-        const brand = getStoreBrand(store);
-        if (!brand) {
-          element.style.removeProperty("background");
-          element.style.removeProperty("color");
-          element.style.removeProperty("border-color");
-          return;
-        }
-
-        element.style.background = brand.bg;
-        element.style.color = brand.fg;
-        element.style.borderColor = brand.bg;
+        void element;
+        void store;
       }
 
       function renderStoreSuggestions() {
@@ -1472,13 +560,10 @@
         return `Last purchased ${years} year${years === 1 ? "" : "s"} ago`;
       }
 
-      function syncStageHeight() {
-        const activePanel = shell.classList.contains("is-flipped") ? catalogPanel : shoppingPanel;
-        flipStage.style.height = `${activePanel.scrollHeight}px`;
-      }
+      function syncStageHeight() {}
 
       function shoppingItems() {
-        const query = shoppingSearch.value.trim().toLowerCase();
+        const query = getFieldValue(shoppingSearch).trim().toLowerCase();
         return shoppingOrder
           .map((id) => itemsById.get(id))
           .filter(Boolean)
@@ -1496,7 +581,7 @@
       }
 
       function catalogItems() {
-        const query = catalogSearch.value.trim().toLowerCase();
+        const query = getFieldValue(catalogSearch).trim().toLowerCase();
         return catalog.filter((item) => {
           if (!query) {
             return true;
@@ -1523,33 +608,33 @@
         const fragment = document.createDocumentFragment();
 
         sortedStores().forEach((store) => {
-          const bubble = document.createElement("button");
-          bubble.type = "button";
-          bubble.className = "store-circle store-pill";
-          bubble.title = `Remove ${store.name}`;
-          bubble.setAttribute("aria-label", `Remove ${store.name}`);
-          bubble.textContent = store.name;
-          bubble.addEventListener("click", () => {
+          const button = document.createElement("button");
+          button.type = "button";
+          button.className = "button is-light is-medium mr-2 mb-2";
+          button.title = `Remove ${store.name}`;
+          button.setAttribute("aria-label", `Remove ${store.name}`);
+          button.textContent = store.name;
+          button.addEventListener("click", () => {
             removeStore(store.id);
           });
-          applyStoreCircleStyle(bubble, store);
-          fragment.append(bubble);
+          applyStoreCircleStyle(button, store);
+          fragment.append(button);
         });
 
         storeList.replaceChildren(fragment);
-        storeSection.classList.toggle("collapsed", !isStoreSectionExpanded);
-        storeSectionToggle.setAttribute("aria-expanded", String(isStoreSectionExpanded));
-        storeSectionChevron.textContent = isStoreSectionExpanded ? "-" : "+";
         storeCount.textContent = `${stores.length} store${stores.length === 1 ? "" : "s"}`;
-        syncStageHeight();
       }
 
       function renderCatalogSection() {
-        catalogSection.classList.toggle("collapsed", !isCatalogSectionExpanded);
-        catalogSectionToggle.setAttribute("aria-expanded", String(isCatalogSectionExpanded));
-        catalogSectionChevron.textContent = isCatalogSectionExpanded ? "-" : "+";
         catalogCount.textContent = `${catalog.length} item${catalog.length === 1 ? "" : "s"}`;
-        syncStageHeight();
+      }
+
+      function setCatalogTab(nextTab) {
+        activeCatalogTab = nextTab === "stores" ? "stores" : "items";
+        storesTab.classList.toggle("is-active", activeCatalogTab === "stores");
+        itemsTab.classList.toggle("is-active", activeCatalogTab === "items");
+        storesPanel.hidden = activeCatalogTab !== "stores";
+        itemsPanel.hidden = activeCatalogTab !== "items";
       }
 
       function updateShoppingItemElement(item) {
@@ -1560,17 +645,17 @@
 
         const primaryStoreId = getPrimaryStoreId(item);
 
-        parts.li.classList.toggle("done", item.done);
         parts.button.setAttribute("aria-pressed", String(item.done));
         parts.button.setAttribute(
           "aria-label",
           `${item.done ? "Unmark" : "Mark"} ${item.name} ${item.done ? "as not done" : "done"}`
         );
-        parts.toggle.textContent = item.done ? "↺" : "";
+        parts.card.classList.toggle("has-background-light", item.done);
         parts.note.hidden = !item.note;
         parts.note.textContent = item.note;
         parts.store.hidden = primaryStoreId === null;
         parts.store.textContent = primaryStoreId === null ? "" : `Buy at ${getStoreName(primaryStoreId)}`;
+        parts.status.hidden = !item.done;
       }
 
       function updateCatalogItemElement(item) {
@@ -1580,7 +665,6 @@
         }
 
         const onList = shoppingSet.has(item.id);
-        parts.li.classList.toggle("on-list", onList);
         parts.mainButton.setAttribute(
           "aria-label",
           onList ? `Remove ${item.name} from shopping list` : `Add ${item.name} to shopping list`
@@ -1588,20 +672,20 @@
         parts.note.hidden = !item.note;
         parts.note.textContent = item.note;
         parts.meta.textContent = formatRelativePurchase(getLastPurchased(item));
-        parts.state.classList.toggle("off", !onList);
+        parts.state.className = `tag is-medium ${onList ? "is-info" : "is-light"}`;
         parts.state.textContent = onList ? "On list" : "Add to list";
         parts.storeButton.textContent = "Stores";
         parts.storeButton.title = `Choose stores for ${item.name}`;
-        parts.storeMenu.hidden = openStoreMenuItemId !== item.id || stores.length === 0;
+        parts.storeDropdown.classList.toggle("is-active", openStoreMenuItemId === item.id && stores.length > 0);
 
         const chips = document.createDocumentFragment();
         getItemStores(item).forEach((store) => {
           const chip = document.createElement("button");
           chip.type = "button";
-          chip.className = "store-circle catalog-store-chip";
+          chip.className = "button is-small is-light mr-2 mb-2";
           chip.title = `Remove ${store.name} from ${item.name}`;
           chip.setAttribute("aria-label", `Remove ${store.name} from ${item.name}`);
-          chip.textContent = store.name.charAt(0).toUpperCase();
+          chip.textContent = store.name;
           chip.addEventListener("click", (event) => {
             event.stopPropagation();
             toggleItemStoreSelection(item.id, store.id);
@@ -1615,37 +699,24 @@
         sortedStores().forEach((store) => {
           const option = document.createElement("button");
           option.type = "button";
-          option.className = `catalog-store-option${getItemStoreIds(item).includes(store.id) ? " active" : ""}`;
+          option.className = `dropdown-item${getItemStoreIds(item).includes(store.id) ? " is-active" : ""}`;
           option.setAttribute("aria-pressed", String(getItemStoreIds(item).includes(store.id)));
           option.addEventListener("click", (event) => {
             event.stopPropagation();
             toggleItemStoreSelection(item.id, store.id);
           });
-
-          const icon = document.createElement("div");
-          icon.className = "store-circle catalog-store-chip";
-          icon.setAttribute("aria-hidden", "true");
-          icon.textContent = store.name.charAt(0).toUpperCase();
-          applyStoreCircleStyle(icon, store);
-
-          const label = document.createElement("div");
-          label.className = "catalog-store-option-label";
-          label.textContent = store.name;
-
-          option.append(icon, label);
+          option.textContent = `${getItemStoreIds(item).includes(store.id) ? "✓ " : ""}${store.name}`;
           menuOptions.append(option);
         });
-        parts.storeMenu.replaceChildren(menuOptions);
+        parts.storeMenuContent.replaceChildren(menuOptions);
       }
 
       function createShoppingItemElement(item) {
-        const li = document.createElement("li");
-        li.className = `item shopping-item${item.done ? " done" : ""}`;
-
-        const button = document.createElement("button");
-        button.className = "shopping-row";
-        button.type = "button";
-        button.addEventListener("click", () => {
+        const card = document.createElement("button");
+        card.type = "button";
+        card.className = "box p-5 mb-4 has-text-left";
+        card.style.width = "100%";
+        card.addEventListener("click", () => {
           const wasDone = item.done;
           item.done = !item.done;
 
@@ -1661,78 +732,87 @@
           refreshShoppingButtons();
         });
 
-        const main = document.createElement("div");
-        main.className = "item-main";
+        const row = document.createElement("div");
+        row.className = "is-flex is-justify-content-space-between is-align-items-center";
 
-        const name = document.createElement("div");
-        name.className = "item-name";
+        const main = document.createElement("div");
+        main.className = "pr-4";
+
+        const name = document.createElement("p");
+        name.className = "title is-2 mb-3 has-text-left";
         name.textContent = item.name;
 
-        const note = document.createElement("div");
-        note.className = "item-note";
+        const note = document.createElement("p");
+        note.className = "subtitle is-4 mb-2 has-text-left";
 
-        const store = document.createElement("div");
-        store.className = "item-meta";
+        const store = document.createElement("p");
+        store.className = "is-size-4 has-text-grey has-text-left";
 
-        const toggle = document.createElement("div");
-        toggle.className = "toggle";
-        toggle.setAttribute("aria-hidden", "true");
+        const status = document.createElement("span");
+        status.className = "tag is-large is-success";
+        status.textContent = "Done";
 
         main.append(name, note, store);
-        button.append(main, toggle);
-        li.append(button);
+        row.append(main, status);
+        card.append(row);
 
-        shoppingElements.set(item.id, { li, button, note, store, toggle });
+        shoppingElements.set(item.id, { card, button: card, note, store, status });
         updateShoppingItemElement(item);
       }
 
       function createCatalogItemElement(item) {
-        const li = document.createElement("li");
-        li.className = "item catalog-item";
+        const card = document.createElement("article");
+        card.className = "card mb-4";
 
-        const card = document.createElement("div");
-        card.className = "catalog-card";
+        const cardContent = document.createElement("div");
+        cardContent.className = "card-content";
 
         const mainButton = document.createElement("button");
-        mainButton.className = "catalog-main";
+        mainButton.className = "button is-white p-0 has-text-left";
         mainButton.type = "button";
+        mainButton.style.width = "100%";
         mainButton.addEventListener("click", () => {
           toggleShoppingListItem(item.id);
         });
 
         const main = document.createElement("div");
-        main.className = "item-main";
+        main.className = "has-text-left";
 
-        const name = document.createElement("div");
-        name.className = "item-name";
+        const name = document.createElement("p");
+        name.className = "title is-3 mb-3";
         name.textContent = item.name;
 
-        const note = document.createElement("div");
-        note.className = "item-note";
+        const note = document.createElement("p");
+        note.className = "subtitle is-5 mb-2";
 
-        const meta = document.createElement("div");
-        meta.className = "item-meta";
+        const meta = document.createElement("p");
+        meta.className = "is-size-6 has-text-grey";
 
         const footer = document.createElement("div");
-        footer.className = "catalog-footer";
+        footer.className = "is-flex is-justify-content-space-between is-align-items-flex-start is-flex-wrap-wrap mt-4";
 
-        const state = document.createElement("div");
-        state.className = "catalog-state";
+        const state = document.createElement("span");
+        state.className = "tag is-medium";
 
         const storeTools = document.createElement("div");
-        storeTools.className = "catalog-store-tools";
+        storeTools.className = "is-flex is-align-items-flex-start is-flex-wrap-wrap is-justify-content-flex-end";
 
         const storeChips = document.createElement("div");
-        storeChips.className = "catalog-store-chips";
+        storeChips.className = "buttons are-small mb-0 mr-2";
+
+        const storeDropdown = document.createElement("div");
+        storeDropdown.className = "dropdown is-right";
+
+        const storeTrigger = document.createElement("div");
+        storeTrigger.className = "dropdown-trigger";
 
         const storeButton = document.createElement("button");
-        storeButton.className = "catalog-store-button";
+        storeButton.className = "button is-small";
         storeButton.type = "button";
         storeButton.addEventListener("click", (event) => {
           event.stopPropagation();
           if (stores.length === 0) {
-            isStoreSectionExpanded = true;
-            renderStoreList();
+            setCatalogTab("stores");
             newStoreInput.focus();
             return;
           }
@@ -1741,28 +821,35 @@
         });
 
         const storeMenu = document.createElement("div");
-        storeMenu.className = "catalog-store-menu";
-        storeMenu.hidden = true;
-        storeMenu.addEventListener("click", (event) => {
+        storeMenu.className = "dropdown-menu";
+        storeMenu.setAttribute("role", "menu");
+
+        const storeMenuContent = document.createElement("div");
+        storeMenuContent.className = "dropdown-content";
+        storeMenuContent.addEventListener("click", (event) => {
           event.stopPropagation();
         });
 
-        storeTools.append(storeChips, storeButton, storeMenu);
+        storeTrigger.append(storeButton);
+        storeMenu.append(storeMenuContent);
+        storeDropdown.append(storeTrigger, storeMenu);
+        storeTools.append(storeChips, storeDropdown);
         footer.append(state, storeTools);
         main.append(name, note, meta);
         mainButton.append(main);
-        card.append(mainButton, footer);
-        li.append(card);
+        cardContent.append(mainButton, footer);
+        card.append(cardContent);
 
         catalogElements.set(item.id, {
-          li,
+          card,
           mainButton,
           note,
           meta,
           state,
           storeChips,
+          storeDropdown,
           storeButton,
-          storeMenu
+          storeMenuContent
         });
         updateCatalogItemElement(item);
       }
@@ -1818,15 +905,15 @@
       function syncShoppingVisibleList() {
         const groups = groupedShoppingItems();
         const nodes = groups.map((group) => {
-          const section = document.createElement("section");
-          section.className = `store-group${collapsedGroups.has(group.key) ? " collapsed" : ""}`;
+          const section = document.createElement("article");
+          section.className = "card mb-5";
 
-          const header = document.createElement("div");
-          header.className = "store-group-header";
+          const header = document.createElement("header");
+          header.className = "card-header";
 
           const toggle = document.createElement("button");
           toggle.type = "button";
-          toggle.className = "store-group-toggle";
+          toggle.className = "card-header-title";
           toggle.addEventListener("click", () => {
             if (collapsedGroups.has(group.key)) {
               collapsedGroups.delete(group.key);
@@ -1836,25 +923,22 @@
             syncShoppingVisibleList();
           });
 
-          const title = document.createElement("div");
-          title.className = "store-group-title";
-
           const strong = document.createElement("strong");
           strong.textContent = group.name;
 
           const count = document.createElement("span");
+          count.className = "ml-3 has-text-grey";
           count.textContent = `${group.items.length} item${group.items.length === 1 ? "" : "s"}`;
 
-          const chevron = document.createElement("div");
-          chevron.className = "store-group-chevron";
+          const chevron = document.createElement("span");
+          chevron.className = "ml-auto";
           chevron.textContent = collapsedGroups.has(group.key) ? "+" : "-";
 
-          title.append(strong, count);
-          toggle.append(title, chevron);
+          toggle.append(strong, count, chevron);
 
           const moveButton = document.createElement("button");
           moveButton.type = "button";
-          moveButton.className = "store-group-icon";
+          moveButton.className = "card-header-icon";
           moveButton.textContent = "↑";
           moveButton.title = `Move ${group.name} to top`;
           moveButton.setAttribute("aria-label", `Move ${group.name} to top`);
@@ -1865,11 +949,11 @@
           header.append(toggle, moveButton);
 
           const body = document.createElement("div");
-          body.className = "store-group-body";
+          body.className = "card-content";
+          body.hidden = collapsedGroups.has(group.key);
 
-          const items = document.createElement("ul");
-          items.className = "store-group-items";
-          items.append(...group.items.map((item) => shoppingElements.get(item.id).li));
+          const items = document.createElement("div");
+          items.append(...group.items.map((item) => shoppingElements.get(item.id).card));
 
           body.append(items);
           section.append(header, body);
@@ -1883,10 +967,9 @@
       }
 
       function syncCatalogVisibleList() {
-        const nodes = catalogItems().map((item) => catalogElements.get(item.id).li);
+        const nodes = catalogItems().map((item) => catalogElements.get(item.id).card);
         catalogList.replaceChildren(...nodes);
         catalogEmpty.hidden = nodes.length > 0;
-        syncStageHeight();
       }
 
       function moveItemToTop(id) {
@@ -1940,7 +1023,6 @@
           }
         }
 
-        syncStageHeight();
       }
 
       function removeStore(storeId) {
@@ -1957,10 +1039,9 @@
         });
 
         if (stores.length === 0) {
-          isStoreSectionExpanded = true;
-          setOpenStoreMenu(null);
+          setCatalogTab("stores");
         }
-
+        setOpenStoreMenu(null);
         renderStoreList();
         persistState();
         syncShoppingVisibleList();
@@ -2051,12 +1132,12 @@
 
       function setFlipped(isFlipped, updateUrl = true) {
         setOpenStoreMenu(null);
-        shell.classList.toggle("is-flipped", isFlipped);
+        shoppingPanel.hidden = isFlipped;
+        catalogPanel.hidden = !isFlipped;
         if (updateUrl) {
           navigateToPanel(isFlipped);
           return;
         }
-        syncStageHeight();
       }
 
       catalog.forEach((item) => {
@@ -2072,6 +1153,7 @@
       renderCatalogSection();
       syncShoppingVisibleList();
       syncCatalogVisibleList();
+      setCatalogTab(activeCatalogTab);
       if (!isCatalogHash(window.location.hash) && !isShoppingHash(window.location.hash)) {
         window.history.replaceState(null, "", `${window.location.pathname}${window.location.search}${SHOPPING_HASH}`);
       }
@@ -2086,23 +1168,20 @@
         }
       });
 
-      storeSectionToggle.addEventListener("click", () => {
-        isStoreSectionExpanded = !isStoreSectionExpanded;
-        renderStoreList();
-        if (isStoreSectionExpanded) {
-          newStoreInput.focus();
-        }
+      storesTabLink.addEventListener("click", (event) => {
+        event.preventDefault();
+        setCatalogTab("stores");
       });
 
-      catalogSectionToggle.addEventListener("click", () => {
-        isCatalogSectionExpanded = !isCatalogSectionExpanded;
-        renderCatalogSection();
+      itemsTabLink.addEventListener("click", (event) => {
+        event.preventDefault();
+        setCatalogTab("items");
       });
 
       storeForm.addEventListener("submit", (event) => {
         event.preventDefault();
 
-        const rawName = newStoreInput.value.trim();
+        const rawName = getFieldValue(newStoreInput).trim();
         if (!rawName) {
           return;
         }
@@ -2126,7 +1205,7 @@
           stores.push(store);
         }
 
-        isStoreSectionExpanded = true;
+        setCatalogTab("stores");
         renderStoreList();
         refreshCatalogPurchaseLabels();
         persistState();
@@ -2178,7 +1257,7 @@
       addForm.addEventListener("submit", (event) => {
         event.preventDefault();
 
-        const name = newItemInput.value.trim();
+        const name = getFieldValue(newItemInput).trim();
         if (!name) {
           return;
         }
@@ -2197,6 +1276,7 @@
         createCatalogItemElement(item);
         persistState();
         renderCatalogSection();
+        setCatalogTab("items");
         newItemInput.value = "";
         syncCatalogVisibleList();
         newItemInput.focus();
@@ -2204,7 +1284,6 @@
 
       window.addEventListener("resize", syncStageHeight);
       window.setInterval(refreshCatalogPurchaseLabels, 60 * 1000);
-      syncStageHeight();
     </script>
   </body>
 </html>
