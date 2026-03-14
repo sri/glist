@@ -500,7 +500,7 @@
       }
 
       .store-group-add {
-        padding: 0 14px 14px;
+        margin-top: 8px;
       }
 
       .store-group-add-btn {
@@ -2355,8 +2355,10 @@
             addSection.append(addBtn);
           }
 
+          body.append(addSection);
+
           section.setAttribute("data-store-key", group.key);
-          section.append(header, body, addSection);
+          section.append(header, body);
           return section;
         });
 
