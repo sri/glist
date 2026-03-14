@@ -535,6 +535,30 @@
         flex-wrap: wrap;
       }
 
+      .catalog-store-tools {
+        display: flex;
+        align-items: center;
+        justify-content: flex-end;
+        gap: 8px;
+        margin-left: auto;
+        flex-wrap: wrap;
+        position: relative;
+      }
+
+      .catalog-store-chips {
+        display: flex;
+        align-items: center;
+        justify-content: flex-end;
+        gap: 6px;
+        flex-wrap: wrap;
+      }
+
+      .catalog-store-chip {
+        width: 32px;
+        height: 32px;
+        font-size: 0.8rem;
+      }
+
       .catalog-state {
         min-height: 34px;
         padding: 8px 12px;
@@ -564,6 +588,62 @@
         cursor: pointer;
         transition: transform 150ms ease, background 150ms ease, color 150ms ease;
         -webkit-tap-highlight-color: transparent;
+      }
+
+      .catalog-store-menu {
+        position: absolute;
+        top: calc(100% + 8px);
+        right: 0;
+        min-width: 190px;
+        display: grid;
+        gap: 8px;
+        padding: 10px;
+        border-radius: 20px;
+        background: var(--panel-strong);
+        border: 1px solid rgba(68, 81, 66, 0.12);
+        box-shadow: 0 18px 32px rgba(90, 72, 40, 0.16);
+        z-index: 10;
+      }
+
+      .catalog-store-menu[hidden] {
+        display: none;
+      }
+
+      .catalog-store-option {
+        width: 100%;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        padding: 10px 12px;
+        border: 0;
+        border-radius: 16px;
+        background: rgba(98, 112, 96, 0.08);
+        color: inherit;
+        font: inherit;
+        text-align: left;
+        cursor: pointer;
+        transition: transform 150ms ease, background 150ms ease, color 150ms ease;
+        -webkit-tap-highlight-color: transparent;
+      }
+
+      .catalog-store-option:active {
+        transform: scale(0.985);
+      }
+
+      .catalog-store-option:hover {
+        transform: translateY(-1px);
+      }
+
+      .catalog-store-option.active {
+        background: rgba(217, 111, 50, 0.14);
+        color: var(--warm);
+      }
+
+      .catalog-store-option-label {
+        min-width: 0;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
       }
 
       .shopping-groups {
@@ -943,20 +1023,20 @@
       const STORAGE_KEY = "glist-state-v2";
       const LEGACY_STORAGE_KEY = "glist-state-v1";
       const seedCatalog = [
-        { id: 1, name: "Bananas", note: "6 ripe ones", done: false, purchaseHistory: [], preferredStoreId: null },
-        { id: 2, name: "Whole milk", note: "1 gallon", done: false, purchaseHistory: [], preferredStoreId: null },
-        { id: 3, name: "Eggs", note: "Large, 12 count", done: false, purchaseHistory: [], preferredStoreId: null },
-        { id: 4, name: "Sourdough bread", note: "Bakery section", done: false, purchaseHistory: [], preferredStoreId: null },
-        { id: 5, name: "Spinach", note: "One big tub", done: false, purchaseHistory: [], preferredStoreId: null },
-        { id: 6, name: "Chicken thighs", note: "About 2 pounds", done: false, purchaseHistory: [], preferredStoreId: null },
-        { id: 7, name: "Greek yogurt", note: "Plain", done: false, purchaseHistory: [], preferredStoreId: null },
+        { id: 1, name: "Bananas", note: "6 ripe ones", done: false, purchaseHistory: [], selectedStoreIds: [] },
+        { id: 2, name: "Whole milk", note: "1 gallon", done: false, purchaseHistory: [], selectedStoreIds: [] },
+        { id: 3, name: "Eggs", note: "Large, 12 count", done: false, purchaseHistory: [], selectedStoreIds: [] },
+        { id: 4, name: "Sourdough bread", note: "Bakery section", done: false, purchaseHistory: [], selectedStoreIds: [] },
+        { id: 5, name: "Spinach", note: "One big tub", done: false, purchaseHistory: [], selectedStoreIds: [] },
+        { id: 6, name: "Chicken thighs", note: "About 2 pounds", done: false, purchaseHistory: [], selectedStoreIds: [] },
+        { id: 7, name: "Greek yogurt", note: "Plain", done: false, purchaseHistory: [], selectedStoreIds: [] },
         {
           id: 8,
           name: "Peanut butter",
           note: "Crunchy if they have it",
           done: true,
           purchaseHistory: [new Date(Date.now() - 8 * 24 * 60 * 60 * 1000).toISOString()],
-          preferredStoreId: null
+          selectedStoreIds: []
         },
         {
           id: 9,
@@ -964,18 +1044,18 @@
           note: "Honeycrisp",
           done: false,
           purchaseHistory: [new Date(Date.now() - 3 * 24 * 60 * 60 * 1000).toISOString()],
-          preferredStoreId: null
+          selectedStoreIds: []
         },
-        { id: 10, name: "Rice", note: "Jasmine", done: false, purchaseHistory: [], preferredStoreId: null },
+        { id: 10, name: "Rice", note: "Jasmine", done: false, purchaseHistory: [], selectedStoreIds: [] },
         {
           id: 11,
           name: "Pasta sauce",
           note: "Tomato basil",
           done: false,
           purchaseHistory: [new Date(Date.now() - 14 * 24 * 60 * 60 * 1000).toISOString()],
-          preferredStoreId: null
+          selectedStoreIds: []
         },
-        { id: 12, name: "Coffee beans", note: "Medium roast", done: false, purchaseHistory: [], preferredStoreId: null }
+        { id: 12, name: "Coffee beans", note: "Medium roast", done: false, purchaseHistory: [], selectedStoreIds: [] }
       ];
       const seedShoppingOrder = [1, 2, 3, 4, 5, 6, 7, 8];
       const seedStores = [];
@@ -1101,7 +1181,19 @@
         }
       }
 
+      function normalizeStoreIds(storeIds) {
+        return [...new Set(storeIds.map(Number).filter((id) => !Number.isNaN(id)))];
+      }
+
       function normalizeItem(item) {
+        const selectedStoreIds = Array.isArray(item.selectedStoreIds)
+          ? normalizeStoreIds(item.selectedStoreIds)
+          : item.preferredStoreId === null || item.preferredStoreId === undefined
+            ? []
+            : Number.isNaN(Number(item.preferredStoreId))
+              ? []
+              : [Number(item.preferredStoreId)];
+
         return {
           id: Number(item.id),
           name: String(item.name || "").trim(),
@@ -1110,12 +1202,7 @@
           purchaseHistory: Array.isArray(item.purchaseHistory)
             ? item.purchaseHistory.filter((entry) => !Number.isNaN(Date.parse(entry)))
             : [],
-          preferredStoreId:
-            item.preferredStoreId === null || item.preferredStoreId === undefined
-              ? null
-              : Number.isNaN(Number(item.preferredStoreId))
-                ? null
-                : Number(item.preferredStoreId)
+          selectedStoreIds
         };
       }
 
@@ -1182,9 +1269,7 @@
           : seedStores.map(normalizeStore);
         const validStoreIds = new Set(stores.map((store) => store.id));
         catalog.forEach((item) => {
-          if (item.preferredStoreId !== null && !validStoreIds.has(item.preferredStoreId)) {
-            item.preferredStoreId = null;
-          }
+          item.selectedStoreIds = item.selectedStoreIds.filter((storeId) => validStoreIds.has(storeId));
         });
         const validIds = new Set(catalog.map((item) => item.id));
         const savedOrder = Array.isArray(saved?.shoppingOrder)
@@ -1241,6 +1326,7 @@
       const collapsedGroups = new Set();
       let isStoreSectionExpanded = stores.length === 0;
       let isCatalogSectionExpanded = true;
+      let openStoreMenuItemId = null;
 
       function persistState() {
         try {
@@ -1271,6 +1357,23 @@
 
       function getStoreById(storeId) {
         return stores.find((store) => store.id === storeId) || null;
+      }
+
+      function getItemStoreIds(item) {
+        return Array.isArray(item.selectedStoreIds) ? item.selectedStoreIds : [];
+      }
+
+      function getPrimaryStoreId(item) {
+        return getItemStores(item)[0]?.id ?? null;
+      }
+
+      function getItemStores(item) {
+        const storeIdSet = new Set(getItemStoreIds(item));
+        return sortedStores().filter((store) => storeIdSet.has(store.id));
+      }
+
+      function getItemStoreNames(item) {
+        return getItemStores(item).map((store) => store.name);
       }
 
       function getStoreBrand(store) {
@@ -1382,7 +1485,7 @@
             return (
               item.name.toLowerCase().includes(query) ||
               item.note.toLowerCase().includes(query) ||
-              getStoreName(item.preferredStoreId).toLowerCase().includes(query)
+              getItemStoreNames(item).some((storeName) => storeName.toLowerCase().includes(query))
             );
           });
       }
@@ -1397,7 +1500,7 @@
           return (
             item.name.toLowerCase().includes(query) ||
             item.note.toLowerCase().includes(query) ||
-            getStoreName(item.preferredStoreId).toLowerCase().includes(query)
+            getItemStoreNames(item).some((storeName) => storeName.toLowerCase().includes(query))
           );
         });
       }
@@ -1405,11 +1508,6 @@
       function refreshShoppingButtons() {
         clearShoppingButton.disabled = shoppingOrder.length === 0;
         moveMarkedButton.disabled = !shoppingOrder.some((id) => itemsById.get(id)?.done);
-      }
-
-      function storeLabel(item) {
-        const preferredStoreName = getStoreName(item.preferredStoreId);
-        return preferredStoreName ? `Store: ${preferredStoreName}` : "Store: Any store";
       }
 
       function sortedStores() {
@@ -1420,11 +1518,15 @@
         const fragment = document.createDocumentFragment();
 
         sortedStores().forEach((store) => {
-          const bubble = document.createElement("div");
+          const bubble = document.createElement("button");
+          bubble.type = "button";
           bubble.className = "store-circle store-pill";
-          bubble.title = store.name;
-          bubble.setAttribute("aria-label", store.name);
+          bubble.title = `Remove ${store.name}`;
+          bubble.setAttribute("aria-label", `Remove ${store.name}`);
           bubble.textContent = store.name;
+          bubble.addEventListener("click", () => {
+            removeStore(store.id);
+          });
           applyStoreCircleStyle(bubble, store);
           fragment.append(bubble);
         });
@@ -1451,6 +1553,8 @@
           return;
         }
 
+        const primaryStoreId = getPrimaryStoreId(item);
+
         parts.li.classList.toggle("done", item.done);
         parts.button.setAttribute("aria-pressed", String(item.done));
         parts.button.setAttribute(
@@ -1460,8 +1564,8 @@
         parts.toggle.textContent = item.done ? "↺" : "";
         parts.note.hidden = !item.note;
         parts.note.textContent = item.note;
-        parts.store.hidden = item.preferredStoreId === null;
-        parts.store.textContent = item.preferredStoreId === null ? "" : `Buy at ${getStoreName(item.preferredStoreId)}`;
+        parts.store.hidden = primaryStoreId === null;
+        parts.store.textContent = primaryStoreId === null ? "" : `Buy at ${getStoreName(primaryStoreId)}`;
       }
 
       function updateCatalogItemElement(item) {
@@ -1481,8 +1585,47 @@
         parts.meta.textContent = formatRelativePurchase(getLastPurchased(item));
         parts.state.classList.toggle("off", !onList);
         parts.state.textContent = onList ? "On list" : "Add to list";
-        parts.storeButton.textContent = getStoreName(item.preferredStoreId) || "Any Store";
-        parts.storeButton.title = `Change store for ${item.name}`;
+        parts.storeButton.textContent = "Stores";
+        parts.storeButton.title = `Choose stores for ${item.name}`;
+        parts.storeMenu.hidden = openStoreMenuItemId !== item.id || stores.length === 0;
+
+        const chips = document.createDocumentFragment();
+        getItemStores(item).forEach((store) => {
+          const chip = document.createElement("div");
+          chip.className = "store-circle catalog-store-chip";
+          chip.title = store.name;
+          chip.setAttribute("aria-label", store.name);
+          chip.textContent = store.name.charAt(0).toUpperCase();
+          applyStoreCircleStyle(chip, store);
+          chips.append(chip);
+        });
+        parts.storeChips.replaceChildren(chips);
+
+        const menuOptions = document.createDocumentFragment();
+        sortedStores().forEach((store) => {
+          const option = document.createElement("button");
+          option.type = "button";
+          option.className = `catalog-store-option${getItemStoreIds(item).includes(store.id) ? " active" : ""}`;
+          option.setAttribute("aria-pressed", String(getItemStoreIds(item).includes(store.id)));
+          option.addEventListener("click", (event) => {
+            event.stopPropagation();
+            toggleItemStoreSelection(item.id, store.id);
+          });
+
+          const icon = document.createElement("div");
+          icon.className = "store-circle catalog-store-chip";
+          icon.setAttribute("aria-hidden", "true");
+          icon.textContent = store.name.charAt(0).toUpperCase();
+          applyStoreCircleStyle(icon, store);
+
+          const label = document.createElement("div");
+          label.className = "catalog-store-option-label";
+          label.textContent = store.name;
+
+          option.append(icon, label);
+          menuOptions.append(option);
+        });
+        parts.storeMenu.replaceChildren(menuOptions);
       }
 
       function createShoppingItemElement(item) {
@@ -1566,10 +1709,17 @@
         const state = document.createElement("div");
         state.className = "catalog-state";
 
+        const storeTools = document.createElement("div");
+        storeTools.className = "catalog-store-tools";
+
+        const storeChips = document.createElement("div");
+        storeChips.className = "catalog-store-chips";
+
         const storeButton = document.createElement("button");
         storeButton.className = "catalog-store-button";
         storeButton.type = "button";
-        storeButton.addEventListener("click", () => {
+        storeButton.addEventListener("click", (event) => {
+          event.stopPropagation();
           if (stores.length === 0) {
             isStoreSectionExpanded = true;
             renderStoreList();
@@ -1577,18 +1727,18 @@
             return;
           }
 
-          const orderedStoreIds = sortedStores().map((store) => store.id);
-          const currentIndex = orderedStoreIds.indexOf(item.preferredStoreId);
-          const nextStoreId =
-            currentIndex === -1
-              ? orderedStoreIds[0]
-              : currentIndex === orderedStoreIds.length - 1
-                ? null
-                : orderedStoreIds[currentIndex + 1];
-          setPreferredStore(item.id, nextStoreId);
+          setOpenStoreMenu(openStoreMenuItemId === item.id ? null : item.id);
         });
 
-        footer.append(state, storeButton);
+        const storeMenu = document.createElement("div");
+        storeMenu.className = "catalog-store-menu";
+        storeMenu.hidden = true;
+        storeMenu.addEventListener("click", (event) => {
+          event.stopPropagation();
+        });
+
+        storeTools.append(storeChips, storeButton, storeMenu);
+        footer.append(state, storeTools);
         main.append(name, note, meta);
         mainButton.append(main);
         card.append(mainButton, footer);
@@ -1600,7 +1750,9 @@
           note,
           meta,
           state,
-          storeButton
+          storeChips,
+          storeButton,
+          storeMenu
         });
         updateCatalogItemElement(item);
       }
@@ -1623,12 +1775,13 @@
         const groups = new Map();
 
         shoppingItems().forEach((item) => {
-          const key = storeGroupKey(item.preferredStoreId);
+          const primaryStoreId = getPrimaryStoreId(item);
+          const key = storeGroupKey(primaryStoreId);
           if (!groups.has(key)) {
             groups.set(key, {
               key,
-              storeId: item.preferredStoreId,
-              name: storeGroupName(item.preferredStoreId),
+              storeId: primaryStoreId,
+              name: storeGroupName(primaryStoreId),
               items: []
             });
           }
@@ -1640,7 +1793,7 @@
       }
 
       function moveStoreToTop(storeId) {
-        const targetIds = shoppingOrder.filter((id) => itemsById.get(id)?.preferredStoreId === storeId);
+        const targetIds = shoppingOrder.filter((id) => getPrimaryStoreId(itemsById.get(id)) === storeId);
         if (targetIds.length === 0) {
           return;
         }
@@ -1759,14 +1912,66 @@
         persistState();
       }
 
-      function setPreferredStore(id, storeId) {
+      function setOpenStoreMenu(itemId) {
+        const previousId = openStoreMenuItemId;
+        openStoreMenuItemId = itemId;
+
+        if (previousId !== null) {
+          const previousItem = itemsById.get(previousId);
+          if (previousItem) {
+            updateCatalogItemElement(previousItem);
+          }
+        }
+
+        if (itemId !== null && itemId !== previousId) {
+          const currentItem = itemsById.get(itemId);
+          if (currentItem) {
+            updateCatalogItemElement(currentItem);
+          }
+        }
+
+        syncStageHeight();
+      }
+
+      function removeStore(storeId) {
+        const index = stores.findIndex((store) => store.id === storeId);
+        if (index === -1) {
+          return;
+        }
+
+        stores.splice(index, 1);
+        catalog.forEach((item) => {
+          item.selectedStoreIds = getItemStoreIds(item).filter((id) => id !== storeId);
+          updateCatalogItemElement(item);
+          updateShoppingItemElement(item);
+        });
+
+        if (stores.length === 0) {
+          isStoreSectionExpanded = true;
+          setOpenStoreMenu(null);
+        }
+
+        renderStoreList();
+        persistState();
+        syncShoppingVisibleList();
+      }
+
+      function toggleItemStoreSelection(id, storeId) {
         const item = itemsById.get(id);
         if (!item) {
           return;
         }
 
-        item.preferredStoreId =
-          storeId === null || stores.some((store) => store.id === storeId) ? storeId ?? null : null;
+        if (!stores.some((store) => store.id === storeId)) {
+          return;
+        }
+
+        if (getItemStoreIds(item).includes(storeId)) {
+          item.selectedStoreIds = getItemStoreIds(item).filter((id) => id !== storeId);
+        } else {
+          item.selectedStoreIds = [...getItemStoreIds(item), storeId];
+        }
+
         updateCatalogItemElement(item);
         updateShoppingItemElement(item);
         persistState();
@@ -1808,6 +2013,7 @@
       }
 
       function setFlipped(isFlipped) {
+        setOpenStoreMenu(null);
         shell.classList.toggle("is-flipped", isFlipped);
         syncStageHeight();
       }
@@ -1828,6 +2034,11 @@
 
       shoppingSearch.addEventListener("input", syncShoppingVisibleList);
       catalogSearch.addEventListener("input", syncCatalogVisibleList);
+      document.addEventListener("click", () => {
+        if (openStoreMenuItemId !== null) {
+          setOpenStoreMenu(null);
+        }
+      });
 
       storeSectionToggle.addEventListener("click", () => {
         isStoreSectionExpanded = !isStoreSectionExpanded;
@@ -1932,7 +2143,7 @@
           note: "",
           done: false,
           purchaseHistory: [],
-          preferredStoreId: null
+          selectedStoreIds: []
         };
 
         catalog.unshift(item);
