@@ -113,24 +113,95 @@
 
       .panel-header {
         display: flex;
-        justify-content: space-between;
-        align-items: center;
+        flex-direction: column;
         gap: 12px;
         padding: 16px 16px 0;
       }
 
-      .panel-actions {
+      .panel-nav {
         display: flex;
+        justify-content: space-between;
         align-items: center;
-        gap: 10px;
-        flex-wrap: wrap;
-        justify-content: flex-end;
+        gap: 12px;
+      }
+
+      .panel-title {
+        font-size: 1.25rem;
+        font-weight: 900;
+        letter-spacing: -0.02em;
+        color: var(--ink);
+      }
+
+      .nav-btn {
+        min-height: 40px;
+        padding: 8px 16px;
+        border: 0;
+        border-radius: 999px;
+        background: var(--fresh-soft);
+        color: var(--fresh);
+        font: inherit;
+        font-size: 0.9rem;
+        font-weight: 700;
+        cursor: pointer;
+        transition: transform 150ms ease, background 150ms ease;
+        -webkit-tap-highlight-color: transparent;
+      }
+
+      .nav-btn:active {
+        transform: scale(0.985);
+      }
+
+      .nav-btn:not(:disabled):hover {
+        transform: translateY(-1px);
+      }
+
+      .panel-search {
         width: 100%;
       }
 
-      .panel-actions .search-box {
-        flex: 1 1 auto;
-        min-width: 0;
+      .tab-bar {
+        display: flex;
+        gap: 8px;
+        padding: 0 16px;
+      }
+
+      .tab-btn {
+        flex: 1;
+        min-height: 44px;
+        padding: 10px 16px;
+        border: 0;
+        border-radius: var(--radius-lg);
+        background: transparent;
+        color: var(--muted);
+        font: inherit;
+        font-size: 0.95rem;
+        font-weight: 700;
+        cursor: pointer;
+        transition: background 150ms ease, color 150ms ease, transform 150ms ease;
+        -webkit-tap-highlight-color: transparent;
+      }
+
+      .tab-btn:active {
+        transform: scale(0.985);
+      }
+
+      .tab-btn.active {
+        background: var(--panel-soft);
+        color: var(--ink);
+        box-shadow: 0 8px 20px rgba(90, 72, 40, 0.06);
+      }
+
+      .tab-btn:not(.active):hover {
+        background: rgba(98, 112, 96, 0.06);
+      }
+
+      .tab-content {
+        display: none;
+      }
+
+      .tab-content.active {
+        display: grid;
+        gap: 10px;
       }
 
       .search-wrap {
@@ -394,6 +465,7 @@
         display: grid;
         grid-template-columns: 1fr auto;
         gap: 10px;
+        padding: 0 16px;
       }
 
       .add-field {
@@ -447,7 +519,9 @@
       .store-circle:focus-visible,
       .store-section-toggle:focus-visible,
       .store-group-icon:focus-visible,
-      .action-btn:focus-visible {
+      .action-btn:focus-visible,
+      .nav-btn:focus-visible,
+      .tab-btn:focus-visible {
         outline: 3px solid rgba(41, 99, 71, 0.24);
         outline-offset: 3px;
       }
@@ -781,11 +855,22 @@
         .store-section,
         .toolbar,
         .add-form,
+        .store-form,
+        .tab-bar,
         .list,
         .shopping-groups,
         .bottom-actions {
           padding-left: 12px;
           padding-right: 12px;
+        }
+
+        .panel-title {
+          font-size: 1.15rem;
+        }
+
+        .nav-btn {
+          padding: 8px 12px;
+          font-size: 0.85rem;
         }
 
         .shopping-row,
@@ -915,17 +1000,18 @@
           <div class="flip-card">
             <section id="shopping-panel" class="panel panel-front" aria-label="Shopping list">
               <div class="panel-header">
-                <div class="panel-actions">
-                  <label class="search-box" for="shopping-search">
-                    <input
-                      id="shopping-search"
-                      type="search"
-                      placeholder="search..."
-                      aria-label="Search shopping list"
-                    />
-                  </label>
-                  <button id="show-catalog" class="action-btn alt" type="button" aria-label="All items">☰</button>
+                <div class="panel-nav">
+                  <h1 class="panel-title">Shopping List</h1>
+                  <button id="show-catalog" class="nav-btn" type="button" aria-label="All items">All Items</button>
                 </div>
+                <label class="search-box panel-search" for="shopping-search">
+                  <input
+                    id="shopping-search"
+                    type="search"
+                    placeholder="Search items..."
+                    aria-label="Search shopping list"
+                  />
+                </label>
               </div>
 
               <div id="shopping-list" class="shopping-groups" aria-live="polite"></div>
@@ -939,72 +1025,58 @@
 
             <section id="catalog-panel" class="panel panel-back" aria-label="All items" hidden>
               <div class="panel-header">
-                <div class="panel-actions">
-                  <button id="show-shopping" class="action-btn alt" type="button" aria-label="Home">⌂</button>
+                <div class="panel-nav">
+                  <h1 class="panel-title">All Items</h1>
+                  <button id="show-shopping" class="nav-btn" type="button" aria-label="Shopping list">Shopping</button>
                 </div>
               </div>
 
-              <section id="store-section" class="store-section" aria-label="Stores">
-                <button id="store-section-toggle" class="store-section-toggle" type="button" aria-expanded="false">
-                  <div class="store-section-title">
-                    <strong>Stores</strong>
-                    <span id="store-count">0 stores</span>
-                  </div>
-                  <div id="store-section-chevron" class="store-section-chevron">+</div>
-                </button>
+              <div class="tab-bar" role="tablist">
+                <button id="tab-items" class="tab-btn active" type="button" role="tab" aria-selected="true" aria-controls="tab-content-items">Items <span id="catalog-count">0</span></button>
+                <button id="tab-stores" class="tab-btn" type="button" role="tab" aria-selected="false" aria-controls="tab-content-stores">Stores <span id="store-count">0</span></button>
+              </div>
 
-                <div id="store-section-body" class="store-section-body">
-                  <div class="store-bar">
-                    <div id="store-list" class="store-list"></div>
-                  </div>
-
-                  <form id="store-form" class="store-form">
-                    <label class="add-field" for="new-store">
-                      <input
-                        id="new-store"
-                        type="text"
-                        placeholder="add store..."
-                        aria-label="Add store"
-                        list="brand-store-suggestions"
-                      />
-                    </label>
-                    <button class="action-btn alt" type="submit">Add store</button>
-                  </form>
+              <section id="tab-content-items" class="tab-content active" role="tabpanel" aria-labelledby="tab-items">
+                <div class="search-wrap">
+                  <label class="search-box" for="catalog-search">
+                    <input
+                      id="catalog-search"
+                      type="search"
+                      placeholder="Search items..."
+                      aria-label="Search all items"
+                    />
+                  </label>
                 </div>
-                <datalist id="brand-store-suggestions"></datalist>
+
+                <form id="add-form" class="add-form">
+                  <label class="add-field" for="new-item">
+                    <input id="new-item" type="text" placeholder="add item..." aria-label="Add item" />
+                  </label>
+                  <button class="action-btn" type="submit">Add</button>
+                </form>
+
+                <ul id="catalog-list" class="list"></ul>
+                <div id="catalog-empty" class="empty" hidden>No matching items.</div>
               </section>
 
-              <section id="catalog-section" class="catalog-section" aria-label="All items">
-                <button id="catalog-section-toggle" class="catalog-section-toggle" type="button" aria-expanded="true">
-                  <div class="catalog-section-title">
-                    <strong>All Items</strong>
-                    <span id="catalog-count">0 items</span>
-                  </div>
-                  <div id="catalog-section-chevron" class="catalog-section-chevron">-</div>
-                </button>
-
-                <div class="catalog-section-body">
-                  <div class="search-wrap">
-                    <label class="search-box" for="catalog-search">
-                      <input
-                        id="catalog-search"
-                        type="search"
-                        placeholder="search..."
-                        aria-label="Search all items"
-                      />
-                    </label>
-                  </div>
-
-                  <form id="add-form" class="add-form">
-                    <label class="add-field" for="new-item">
-                      <input id="new-item" type="text" placeholder="add item..." aria-label="Add item" />
-                    </label>
-                    <button class="action-btn" type="submit">Add</button>
-                  </form>
-
-                  <ul id="catalog-list" class="list"></ul>
-                  <div id="catalog-empty" class="empty" hidden>No matching items.</div>
+              <section id="tab-content-stores" class="tab-content" role="tabpanel" aria-labelledby="tab-stores">
+                <div class="search-wrap">
+                  <div id="store-list" class="store-list"></div>
                 </div>
+
+                <form id="store-form" class="store-form">
+                  <label class="add-field" for="new-store">
+                    <input
+                      id="new-store"
+                      type="text"
+                      placeholder="add store..."
+                      aria-label="Add store"
+                      list="brand-store-suggestions"
+                    />
+                  </label>
+                  <button class="action-btn alt" type="submit">Add store</button>
+                </form>
+                <datalist id="brand-store-suggestions"></datalist>
               </section>
             </section>
           </div>
@@ -1290,13 +1362,11 @@
       const catalogPanel = document.getElementById("catalog-panel");
       const shoppingSearch = document.getElementById("shopping-search");
       const catalogSearch = document.getElementById("catalog-search");
-      const catalogSection = document.getElementById("catalog-section");
-      const catalogSectionToggle = document.getElementById("catalog-section-toggle");
-      const catalogSectionChevron = document.getElementById("catalog-section-chevron");
+      const tabItems = document.getElementById("tab-items");
+      const tabStores = document.getElementById("tab-stores");
+      const tabContentItems = document.getElementById("tab-content-items");
+      const tabContentStores = document.getElementById("tab-content-stores");
       const catalogCount = document.getElementById("catalog-count");
-      const storeSection = document.getElementById("store-section");
-      const storeSectionToggle = document.getElementById("store-section-toggle");
-      const storeSectionChevron = document.getElementById("store-section-chevron");
       const storeCount = document.getElementById("store-count");
       const newItemInput = document.getElementById("new-item");
       const newStoreInput = document.getElementById("new-store");
@@ -1317,8 +1387,7 @@
       const collapsedGroups = new Set();
       const SHOPPING_HASH = "#shopping";
       const CATALOG_HASH = "#all";
-      let isStoreSectionExpanded = stores.length === 0;
-      let isCatalogSectionExpanded = true;
+      let activeTab = "items";
       let openStoreMenuItemId = null;
 
       function persistState() {
@@ -1522,18 +1591,23 @@
         });
 
         storeList.replaceChildren(fragment);
-        storeSection.classList.toggle("collapsed", !isStoreSectionExpanded);
-        storeSectionToggle.setAttribute("aria-expanded", String(isStoreSectionExpanded));
-        storeSectionChevron.textContent = isStoreSectionExpanded ? "-" : "+";
-        storeCount.textContent = `${stores.length} store${stores.length === 1 ? "" : "s"}`;
+        storeCount.textContent = stores.length;
         syncStageHeight();
       }
 
       function renderCatalogSection() {
-        catalogSection.classList.toggle("collapsed", !isCatalogSectionExpanded);
-        catalogSectionToggle.setAttribute("aria-expanded", String(isCatalogSectionExpanded));
-        catalogSectionChevron.textContent = isCatalogSectionExpanded ? "-" : "+";
-        catalogCount.textContent = `${catalog.length} item${catalog.length === 1 ? "" : "s"}`;
+        catalogCount.textContent = catalog.length;
+        syncStageHeight();
+      }
+
+      function switchTab(tab) {
+        activeTab = tab;
+        tabItems.classList.toggle("active", tab === "items");
+        tabStores.classList.toggle("active", tab === "stores");
+        tabItems.setAttribute("aria-selected", String(tab === "items"));
+        tabStores.setAttribute("aria-selected", String(tab === "stores"));
+        tabContentItems.classList.toggle("active", tab === "items");
+        tabContentStores.classList.toggle("active", tab === "stores");
         syncStageHeight();
       }
 
@@ -1716,8 +1790,7 @@
         storeButton.addEventListener("click", (event) => {
           event.stopPropagation();
           if (stores.length === 0) {
-            isStoreSectionExpanded = true;
-            renderStoreList();
+            switchTab("stores");
             newStoreInput.focus();
             return;
           }
@@ -1942,7 +2015,6 @@
         });
 
         if (stores.length === 0) {
-          isStoreSectionExpanded = true;
           setOpenStoreMenu(null);
         }
 
@@ -2071,17 +2143,12 @@
         }
       });
 
-      storeSectionToggle.addEventListener("click", () => {
-        isStoreSectionExpanded = !isStoreSectionExpanded;
-        renderStoreList();
-        if (isStoreSectionExpanded) {
-          newStoreInput.focus();
-        }
+      tabItems.addEventListener("click", () => {
+        switchTab("items");
       });
 
-      catalogSectionToggle.addEventListener("click", () => {
-        isCatalogSectionExpanded = !isCatalogSectionExpanded;
-        renderCatalogSection();
+      tabStores.addEventListener("click", () => {
+        switchTab("stores");
       });
 
       storeForm.addEventListener("submit", (event) => {
@@ -2111,7 +2178,6 @@
           stores.push(store);
         }
 
-        isStoreSectionExpanded = true;
         renderStoreList();
         refreshCatalogPurchaseLabels();
         persistState();
