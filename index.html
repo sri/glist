@@ -4,29 +4,21 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
     <title>Grocery List</title>
+    <link
+      rel="stylesheet"
+      href="https://cdn.jsdelivr.net/npm/@shoelace-style/shoelace@2.20.1/cdn/themes/light.css"
+    />
+    <link
+      rel="stylesheet"
+      href="https://cdn.jsdelivr.net/npm/@shoelace-style/shoelace@2.20.1/cdn/themes/dark.css"
+    />
+    <script>
+      document.documentElement.classList.add(
+        window.matchMedia("(prefers-color-scheme: dark)").matches ? "sl-theme-dark" : "sl-theme-light"
+      );
+    </script>
+    <script type="module" src="https://cdn.jsdelivr.net/npm/@shoelace-style/shoelace@2.20.1/cdn/shoelace-autoloader.js"></script>
     <style>
-      :root {
-        color-scheme: light dark;
-        --bg: #f6f0e3;
-        --bg-accent: #efe0ba;
-        --panel: rgba(255, 251, 244, 0.92);
-        --panel-strong: #fff7eb;
-        --panel-soft: rgba(255, 255, 255, 0.68);
-        --ink: #263127;
-        --muted: #617060;
-        --fresh: #296347;
-        --fresh-soft: rgba(41, 99, 71, 0.12);
-        --warm: #d96f32;
-        --warm-soft: rgba(217, 111, 50, 0.14);
-        --done: #8f978d;
-        --shadow: 0 24px 50px rgba(78, 60, 32, 0.16);
-        --blob-top: rgba(124, 184, 116, 0.22);
-        --blob-bottom: rgba(255, 190, 118, 0.22);
-        --radius-xl: 28px;
-        --radius-lg: 22px;
-        --radius-md: 18px;
-      }
-
       * {
         box-sizing: border-box;
       }
@@ -38,437 +30,134 @@
       }
 
       body {
-        font-family: "Avenir Next Rounded", "Nunito", "Trebuchet MS", sans-serif;
-        color: var(--ink);
-        background:
-          radial-gradient(circle at top right, rgba(255, 255, 255, 0.65), transparent 30%),
-          radial-gradient(circle at bottom left, rgba(217, 111, 50, 0.18), transparent 28%),
-          linear-gradient(160deg, var(--bg) 0%, #f2ebd9 50%, var(--bg-accent) 100%);
+        font-family: var(--sl-font-sans);
       }
 
-      body::before,
-      body::after {
-        content: "";
-        position: fixed;
-        inset: auto;
-        pointer-events: none;
-        border-radius: 999px;
-        filter: blur(10px);
-        opacity: 0.45;
-      }
-
-      body::before {
-        width: 220px;
-        height: 220px;
-        top: -60px;
-        right: -40px;
-        background: var(--blob-top);
-      }
-
-      body::after {
-        width: 280px;
-        height: 280px;
-        left: -120px;
-        bottom: 8vh;
-        background: var(--blob-bottom);
-      }
-
-      .app {
-        width: min(100%, 640px);
+      .shoelace-app {
+        width: min(100%, 760px);
         margin: 0 auto;
         padding: max(20px, env(safe-area-inset-top)) 16px max(28px, env(safe-area-inset-bottom));
       }
 
-      .shell {
-        background: var(--panel);
-        border: 1px solid rgba(255, 255, 255, 0.5);
-        border-radius: 34px;
-        box-shadow: var(--shadow);
-        overflow: hidden;
-        backdrop-filter: blur(10px);
-      }
-
-      .flip-stage {
-        position: relative;
-        overflow: hidden;
-        perspective: 1600px;
-        transition: height 260ms ease;
-      }
-
-      .flip-card {
-        position: relative;
-        height: 100%;
-        transform-style: preserve-3d;
-        transition: transform 520ms cubic-bezier(0.2, 0.8, 0.2, 1);
-      }
-
-      .shell.is-flipped .flip-card {
-        transform: rotateY(180deg);
-      }
-
-      .panel {
-        position: absolute;
-        inset: 0;
-        display: flex;
-        flex-direction: column;
-        gap: 14px;
-        padding-bottom: 20px;
-        backface-visibility: hidden;
-        -webkit-backface-visibility: hidden;
-      }
-
-      .panel-back {
-        transform: rotateY(180deg);
-      }
-
-      .panel-header {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        gap: 12px;
-        padding: 16px 16px 0;
-      }
-
-      .panel-actions {
-        display: flex;
-        align-items: center;
-        gap: 10px;
-        flex-wrap: wrap;
-        justify-content: flex-end;
-        width: 100%;
-      }
-
-      .panel-actions .search-box {
-        flex: 1 1 auto;
-        min-width: 0;
-      }
-
-      .search-wrap {
-        padding: 0 16px;
-      }
-
-      .bottom-actions {
+      .shoelace-shell {
         display: grid;
-        grid-template-columns: repeat(2, minmax(0, 1fr));
-        gap: 10px;
-        padding: 0 16px;
+        gap: 18px;
+        padding: 18px;
       }
 
-      .bottom-actions .action-btn {
-        width: 100%;
+      .panel-view {
+        display: grid;
+        gap: 16px;
+      }
+
+      .panel-view[hidden] {
+        display: none;
+      }
+
+      .panel-head {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) auto;
+        gap: 12px;
+        align-items: center;
+      }
+
+      .panel-title-block {
+        display: grid;
+        gap: 2px;
+      }
+
+      .panel-title-block strong {
+        font-size: 1.25rem;
+      }
+
+      .eyebrow,
+      .tab-meta,
+      .item-note,
+      .item-meta,
+      .store-summary-title span {
+        color: var(--sl-color-neutral-500);
+      }
+
+      .eyebrow {
+        font-size: 0.72rem;
+        text-transform: uppercase;
+        letter-spacing: 0.14em;
+      }
+
+      .footer-actions,
+      .inline-form {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) auto;
+        gap: 12px;
+      }
+
+      .footer-actions sl-button::part(base) {
         min-height: 72px;
-        border-radius: var(--radius-lg);
-        box-shadow: 0 12px 26px rgba(90, 72, 40, 0.08);
-        font-size: 1rem;
       }
 
-      .search-box {
+      .tab-stack,
+      .shopping-groups,
+      .catalog-list,
+      .store-pill-list,
+      .shopping-items {
+        display: grid;
+        gap: 14px;
+      }
+
+      .store-pill-list {
+        grid-template-columns: repeat(auto-fit, minmax(148px, 1fr));
+      }
+
+      .catalog-tabs::part(body) {
+        padding-top: 18px;
+      }
+
+      .shopping-group::part(summary) {
+        padding: 10px 14px;
+      }
+
+      .store-summary {
         display: flex;
         align-items: center;
+        justify-content: space-between;
         gap: 12px;
-        padding: 16px 18px;
-        border-radius: var(--radius-xl);
-        background: var(--panel-strong);
-        border: 1px solid rgba(68, 81, 66, 0.08);
-        box-shadow: 0 14px 28px rgba(90, 72, 40, 0.08);
+        width: 100%;
       }
 
-      .search-box input,
-      .add-form input,
-      .store-form input {
-        width: 100%;
-        border: 0;
-        outline: 0;
+      .store-summary-title {
+        display: flex;
+        align-items: baseline;
+        gap: 8px;
+        flex-wrap: wrap;
+      }
+
+      .shopping-card::part(body),
+      .catalog-card::part(body) {
         padding: 0;
-        background: transparent;
-        color: var(--ink);
-        font: inherit;
-        font-size: 1.08rem;
       }
 
-      .search-box input::placeholder,
-      .add-form input::placeholder,
-      .store-form input::placeholder {
-        color: #7c8677;
-      }
-
-      .toolbar {
-        display: flex;
-        justify-content: flex-end;
-        align-items: center;
-        padding: 0 16px;
-      }
-
-      .action-btn {
-        min-height: 44px;
-        padding: 10px 15px;
-        border: 0;
-        border-radius: 999px;
-        background: var(--warm-soft);
-        color: var(--warm);
-        font: inherit;
-        font-weight: 900;
-        cursor: pointer;
-        transition: transform 150ms ease, opacity 150ms ease, background 150ms ease;
-        -webkit-tap-highlight-color: transparent;
-      }
-
-      .action-btn.alt {
-        background: var(--fresh-soft);
-        color: var(--fresh);
-      }
-
-      .action-btn:active {
-        transform: scale(0.985);
-      }
-
-      .action-btn:disabled {
-        opacity: 0.45;
-        cursor: default;
-      }
-
-      .action-btn:not(:disabled):hover {
-        transform: translateY(-1px);
-      }
-
-      .add-form {
-        display: grid;
-        grid-template-columns: 1fr auto;
-        gap: 10px;
-        padding: 0 16px;
-      }
-
-      .store-section {
-        display: grid;
-        gap: 10px;
-        padding: 0 16px;
-      }
-
-      .catalog-section {
-        display: grid;
-        gap: 10px;
-        padding: 0 16px;
-      }
-
-      .catalog-section-toggle {
-        width: 100%;
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        gap: 12px;
-        padding: 16px 18px;
-        border: 0;
-        border-radius: var(--radius-lg);
-        background: var(--panel-soft);
-        box-shadow: 0 12px 26px rgba(90, 72, 40, 0.08);
-        color: inherit;
-        text-align: left;
-        font: inherit;
-        cursor: pointer;
-      }
-
-      .catalog-section-title {
-        display: flex;
-        align-items: baseline;
-        gap: 8px;
-        flex-wrap: wrap;
-      }
-
-      .catalog-section-title strong {
-        font-size: 1.05rem;
-        letter-spacing: -0.01em;
-      }
-
-      .catalog-section-title span {
-        font-size: 0.85rem;
-        color: var(--muted);
-      }
-
-      .catalog-section-chevron {
-        font-size: 1rem;
-        color: var(--muted);
-      }
-
-      .catalog-section-body {
-        display: grid;
-        gap: 10px;
-      }
-
-      .catalog-section.collapsed .catalog-section-body {
-        display: none;
-      }
-
-      .store-section-toggle {
-        width: 100%;
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        gap: 12px;
-        padding: 16px 18px;
-        border: 0;
-        border-radius: var(--radius-lg);
-        background: var(--panel-soft);
-        box-shadow: 0 12px 26px rgba(90, 72, 40, 0.08);
-        color: inherit;
-        text-align: left;
-        font: inherit;
-        cursor: pointer;
-      }
-
-      .store-section-title {
-        display: flex;
-        align-items: baseline;
-        gap: 8px;
-        flex-wrap: wrap;
-      }
-
-      .store-section-title strong {
-        font-size: 1.05rem;
-        letter-spacing: -0.01em;
-      }
-
-      .store-section-title span {
-        font-size: 0.85rem;
-        color: var(--muted);
-      }
-
-      .store-section-chevron {
-        font-size: 1rem;
-        color: var(--muted);
-      }
-
-      .store-section-body {
-        display: grid;
-        gap: 10px;
-      }
-
-      .store-section.collapsed .store-section-body {
-        display: none;
-      }
-
-      .store-bar {
-        display: flex;
-        align-items: center;
-        gap: 10px;
-        flex-wrap: wrap;
-      }
-
-      .store-list {
-        display: flex;
-        align-items: center;
-        gap: 10px;
-        flex-wrap: wrap;
-      }
-
-      .store-circle {
-        width: 42px;
-        height: 42px;
-        border: 0;
-        border-radius: 50%;
-        display: grid;
-        place-items: center;
-        background: rgba(41, 99, 71, 0.1);
-        color: var(--fresh);
-        font: inherit;
-        font-weight: 900;
-        cursor: pointer;
-        transition: transform 150ms ease, background 150ms ease, color 150ms ease;
-        -webkit-tap-highlight-color: transparent;
-      }
-
-      .store-circle.active {
-        box-shadow: 0 0 0 3px rgba(217, 111, 50, 0.32);
-      }
-
-      .store-circle.add-circle {
-        background: var(--warm-soft);
-        color: var(--warm);
-      }
-
-      .store-circle:active {
-        transform: scale(0.985);
-      }
-
-      .store-pill {
-        width: auto;
-        min-width: 42px;
-        padding: 0 14px;
-        border-radius: 999px;
-      }
-
-      .store-form[hidden] {
-        display: none;
-      }
-
-      .store-form {
-        display: grid;
-        grid-template-columns: 1fr auto;
-        gap: 10px;
-      }
-
-      .add-field {
-        display: flex;
-        align-items: center;
-        min-height: 52px;
-        padding: 0 18px;
-        border-radius: var(--radius-xl);
-        background: var(--panel-strong);
-        border: 1px solid rgba(68, 81, 66, 0.08);
-        box-shadow: 0 14px 28px rgba(90, 72, 40, 0.08);
-      }
-
-      .list {
-        list-style: none;
-        margin: 0;
-        padding: 0 16px;
-      }
-
-      .item {
-        margin-bottom: 12px;
-      }
-
-      .shopping-row,
-      .catalog-main {
+      .shopping-row-button,
+      .catalog-main-button {
         width: 100%;
         display: grid;
-        grid-template-columns: 1fr auto;
         align-items: center;
         gap: 14px;
-        padding: 18px 18px 18px 20px;
+        padding: 20px;
         border: 0;
-        border-radius: var(--radius-lg);
-        background: var(--panel-soft);
-        box-shadow: 0 12px 26px rgba(90, 72, 40, 0.08);
+        background: transparent;
         color: inherit;
         text-align: left;
+        font: inherit;
         cursor: pointer;
-        transition: transform 150ms ease, box-shadow 150ms ease, background 150ms ease;
-        -webkit-tap-highlight-color: transparent;
       }
 
-      .shopping-row:active,
-      .catalog-main:active {
-        transform: scale(0.985);
+      .shopping-row-button {
+        grid-template-columns: minmax(0, 1fr) auto;
       }
 
-      .shopping-row:focus-visible,
-      .catalog-main:focus-visible,
-      .catalog-section-toggle:focus-visible,
-      .store-circle:focus-visible,
-      .store-section-toggle:focus-visible,
-      .store-group-icon:focus-visible,
-      .action-btn:focus-visible {
-        outline: 3px solid rgba(41, 99, 71, 0.24);
-        outline-offset: 3px;
-      }
-
-      .shopping-item:not(.done) .shopping-row:hover,
-      .catalog-main:hover,
-      .catalog-section-toggle:hover,
-      .store-section-toggle:hover,
-      .store-circle:hover,
-      .store-group-icon:hover {
-        transform: translateY(-1px);
+      .catalog-main-button {
+        grid-template-columns: 1fr;
+        padding-bottom: 10px;
       }
 
       .item-main {
@@ -477,548 +166,190 @@
       }
 
       .item-name {
-        font-size: 1.3rem;
-        line-height: 1.1;
-        font-weight: 900;
-        letter-spacing: -0.02em;
+        font-size: 1.36rem;
+        line-height: 1.08;
+        font-weight: 700;
       }
 
-      .item-note {
-        font-size: 0.92rem;
-        color: var(--muted);
+      .shopping-card.done .item-name {
+        text-decoration: line-through;
       }
 
-      .item-meta {
-        font-size: 0.82rem;
-        color: var(--muted);
-        opacity: 0.92;
-      }
-
-      .toggle {
-        min-width: 52px;
+      .shopping-toggle {
+        width: 52px;
         height: 52px;
         border-radius: 50%;
         display: grid;
         place-items: center;
-        background: transparent;
-        border: 0;
+        font-size: 1.35rem;
         color: transparent;
-        font-size: 1.3rem;
-        font-weight: 900;
-        opacity: 0;
-        padding: 0 12px;
+        border: 2px solid var(--sl-color-neutral-300);
       }
 
-      .catalog-card {
-        display: grid;
-        gap: 10px;
-        padding: 18px 18px 18px 20px;
-        border-radius: var(--radius-lg);
-        background: var(--panel-soft);
-        border: 1px solid rgba(68, 81, 66, 0.08);
-        box-shadow: 0 12px 26px rgba(90, 72, 40, 0.08);
-      }
-
-      .catalog-main {
-        grid-template-columns: 1fr;
-        padding: 0;
-        border-radius: 0;
-        background: transparent;
-        box-shadow: none;
+      .shopping-card.done .shopping-toggle {
+        color: currentColor;
       }
 
       .catalog-footer {
         display: flex;
-        justify-content: space-between;
         align-items: center;
+        justify-content: space-between;
+        gap: 10px;
+        padding: 0 20px 18px;
+        flex-wrap: wrap;
+      }
+
+      .catalog-store-tools,
+      .catalog-store-tags {
+        display: flex;
+        align-items: center;
+        justify-content: flex-end;
         gap: 8px;
         flex-wrap: wrap;
       }
 
       .catalog-store-tools {
-        display: flex;
-        align-items: center;
-        justify-content: flex-end;
-        gap: 8px;
         margin-left: auto;
-        flex-wrap: wrap;
-        position: relative;
       }
 
-      .catalog-store-chips {
-        display: flex;
-        align-items: center;
-        justify-content: flex-end;
-        gap: 6px;
-        flex-wrap: wrap;
+      .panel-switch::part(base) {
+        min-width: 52px;
+        min-height: 52px;
       }
 
-      .catalog-store-chip {
-        width: 32px;
-        height: 32px;
-        padding: 0;
-        border: 0;
-        cursor: pointer;
-        font-size: 0.8rem;
-      }
-
-      .catalog-state {
-        min-height: 34px;
-        padding: 8px 12px;
-        border-radius: 999px;
-        background: rgba(41, 99, 71, 0.1);
-        color: var(--fresh);
-        font-size: 0.86rem;
-        font-weight: 800;
-      }
-
-      .catalog-state.off {
-        background: rgba(98, 112, 96, 0.08);
-        color: var(--muted);
-      }
-
-      .catalog-store-button {
-        max-width: 100%;
-        min-height: 38px;
-        padding: 8px 14px;
-        border: 0;
-        border-radius: 999px;
-        background: rgba(217, 111, 50, 0.14);
-        color: var(--warm);
-        font: inherit;
-        font-size: 0.86rem;
-        font-weight: 800;
-        cursor: pointer;
-        transition: transform 150ms ease, background 150ms ease, color 150ms ease;
-        -webkit-tap-highlight-color: transparent;
-      }
-
-      .catalog-store-menu {
-        position: absolute;
-        top: calc(100% + 8px);
-        right: 0;
-        min-width: 190px;
+      .store-menu-list {
         display: grid;
-        gap: 8px;
-        padding: 10px;
-        border-radius: 20px;
-        background: var(--panel-strong);
-        border: 1px solid rgba(68, 81, 66, 0.12);
-        box-shadow: 0 18px 32px rgba(90, 72, 40, 0.16);
-        z-index: 10;
-      }
-
-      .catalog-store-menu[hidden] {
-        display: none;
-      }
-
-      .catalog-store-option {
-        width: 100%;
-        display: flex;
-        align-items: center;
         gap: 10px;
-        padding: 10px 12px;
-        border: 0;
-        border-radius: 16px;
-        background: rgba(98, 112, 96, 0.08);
-        color: inherit;
-        font: inherit;
-        text-align: left;
-        cursor: pointer;
-        transition: transform 150ms ease, background 150ms ease, color 150ms ease;
-        -webkit-tap-highlight-color: transparent;
-      }
-
-      .catalog-store-option:active {
-        transform: scale(0.985);
-      }
-
-      .catalog-store-option:hover {
-        transform: translateY(-1px);
-      }
-
-      .catalog-store-option.active {
-        background: rgba(217, 111, 50, 0.14);
-        color: var(--warm);
-      }
-
-      .catalog-store-option-label {
-        min-width: 0;
-        overflow: hidden;
-        text-overflow: ellipsis;
-        white-space: nowrap;
-      }
-
-      .shopping-groups {
-        display: grid;
-        gap: 14px;
-        padding: 0 16px;
-      }
-
-      .store-group {
-        border-radius: var(--radius-lg);
-        background: rgba(255, 255, 255, 0.14);
-        border: 1px solid rgba(68, 81, 66, 0.08);
-        overflow: hidden;
-      }
-
-      .store-group-header {
-        display: flex;
-        align-items: center;
-        gap: 10px;
-        padding: 12px 14px 0;
-      }
-
-      .store-group-toggle {
-        width: 100%;
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        gap: 12px;
-        padding: 4px 4px 12px;
-        border: 0;
-        background: transparent;
-        color: inherit;
-        text-align: left;
-        font: inherit;
-        cursor: pointer;
-      }
-
-      .store-group-icon {
-        width: 36px;
-        height: 36px;
-        border: 0;
-        border-radius: 50%;
-        display: grid;
-        place-items: center;
-        background: rgba(41, 99, 71, 0.1);
-        color: var(--fresh);
-        font: inherit;
-        font-size: 1rem;
-        font-weight: 900;
-        cursor: pointer;
-        transition: transform 150ms ease, background 150ms ease, color 150ms ease;
-        -webkit-tap-highlight-color: transparent;
-      }
-
-      .store-group-title {
-        display: flex;
-        align-items: baseline;
-        gap: 8px;
-        flex-wrap: wrap;
-      }
-
-      .store-group-title strong {
-        font-size: 1.05rem;
-        letter-spacing: -0.01em;
-      }
-
-      .store-group-title span {
-        font-size: 0.85rem;
-        color: var(--muted);
-      }
-
-      .store-group-chevron {
-        font-size: 1rem;
-        color: var(--muted);
-      }
-
-      .store-group-body {
-        display: grid;
-        padding: 0 14px 14px;
-      }
-
-      .store-group.collapsed .store-group-body {
-        display: none;
-      }
-
-      .store-group-items {
-        list-style: none;
-        margin: 0;
-        padding: 0;
-        display: grid;
-        gap: 12px;
-      }
-
-      .item.done {
-        opacity: 0.84;
-      }
-
-      .shopping-item.done .shopping-row {
-        background: rgba(247, 240, 228, 0.86);
-      }
-
-      .item.done .item-name {
-        color: var(--done);
-        text-decoration: line-through;
-        text-decoration-thickness: 3px;
-        text-decoration-color: rgba(143, 151, 141, 0.85);
-      }
-
-      .item.done .item-note {
-        color: #8b8f86;
-      }
-
-      .item.done .toggle {
-        background: rgba(217, 111, 50, 0.14);
-        color: var(--warm);
-        opacity: 1;
-      }
-
-      .empty {
-        margin: 8px 16px 0;
-        padding: 22px 18px;
-        border-radius: var(--radius-md);
-        background: rgba(255, 255, 255, 0.62);
-        color: var(--muted);
-        text-align: center;
-        font-size: 1rem;
+        min-width: 220px;
+        padding: 8px;
       }
 
       @media (max-width: 480px) {
-        .app {
+        .shoelace-app {
           padding-left: 10px;
           padding-right: 10px;
         }
 
-        .shell {
-          border-radius: 28px;
-        }
-
-        .panel-header,
-        .catalog-section,
-        .search-wrap,
-        .store-section,
-        .toolbar,
-        .add-form,
-        .list,
-        .shopping-groups,
-        .bottom-actions {
-          padding-left: 12px;
-          padding-right: 12px;
-        }
-
-        .shopping-row,
-        .catalog-card {
-          padding: 17px 16px 17px 18px;
+        .footer-actions,
+        .inline-form {
+          grid-template-columns: 1fr;
         }
 
         .item-name {
           font-size: 1.18rem;
         }
-
-        .add-form {
-          grid-template-columns: 1fr;
-        }
-
-        .store-form {
-          grid-template-columns: 1fr;
-        }
-
-        .bottom-actions {
-          grid-template-columns: 1fr;
-        }
-
-        .catalog-card {
-          grid-template-columns: 1fr;
-        }
-      }
-
-      @media (prefers-color-scheme: dark) {
-        :root {
-          --bg: #081120;
-          --bg-accent: #0d213d;
-          --panel: rgba(10, 22, 42, 0.9);
-          --panel-strong: rgba(16, 31, 58, 0.98);
-          --panel-soft: rgba(17, 30, 54, 0.78);
-          --ink: #edf4ff;
-          --muted: #9bb0cf;
-          --fresh: #87d8c7;
-          --fresh-soft: rgba(135, 216, 199, 0.16);
-          --warm: #ffb36e;
-          --warm-soft: rgba(255, 179, 110, 0.14);
-          --done: #7f8da7;
-          --shadow: 0 26px 60px rgba(0, 0, 0, 0.38);
-          --blob-top: rgba(70, 136, 255, 0.22);
-          --blob-bottom: rgba(13, 103, 168, 0.24);
-        }
-
-        body {
-          background:
-            radial-gradient(circle at top right, rgba(129, 180, 255, 0.14), transparent 30%),
-            radial-gradient(circle at bottom left, rgba(20, 116, 194, 0.2), transparent 28%),
-            linear-gradient(160deg, var(--bg) 0%, #07182d 45%, var(--bg-accent) 100%);
-        }
-
-        .shell,
-        .search-box,
-        .add-field,
-        .shopping-row,
-        .catalog-card,
-        .catalog-store-button,
-        .catalog-section-toggle,
-        .bottom-actions .action-btn,
-        .empty {
-          border-color: rgba(181, 209, 255, 0.08);
-        }
-
-        .search-box,
-        .add-field,
-        .shopping-row,
-        .catalog-card,
-        .catalog-store-button,
-        .catalog-section-toggle,
-        .bottom-actions .action-btn,
-        .empty {
-          box-shadow: 0 18px 32px rgba(0, 0, 0, 0.24);
-        }
-
-        .store-circle {
-          background: rgba(130, 169, 224, 0.12);
-          color: #98afd1;
-        }
-
-        .store-circle.active {
-          box-shadow: 0 0 0 3px rgba(135, 216, 199, 0.28);
-        }
-
-        .store-circle.add-circle {
-          background: rgba(255, 179, 110, 0.14);
-          color: var(--warm);
-        }
-
-        .store-group {
-          background: rgba(17, 30, 54, 0.42);
-          border-color: rgba(181, 209, 255, 0.08);
-        }
-
-        .store-group-icon {
-          background: rgba(130, 169, 224, 0.12);
-          color: #98afd1;
-        }
-
-        .empty {
-          background: rgba(20, 34, 60, 0.92);
-          color: #90a7cb;
-        }
-
-        .shopping-item.done .shopping-row {
-          background: rgba(12, 24, 44, 0.92);
-        }
-
-        .item.done .item-note {
-          color: #7988a2;
-        }
-
-        .search-box input::placeholder,
-        .add-form input::placeholder,
-        .store-form input::placeholder {
-          color: #7d94b7;
-        }
       }
     </style>
   </head>
   <body>
-    <main class="app">
-      <section id="shell" class="shell">
-        <div id="flip-stage" class="flip-stage">
-          <div class="flip-card">
-            <section id="shopping-panel" class="panel panel-front" aria-label="Shopping list">
-              <div class="panel-header">
-                <div class="panel-actions">
-                  <label class="search-box" for="shopping-search">
-                    <input
-                      id="shopping-search"
-                      type="search"
-                      placeholder="search..."
-                      aria-label="Search shopping list"
-                    />
-                  </label>
-                  <button id="show-catalog" class="action-btn alt" type="button" aria-label="All items">☰</button>
-                </div>
-              </div>
+    <main class="shoelace-app">
+      <section id="shell" class="shoelace-shell">
+        <section id="shopping-panel" class="panel-view" aria-label="Shopping list">
+          <header class="panel-head">
+            <sl-input
+              id="shopping-search"
+              class="panel-search"
+              size="large"
+              filled
+              clearable
+              placeholder="search..."
+              aria-label="Search shopping list"
+            ></sl-input>
+            <sl-tooltip content="All Items">
+              <sl-button
+                id="show-catalog"
+                class="panel-switch"
+                size="large"
+                circle
+                aria-label="All Items"
+              >
+                ⚙
+              </sl-button>
+            </sl-tooltip>
+          </header>
 
-              <div id="shopping-list" class="shopping-groups" aria-live="polite"></div>
-              <div id="shopping-empty" class="empty" hidden>No matching items.</div>
+          <div id="shopping-list" class="shopping-groups" aria-live="polite"></div>
+          <sl-card id="shopping-empty" class="empty-card" hidden>No matching items.</sl-card>
 
-              <div class="bottom-actions">
-                <button id="move-marked" class="action-btn" type="button">Move check items down</button>
-                <button id="clear-shopping" class="action-btn alt" type="button">Clear Items</button>
-              </div>
-            </section>
-
-            <section id="catalog-panel" class="panel panel-back" aria-label="All items">
-              <div class="panel-header">
-                <div class="panel-actions">
-                  <button id="show-shopping" class="action-btn alt" type="button" aria-label="Home">⌂</button>
-                </div>
-              </div>
-
-              <section id="store-section" class="store-section" aria-label="Stores">
-                <button id="store-section-toggle" class="store-section-toggle" type="button" aria-expanded="false">
-                  <div class="store-section-title">
-                    <strong>Stores</strong>
-                    <span id="store-count">0 stores</span>
-                  </div>
-                  <div id="store-section-chevron" class="store-section-chevron">+</div>
-                </button>
-
-                <div id="store-section-body" class="store-section-body">
-                  <div class="store-bar">
-                    <div id="store-list" class="store-list"></div>
-                  </div>
-
-                  <form id="store-form" class="store-form">
-                    <label class="add-field" for="new-store">
-                      <input
-                        id="new-store"
-                        type="text"
-                        placeholder="add store..."
-                        aria-label="Add store"
-                        list="brand-store-suggestions"
-                      />
-                    </label>
-                    <button class="action-btn alt" type="submit">Add store</button>
-                  </form>
-                </div>
-                <datalist id="brand-store-suggestions"></datalist>
-              </section>
-
-              <section id="catalog-section" class="catalog-section" aria-label="All items">
-                <button id="catalog-section-toggle" class="catalog-section-toggle" type="button" aria-expanded="true">
-                  <div class="catalog-section-title">
-                    <strong>All Items</strong>
-                    <span id="catalog-count">0 items</span>
-                  </div>
-                  <div id="catalog-section-chevron" class="catalog-section-chevron">-</div>
-                </button>
-
-                <div class="catalog-section-body">
-                  <div class="search-wrap">
-                    <label class="search-box" for="catalog-search">
-                      <input
-                        id="catalog-search"
-                        type="search"
-                        placeholder="search..."
-                        aria-label="Search all items"
-                      />
-                    </label>
-                  </div>
-
-                  <form id="add-form" class="add-form">
-                    <label class="add-field" for="new-item">
-                      <input id="new-item" type="text" placeholder="add item..." aria-label="Add item" />
-                    </label>
-                    <button class="action-btn" type="submit">Add</button>
-                  </form>
-
-                  <ul id="catalog-list" class="list"></ul>
-                  <div id="catalog-empty" class="empty" hidden>No matching items.</div>
-                </div>
-              </section>
-            </section>
+          <div class="footer-actions">
+            <sl-button id="move-marked" size="large" variant="primary">Move check items down</sl-button>
+            <sl-button id="clear-shopping" size="large" variant="default">Clear Items</sl-button>
           </div>
-        </div>
+        </section>
+
+        <section id="catalog-panel" class="panel-view" aria-label="All items" hidden>
+          <header class="panel-head">
+            <div class="panel-title-block">
+              <span class="eyebrow">Catalog</span>
+              <strong>All Items</strong>
+            </div>
+            <sl-tooltip content="Shopping List">
+              <sl-button
+                id="show-shopping"
+                class="panel-switch"
+                size="large"
+                circle
+                aria-label="Shopping List"
+              >
+                ⌂
+              </sl-button>
+            </sl-tooltip>
+          </header>
+
+          <sl-tab-group id="catalog-tabs" class="catalog-tabs">
+            <sl-tab slot="nav" panel="stores">Stores</sl-tab>
+            <sl-tab slot="nav" panel="items">Items</sl-tab>
+
+            <sl-tab-panel name="stores">
+              <div class="tab-stack">
+                <div class="tab-meta"><span id="store-count">0 stores</span></div>
+                <form id="store-form" class="inline-form">
+                  <sl-input
+                    id="new-store"
+                    class="flex-field"
+                    size="large"
+                    filled
+                    placeholder="add store..."
+                    aria-label="Add store"
+                  ></sl-input>
+                  <sl-button type="submit" size="large" variant="primary">Add store</sl-button>
+                </form>
+                <div id="store-list" class="store-pill-list"></div>
+                <datalist id="brand-store-suggestions"></datalist>
+              </div>
+            </sl-tab-panel>
+
+            <sl-tab-panel name="items">
+              <div class="tab-stack">
+                <div class="tab-meta"><span id="catalog-count">0 items</span></div>
+                <sl-input
+                  id="catalog-search"
+                  class="panel-search"
+                  size="large"
+                  filled
+                  clearable
+                  placeholder="search..."
+                  aria-label="Search all items"
+                ></sl-input>
+
+                <form id="add-form" class="inline-form">
+                  <sl-input
+                    id="new-item"
+                    class="flex-field"
+                    size="large"
+                    filled
+                    placeholder="add item..."
+                    aria-label="Add item"
+                  ></sl-input>
+                  <sl-button type="submit" size="large" variant="primary">Add</sl-button>
+                </form>
+
+                <div id="catalog-list" class="catalog-list"></div>
+                <sl-card id="catalog-empty" class="empty-card" hidden>No matching items.</sl-card>
+              </div>
+            </sl-tab-panel>
+          </sl-tab-group>
+        </section>
       </section>
     </main>
 
@@ -1297,18 +628,12 @@
       let nextStoreId = state.nextStoreId;
 
       const shell = document.getElementById("shell");
-      const flipStage = document.getElementById("flip-stage");
       const shoppingPanel = document.getElementById("shopping-panel");
       const catalogPanel = document.getElementById("catalog-panel");
       const shoppingSearch = document.getElementById("shopping-search");
       const catalogSearch = document.getElementById("catalog-search");
-      const catalogSection = document.getElementById("catalog-section");
-      const catalogSectionToggle = document.getElementById("catalog-section-toggle");
-      const catalogSectionChevron = document.getElementById("catalog-section-chevron");
+      const catalogTabs = document.getElementById("catalog-tabs");
       const catalogCount = document.getElementById("catalog-count");
-      const storeSection = document.getElementById("store-section");
-      const storeSectionToggle = document.getElementById("store-section-toggle");
-      const storeSectionChevron = document.getElementById("store-section-chevron");
       const storeCount = document.getElementById("store-count");
       const newItemInput = document.getElementById("new-item");
       const newStoreInput = document.getElementById("new-store");
@@ -1329,9 +654,11 @@
       const collapsedGroups = new Set();
       const SHOPPING_HASH = "#shopping";
       const CATALOG_HASH = "#all";
-      let isStoreSectionExpanded = stores.length === 0;
-      let isCatalogSectionExpanded = true;
-      let openStoreMenuItemId = null;
+      const UP_ICON =
+        "data:image/svg+xml;utf8," +
+        encodeURIComponent(
+          "<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='currentColor'><path d='M8 3.293 4.354 6.939 2.939 5.525 8 0.464l5.061 5.061-1.414 1.414L8 3.293z'/><path d='M7 2h2v14H7z'/></svg>"
+        );
 
       function persistState() {
         try {
@@ -1364,6 +691,18 @@
         return stores.find((store) => store.id === storeId) || null;
       }
 
+      function getFieldValue(field) {
+        if (!field) {
+          return "";
+        }
+
+        if (typeof field.value === "string") {
+          return field.value;
+        }
+
+        return field.getAttribute("value") || "";
+      }
+
       function getItemStoreIds(item) {
         return Array.isArray(item.selectedStoreIds) ? item.selectedStoreIds : [];
       }
@@ -1390,17 +729,7 @@
       }
 
       function applyStoreCircleStyle(element, store) {
-        const brand = getStoreBrand(store);
-        if (!brand) {
-          element.style.removeProperty("background");
-          element.style.removeProperty("color");
-          element.style.removeProperty("border-color");
-          return;
-        }
-
-        element.style.background = brand.bg;
-        element.style.color = brand.fg;
-        element.style.borderColor = brand.bg;
+        // Store matching still exists, but visual styling now uses the default Shoelace theme.
       }
 
       function renderStoreSuggestions() {
@@ -1473,12 +802,11 @@
       }
 
       function syncStageHeight() {
-        const activePanel = shell.classList.contains("is-flipped") ? catalogPanel : shoppingPanel;
-        flipStage.style.height = `${activePanel.scrollHeight}px`;
+        // Panels use normal flow in the Shoelace layout.
       }
 
       function shoppingItems() {
-        const query = shoppingSearch.value.trim().toLowerCase();
+        const query = getFieldValue(shoppingSearch).trim().toLowerCase();
         return shoppingOrder
           .map((id) => itemsById.get(id))
           .filter(Boolean)
@@ -1496,7 +824,7 @@
       }
 
       function catalogItems() {
-        const query = catalogSearch.value.trim().toLowerCase();
+        const query = getFieldValue(catalogSearch).trim().toLowerCase();
         return catalog.filter((item) => {
           if (!query) {
             return true;
@@ -1523,9 +851,10 @@
         const fragment = document.createDocumentFragment();
 
         sortedStores().forEach((store) => {
-          const bubble = document.createElement("button");
-          bubble.type = "button";
-          bubble.className = "store-circle store-pill";
+          const bubble = document.createElement("sl-button");
+          bubble.className = "store-pill-btn";
+          bubble.size = "large";
+          bubble.pill = true;
           bubble.title = `Remove ${store.name}`;
           bubble.setAttribute("aria-label", `Remove ${store.name}`);
           bubble.textContent = store.name;
@@ -1537,17 +866,11 @@
         });
 
         storeList.replaceChildren(fragment);
-        storeSection.classList.toggle("collapsed", !isStoreSectionExpanded);
-        storeSectionToggle.setAttribute("aria-expanded", String(isStoreSectionExpanded));
-        storeSectionChevron.textContent = isStoreSectionExpanded ? "-" : "+";
         storeCount.textContent = `${stores.length} store${stores.length === 1 ? "" : "s"}`;
         syncStageHeight();
       }
 
       function renderCatalogSection() {
-        catalogSection.classList.toggle("collapsed", !isCatalogSectionExpanded);
-        catalogSectionToggle.setAttribute("aria-expanded", String(isCatalogSectionExpanded));
-        catalogSectionChevron.textContent = isCatalogSectionExpanded ? "-" : "+";
         catalogCount.textContent = `${catalog.length} item${catalog.length === 1 ? "" : "s"}`;
         syncStageHeight();
       }
@@ -1560,7 +883,7 @@
 
         const primaryStoreId = getPrimaryStoreId(item);
 
-        parts.li.classList.toggle("done", item.done);
+        parts.card.classList.toggle("done", item.done);
         parts.button.setAttribute("aria-pressed", String(item.done));
         parts.button.setAttribute(
           "aria-label",
@@ -1580,7 +903,6 @@
         }
 
         const onList = shoppingSet.has(item.id);
-        parts.li.classList.toggle("on-list", onList);
         parts.mainButton.setAttribute(
           "aria-label",
           onList ? `Remove ${item.name} from shopping list` : `Add ${item.name} to shopping list`
@@ -1588,62 +910,50 @@
         parts.note.hidden = !item.note;
         parts.note.textContent = item.note;
         parts.meta.textContent = formatRelativePurchase(getLastPurchased(item));
-        parts.state.classList.toggle("off", !onList);
+        parts.state.className = "catalog-state";
+        parts.state.variant = onList ? "success" : "neutral";
         parts.state.textContent = onList ? "On list" : "Add to list";
-        parts.storeButton.textContent = "Stores";
-        parts.storeButton.title = `Choose stores for ${item.name}`;
-        parts.storeMenu.hidden = openStoreMenuItemId !== item.id || stores.length === 0;
+        parts.storeTrigger.textContent = "Stores";
+        parts.storeTrigger.disabled = stores.length === 0;
 
         const chips = document.createDocumentFragment();
         getItemStores(item).forEach((store) => {
-          const chip = document.createElement("button");
-          chip.type = "button";
-          chip.className = "store-circle catalog-store-chip";
-          chip.title = `Remove ${store.name} from ${item.name}`;
-          chip.setAttribute("aria-label", `Remove ${store.name} from ${item.name}`);
-          chip.textContent = store.name.charAt(0).toUpperCase();
-          chip.addEventListener("click", (event) => {
+          const chip = document.createElement("sl-tag");
+          chip.className = "store-tag";
+          chip.size = "small";
+          chip.pill = true;
+          chip.removable = true;
+          chip.textContent = store.name;
+          chip.addEventListener("sl-remove", (event) => {
             event.stopPropagation();
+            event.preventDefault();
             toggleItemStoreSelection(item.id, store.id);
           });
           applyStoreCircleStyle(chip, store);
           chips.append(chip);
         });
-        parts.storeChips.replaceChildren(chips);
+        parts.storeTags.replaceChildren(chips);
 
         const menuOptions = document.createDocumentFragment();
         sortedStores().forEach((store) => {
-          const option = document.createElement("button");
-          option.type = "button";
-          option.className = `catalog-store-option${getItemStoreIds(item).includes(store.id) ? " active" : ""}`;
-          option.setAttribute("aria-pressed", String(getItemStoreIds(item).includes(store.id)));
-          option.addEventListener("click", (event) => {
-            event.stopPropagation();
+          const option = document.createElement("sl-checkbox");
+          option.className = "store-option-check";
+          option.checked = getItemStoreIds(item).includes(store.id);
+          option.textContent = store.name;
+          option.addEventListener("sl-change", () => {
             toggleItemStoreSelection(item.id, store.id);
           });
-
-          const icon = document.createElement("div");
-          icon.className = "store-circle catalog-store-chip";
-          icon.setAttribute("aria-hidden", "true");
-          icon.textContent = store.name.charAt(0).toUpperCase();
-          applyStoreCircleStyle(icon, store);
-
-          const label = document.createElement("div");
-          label.className = "catalog-store-option-label";
-          label.textContent = store.name;
-
-          option.append(icon, label);
           menuOptions.append(option);
         });
         parts.storeMenu.replaceChildren(menuOptions);
       }
 
       function createShoppingItemElement(item) {
-        const li = document.createElement("li");
-        li.className = `item shopping-item${item.done ? " done" : ""}`;
+        const card = document.createElement("sl-card");
+        card.className = `shopping-card${item.done ? " done" : ""}`;
 
         const button = document.createElement("button");
-        button.className = "shopping-row";
+        button.className = "shopping-row-button";
         button.type = "button";
         button.addEventListener("click", () => {
           const wasDone = item.done;
@@ -1675,26 +985,23 @@
         store.className = "item-meta";
 
         const toggle = document.createElement("div");
-        toggle.className = "toggle";
+        toggle.className = "shopping-toggle";
         toggle.setAttribute("aria-hidden", "true");
 
         main.append(name, note, store);
         button.append(main, toggle);
-        li.append(button);
+        card.append(button);
 
-        shoppingElements.set(item.id, { li, button, note, store, toggle });
+        shoppingElements.set(item.id, { card, button, note, store, toggle });
         updateShoppingItemElement(item);
       }
 
       function createCatalogItemElement(item) {
-        const li = document.createElement("li");
-        li.className = "item catalog-item";
-
-        const card = document.createElement("div");
+        const card = document.createElement("sl-card");
         card.className = "catalog-card";
 
         const mainButton = document.createElement("button");
-        mainButton.className = "catalog-main";
+        mainButton.className = "catalog-main-button";
         mainButton.type = "button";
         mainButton.addEventListener("click", () => {
           toggleShoppingListItem(item.id);
@@ -1716,52 +1023,54 @@
         const footer = document.createElement("div");
         footer.className = "catalog-footer";
 
-        const state = document.createElement("div");
+        const state = document.createElement("sl-tag");
         state.className = "catalog-state";
+        state.pill = true;
 
         const storeTools = document.createElement("div");
         storeTools.className = "catalog-store-tools";
 
-        const storeChips = document.createElement("div");
-        storeChips.className = "catalog-store-chips";
+        const storeTags = document.createElement("div");
+        storeTags.className = "catalog-store-tags";
 
-        const storeButton = document.createElement("button");
-        storeButton.className = "catalog-store-button";
-        storeButton.type = "button";
-        storeButton.addEventListener("click", (event) => {
-          event.stopPropagation();
+        const storeDropdown = document.createElement("sl-dropdown");
+        storeDropdown.placement = "bottom-end";
+        storeDropdown.hoist = true;
+
+        const storeTrigger = document.createElement("sl-button");
+        storeTrigger.className = "catalog-store-trigger";
+        storeTrigger.slot = "trigger";
+        storeTrigger.size = "small";
+        storeTrigger.caret = true;
+        storeTrigger.textContent = "Stores";
+        storeTrigger.addEventListener("click", () => {
           if (stores.length === 0) {
-            isStoreSectionExpanded = true;
-            renderStoreList();
+            catalogTabs.show("stores");
             newStoreInput.focus();
-            return;
           }
-
-          setOpenStoreMenu(openStoreMenuItemId === item.id ? null : item.id);
         });
 
         const storeMenu = document.createElement("div");
-        storeMenu.className = "catalog-store-menu";
-        storeMenu.hidden = true;
+        storeMenu.className = "store-menu-list";
         storeMenu.addEventListener("click", (event) => {
           event.stopPropagation();
         });
 
-        storeTools.append(storeChips, storeButton, storeMenu);
+        storeDropdown.append(storeTrigger, storeMenu);
+        storeTools.append(storeTags, storeDropdown);
         footer.append(state, storeTools);
         main.append(name, note, meta);
         mainButton.append(main);
         card.append(mainButton, footer);
-        li.append(card);
 
         catalogElements.set(item.id, {
-          li,
+          card,
           mainButton,
           note,
           meta,
           state,
-          storeChips,
-          storeButton,
+          storeTags,
+          storeTrigger,
           storeMenu
         });
         updateCatalogItemElement(item);
@@ -1818,26 +1127,22 @@
       function syncShoppingVisibleList() {
         const groups = groupedShoppingItems();
         const nodes = groups.map((group) => {
-          const section = document.createElement("section");
-          section.className = `store-group${collapsedGroups.has(group.key) ? " collapsed" : ""}`;
-
-          const header = document.createElement("div");
-          header.className = "store-group-header";
-
-          const toggle = document.createElement("button");
-          toggle.type = "button";
-          toggle.className = "store-group-toggle";
-          toggle.addEventListener("click", () => {
-            if (collapsedGroups.has(group.key)) {
-              collapsedGroups.delete(group.key);
-            } else {
-              collapsedGroups.add(group.key);
-            }
-            syncShoppingVisibleList();
+          const details = document.createElement("sl-details");
+          details.className = "shopping-group";
+          details.open = !collapsedGroups.has(group.key);
+          details.addEventListener("sl-after-show", () => {
+            collapsedGroups.delete(group.key);
+          });
+          details.addEventListener("sl-after-hide", () => {
+            collapsedGroups.add(group.key);
           });
 
+          const summary = document.createElement("div");
+          summary.slot = "summary";
+          summary.className = "store-summary";
+
           const title = document.createElement("div");
-          title.className = "store-group-title";
+          title.className = "store-summary-title";
 
           const strong = document.createElement("strong");
           strong.textContent = group.name;
@@ -1845,35 +1150,25 @@
           const count = document.createElement("span");
           count.textContent = `${group.items.length} item${group.items.length === 1 ? "" : "s"}`;
 
-          const chevron = document.createElement("div");
-          chevron.className = "store-group-chevron";
-          chevron.textContent = collapsedGroups.has(group.key) ? "+" : "-";
-
           title.append(strong, count);
-          toggle.append(title, chevron);
 
-          const moveButton = document.createElement("button");
-          moveButton.type = "button";
-          moveButton.className = "store-group-icon";
-          moveButton.textContent = "↑";
-          moveButton.title = `Move ${group.name} to top`;
-          moveButton.setAttribute("aria-label", `Move ${group.name} to top`);
-          moveButton.addEventListener("click", () => {
+          const moveButton = document.createElement("sl-icon-button");
+          moveButton.className = "store-up";
+          moveButton.src = UP_ICON;
+          moveButton.label = `Move ${group.name} to top`;
+          moveButton.addEventListener("click", (event) => {
+            event.stopPropagation();
             moveStoreToTop(group.storeId);
           });
 
-          header.append(toggle, moveButton);
+          summary.append(title, moveButton);
 
-          const body = document.createElement("div");
-          body.className = "store-group-body";
+          const items = document.createElement("div");
+          items.className = "shopping-items";
+          items.append(...group.items.map((item) => shoppingElements.get(item.id).card));
 
-          const items = document.createElement("ul");
-          items.className = "store-group-items";
-          items.append(...group.items.map((item) => shoppingElements.get(item.id).li));
-
-          body.append(items);
-          section.append(header, body);
-          return section;
+          details.append(summary, items);
+          return details;
         });
 
         shoppingList.replaceChildren(...nodes);
@@ -1883,7 +1178,7 @@
       }
 
       function syncCatalogVisibleList() {
-        const nodes = catalogItems().map((item) => catalogElements.get(item.id).li);
+        const nodes = catalogItems().map((item) => catalogElements.get(item.id).card);
         catalogList.replaceChildren(...nodes);
         catalogEmpty.hidden = nodes.length > 0;
         syncStageHeight();
@@ -1922,27 +1217,6 @@
         persistState();
       }
 
-      function setOpenStoreMenu(itemId) {
-        const previousId = openStoreMenuItemId;
-        openStoreMenuItemId = itemId;
-
-        if (previousId !== null) {
-          const previousItem = itemsById.get(previousId);
-          if (previousItem) {
-            updateCatalogItemElement(previousItem);
-          }
-        }
-
-        if (itemId !== null && itemId !== previousId) {
-          const currentItem = itemsById.get(itemId);
-          if (currentItem) {
-            updateCatalogItemElement(currentItem);
-          }
-        }
-
-        syncStageHeight();
-      }
-
       function removeStore(storeId) {
         const index = stores.findIndex((store) => store.id === storeId);
         if (index === -1) {
@@ -1955,11 +1229,6 @@
           updateCatalogItemElement(item);
           updateShoppingItemElement(item);
         });
-
-        if (stores.length === 0) {
-          isStoreSectionExpanded = true;
-          setOpenStoreMenu(null);
-        }
 
         renderStoreList();
         persistState();
@@ -2050,8 +1319,8 @@
       }
 
       function setFlipped(isFlipped, updateUrl = true) {
-        setOpenStoreMenu(null);
-        shell.classList.toggle("is-flipped", isFlipped);
+        shoppingPanel.hidden = isFlipped;
+        catalogPanel.hidden = !isFlipped;
         if (updateUrl) {
           navigateToPanel(isFlipped);
           return;
@@ -2077,32 +1346,16 @@
       }
       syncPanelFromLocation();
 
-      shoppingSearch.addEventListener("input", syncShoppingVisibleList);
-      catalogSearch.addEventListener("input", syncCatalogVisibleList);
+      shoppingSearch.addEventListener("sl-input", syncShoppingVisibleList);
+      shoppingSearch.addEventListener("sl-clear", syncShoppingVisibleList);
+      catalogSearch.addEventListener("sl-input", syncCatalogVisibleList);
+      catalogSearch.addEventListener("sl-clear", syncCatalogVisibleList);
       window.addEventListener("hashchange", syncPanelFromLocation);
-      document.addEventListener("click", () => {
-        if (openStoreMenuItemId !== null) {
-          setOpenStoreMenu(null);
-        }
-      });
-
-      storeSectionToggle.addEventListener("click", () => {
-        isStoreSectionExpanded = !isStoreSectionExpanded;
-        renderStoreList();
-        if (isStoreSectionExpanded) {
-          newStoreInput.focus();
-        }
-      });
-
-      catalogSectionToggle.addEventListener("click", () => {
-        isCatalogSectionExpanded = !isCatalogSectionExpanded;
-        renderCatalogSection();
-      });
 
       storeForm.addEventListener("submit", (event) => {
         event.preventDefault();
 
-        const rawName = newStoreInput.value.trim();
+        const rawName = getFieldValue(newStoreInput).trim();
         if (!rawName) {
           return;
         }
@@ -2126,7 +1379,6 @@
           stores.push(store);
         }
 
-        isStoreSectionExpanded = true;
         renderStoreList();
         refreshCatalogPurchaseLabels();
         persistState();
@@ -2178,7 +1430,7 @@
       addForm.addEventListener("submit", (event) => {
         event.preventDefault();
 
-        const name = newItemInput.value.trim();
+        const name = getFieldValue(newItemInput).trim();
         if (!name) {
           return;
         }
