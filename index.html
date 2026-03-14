@@ -244,6 +244,54 @@
         padding: 0 16px;
       }
 
+      .store-section-toggle {
+        width: 100%;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 12px;
+        padding: 16px 18px;
+        border: 0;
+        border-radius: var(--radius-lg);
+        background: var(--panel-soft);
+        box-shadow: 0 12px 26px rgba(90, 72, 40, 0.08);
+        color: inherit;
+        text-align: left;
+        font: inherit;
+        cursor: pointer;
+      }
+
+      .store-section-title {
+        display: flex;
+        align-items: baseline;
+        gap: 8px;
+        flex-wrap: wrap;
+      }
+
+      .store-section-title strong {
+        font-size: 1.05rem;
+        letter-spacing: -0.01em;
+      }
+
+      .store-section-title span {
+        font-size: 0.85rem;
+        color: var(--muted);
+      }
+
+      .store-section-chevron {
+        font-size: 1rem;
+        color: var(--muted);
+      }
+
+      .store-section-body {
+        display: grid;
+        gap: 10px;
+      }
+
+      .store-section.collapsed .store-section-body {
+        display: none;
+      }
+
       .store-bar {
         display: flex;
         align-items: center;
@@ -285,6 +333,13 @@
 
       .store-circle:active {
         transform: scale(0.985);
+      }
+
+      .store-pill {
+        width: auto;
+        min-width: 42px;
+        padding: 0 14px;
+        border-radius: 999px;
       }
 
       .store-form[hidden] {
@@ -347,6 +402,7 @@
       .catalog-main:focus-visible,
       .catalog-action:focus-visible,
       .store-circle:focus-visible,
+      .store-section-toggle:focus-visible,
       .store-group-icon:focus-visible,
       .action-btn:focus-visible {
         outline: 3px solid rgba(41, 99, 71, 0.24);
@@ -356,6 +412,7 @@
       .shopping-item:not(.done) .shopping-row:hover,
       .catalog-main:hover,
       .catalog-action:hover,
+      .store-section-toggle:hover,
       .store-circle:hover,
       .store-group-icon:hover {
         transform: translateY(-1px);
@@ -776,26 +833,33 @@
                 </div>
               </div>
 
-              <section class="store-section" aria-label="Stores">
-                <div class="store-bar">
-                  <div id="store-list" class="store-list"></div>
-                  <button id="show-store-form" class="store-circle add-circle" type="button" aria-label="Add store">
-                    +
-                  </button>
-                </div>
+              <section id="store-section" class="store-section" aria-label="Stores">
+                <button id="store-section-toggle" class="store-section-toggle" type="button" aria-expanded="false">
+                  <div class="store-section-title">
+                    <strong>Stores</strong>
+                    <span id="store-count">0 stores</span>
+                  </div>
+                  <div id="store-section-chevron" class="store-section-chevron">+</div>
+                </button>
 
-                <form id="store-form" class="store-form" hidden>
-                  <label class="add-field" for="new-store">
-                    <input
-                      id="new-store"
-                      type="text"
-                      placeholder="add store..."
-                      aria-label="Add store"
-                      list="brand-store-suggestions"
-                    />
-                  </label>
-                  <button class="action-btn alt" type="submit">Add store</button>
-                </form>
+                <div id="store-section-body" class="store-section-body">
+                  <div class="store-bar">
+                    <div id="store-list" class="store-list"></div>
+                  </div>
+
+                  <form id="store-form" class="store-form">
+                    <label class="add-field" for="new-store">
+                      <input
+                        id="new-store"
+                        type="text"
+                        placeholder="add store..."
+                        aria-label="Add store"
+                        list="brand-store-suggestions"
+                      />
+                    </label>
+                    <button class="action-btn alt" type="submit">Add store</button>
+                  </form>
+                </div>
                 <datalist id="brand-store-suggestions"></datalist>
               </section>
 
@@ -1089,10 +1153,13 @@
       const catalogPanel = document.getElementById("catalog-panel");
       const shoppingSearch = document.getElementById("shopping-search");
       const catalogSearch = document.getElementById("catalog-search");
+      const storeSection = document.getElementById("store-section");
+      const storeSectionToggle = document.getElementById("store-section-toggle");
+      const storeSectionChevron = document.getElementById("store-section-chevron");
+      const storeCount = document.getElementById("store-count");
       const newItemInput = document.getElementById("new-item");
       const newStoreInput = document.getElementById("new-store");
       const addForm = document.getElementById("add-form");
-      const showStoreFormButton = document.getElementById("show-store-form");
       const storeForm = document.getElementById("store-form");
       const clearShoppingButton = document.getElementById("clear-shopping");
       const moveMarkedButton = document.getElementById("move-marked");
@@ -1107,7 +1174,7 @@
       const shoppingElements = new Map();
       const catalogElements = new Map();
       const collapsedGroups = new Set();
-      let isStoreFormOpen = stores.length === 0;
+      let isStoreSectionExpanded = stores.length === 0;
 
       function persistState() {
         try {
@@ -1288,16 +1355,19 @@
 
         sortedStores().forEach((store) => {
           const bubble = document.createElement("div");
-          bubble.className = "store-circle";
+          bubble.className = "store-circle store-pill";
           bubble.title = store.name;
           bubble.setAttribute("aria-label", store.name);
-          bubble.textContent = store.name.charAt(0).toUpperCase();
+          bubble.textContent = store.name;
           applyStoreCircleStyle(bubble, store);
           fragment.append(bubble);
         });
 
         storeList.replaceChildren(fragment);
-        storeForm.hidden = !isStoreFormOpen;
+        storeSection.classList.toggle("collapsed", !isStoreSectionExpanded);
+        storeSectionToggle.setAttribute("aria-expanded", String(isStoreSectionExpanded));
+        storeSectionChevron.textContent = isStoreSectionExpanded ? "-" : "+";
+        storeCount.textContent = `${stores.length} store${stores.length === 1 ? "" : "s"}`;
         syncStageHeight();
       }
 
@@ -1693,10 +1763,10 @@
       shoppingSearch.addEventListener("input", syncShoppingVisibleList);
       catalogSearch.addEventListener("input", syncCatalogVisibleList);
 
-      showStoreFormButton.addEventListener("click", () => {
-        isStoreFormOpen = !isStoreFormOpen;
+      storeSectionToggle.addEventListener("click", () => {
+        isStoreSectionExpanded = !isStoreSectionExpanded;
         renderStoreList();
-        if (isStoreFormOpen) {
+        if (isStoreSectionExpanded) {
           newStoreInput.focus();
         }
       });
@@ -1728,11 +1798,12 @@
           stores.push(store);
         }
 
-        isStoreFormOpen = false;
+        isStoreSectionExpanded = true;
         renderStoreList();
         refreshCatalogPurchaseLabels();
         persistState();
         newStoreInput.value = "";
+        newStoreInput.focus();
       });
 
       clearShoppingButton.addEventListener("click", () => {
