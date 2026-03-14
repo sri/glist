@@ -120,28 +120,20 @@
 
       .panel-nav {
         display: flex;
-        justify-content: space-between;
+        justify-content: flex-end;
         align-items: center;
-        gap: 12px;
-      }
-
-      .panel-title {
-        font-size: 1.25rem;
-        font-weight: 900;
-        letter-spacing: -0.02em;
-        color: var(--ink);
       }
 
       .nav-btn {
-        min-height: 40px;
-        padding: 8px 16px;
+        width: 44px;
+        height: 44px;
+        padding: 0;
         border: 0;
-        border-radius: 999px;
+        border-radius: 50%;
         background: var(--fresh-soft);
         color: var(--fresh);
         font: inherit;
-        font-size: 0.9rem;
-        font-weight: 700;
+        font-size: 1.25rem;
         cursor: pointer;
         transition: transform 150ms ease, background 150ms ease;
         -webkit-tap-highlight-color: transparent;
@@ -558,21 +550,6 @@
         opacity: 0.92;
       }
 
-      .toggle {
-        min-width: 52px;
-        height: 52px;
-        border-radius: 50%;
-        display: grid;
-        place-items: center;
-        background: transparent;
-        border: 0;
-        color: transparent;
-        font-size: 1.3rem;
-        font-weight: 900;
-        opacity: 0;
-        padding: 0 12px;
-      }
-
       .catalog-card {
         display: grid;
         gap: 10px;
@@ -823,12 +800,6 @@
         color: #8b8f86;
       }
 
-      .item.done .toggle {
-        background: rgba(217, 111, 50, 0.14);
-        color: var(--warm);
-        opacity: 1;
-      }
-
       .empty {
         margin: 8px 16px 0;
         padding: 22px 18px;
@@ -864,14 +835,6 @@
           padding-right: 12px;
         }
 
-        .panel-title {
-          font-size: 1.15rem;
-        }
-
-        .nav-btn {
-          padding: 8px 12px;
-          font-size: 0.85rem;
-        }
 
         .shopping-row,
         .catalog-card {
@@ -1001,8 +964,7 @@
             <section id="shopping-panel" class="panel panel-front" aria-label="Shopping list">
               <div class="panel-header">
                 <div class="panel-nav">
-                  <h1 class="panel-title">Shopping List</h1>
-                  <button id="show-catalog" class="nav-btn" type="button" aria-label="All items">All Items</button>
+                  <button id="show-catalog" class="nav-btn" type="button" aria-label="All items">▤</button>
                 </div>
                 <label class="search-box panel-search" for="shopping-search">
                   <input
@@ -1026,8 +988,7 @@
             <section id="catalog-panel" class="panel panel-back" aria-label="All items" hidden>
               <div class="panel-header">
                 <div class="panel-nav">
-                  <h1 class="panel-title">All Items</h1>
-                  <button id="show-shopping" class="nav-btn" type="button" aria-label="Shopping list">Shopping</button>
+                  <button id="show-shopping" class="nav-btn" type="button" aria-label="Shopping list">🛒</button>
                 </div>
               </div>
 
@@ -1625,7 +1586,6 @@
           "aria-label",
           `${item.done ? "Unmark" : "Mark"} ${item.name} ${item.done ? "as not done" : "done"}`
         );
-        parts.toggle.textContent = item.done ? "↺" : "";
         parts.note.hidden = !item.note;
         parts.note.textContent = item.note;
         parts.store.hidden = primaryStoreId === null;
@@ -1733,15 +1693,11 @@
         const store = document.createElement("div");
         store.className = "item-meta";
 
-        const toggle = document.createElement("div");
-        toggle.className = "toggle";
-        toggle.setAttribute("aria-hidden", "true");
-
         main.append(name, note, store);
-        button.append(main, toggle);
+        button.append(main);
         li.append(button);
 
-        shoppingElements.set(item.id, { li, button, note, store, toggle });
+        shoppingElements.set(item.id, { li, button, note, store });
         updateShoppingItemElement(item);
       }
 
