@@ -244,6 +244,60 @@
         padding: 0 16px;
       }
 
+      .catalog-section {
+        display: grid;
+        gap: 10px;
+        padding: 0 16px;
+      }
+
+      .catalog-section-toggle {
+        width: 100%;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 12px;
+        padding: 16px 18px;
+        border: 0;
+        border-radius: var(--radius-lg);
+        background: var(--panel-soft);
+        box-shadow: 0 12px 26px rgba(90, 72, 40, 0.08);
+        color: inherit;
+        text-align: left;
+        font: inherit;
+        cursor: pointer;
+      }
+
+      .catalog-section-title {
+        display: flex;
+        align-items: baseline;
+        gap: 8px;
+        flex-wrap: wrap;
+      }
+
+      .catalog-section-title strong {
+        font-size: 1.05rem;
+        letter-spacing: -0.01em;
+      }
+
+      .catalog-section-title span {
+        font-size: 0.85rem;
+        color: var(--muted);
+      }
+
+      .catalog-section-chevron {
+        font-size: 1rem;
+        color: var(--muted);
+      }
+
+      .catalog-section-body {
+        display: grid;
+        gap: 10px;
+      }
+
+      .catalog-section.collapsed .catalog-section-body {
+        display: none;
+      }
+
       .store-section-toggle {
         width: 100%;
         display: flex;
@@ -393,14 +447,13 @@
       }
 
       .shopping-row:active,
-      .catalog-main:active,
-      .catalog-action:active {
+      .catalog-main:active {
         transform: scale(0.985);
       }
 
       .shopping-row:focus-visible,
       .catalog-main:focus-visible,
-      .catalog-action:focus-visible,
+      .catalog-section-toggle:focus-visible,
       .store-circle:focus-visible,
       .store-section-toggle:focus-visible,
       .store-group-icon:focus-visible,
@@ -411,7 +464,7 @@
 
       .shopping-item:not(.done) .shopping-row:hover,
       .catalog-main:hover,
-      .catalog-action:hover,
+      .catalog-section-toggle:hover,
       .store-section-toggle:hover,
       .store-circle:hover,
       .store-group-icon:hover {
@@ -458,52 +511,59 @@
 
       .catalog-card {
         display: grid;
-        grid-template-columns: minmax(0, 1fr) auto;
         gap: 10px;
+        padding: 18px 18px 18px 20px;
+        border-radius: var(--radius-lg);
+        background: var(--panel-soft);
+        border: 1px solid rgba(68, 81, 66, 0.08);
+        box-shadow: 0 12px 26px rgba(90, 72, 40, 0.08);
       }
 
       .catalog-main {
         grid-template-columns: 1fr;
+        padding: 0;
+        border-radius: 0;
+        background: transparent;
+        box-shadow: none;
       }
 
-      .catalog-actions {
-        display: grid;
-        gap: 10px;
-        align-content: stretch;
-        align-items: end;
-      }
-
-      .catalog-action {
-        min-width: 102px;
-        padding: 0 14px;
-        border: 0;
-        border-radius: 18px;
-        background: rgba(41, 99, 71, 0.1);
-        color: var(--fresh);
-        font: inherit;
-        font-weight: 800;
-        box-shadow: 0 12px 26px rgba(90, 72, 40, 0.08);
-        cursor: pointer;
-        transition: transform 150ms ease, box-shadow 150ms ease, background 150ms ease;
-        -webkit-tap-highlight-color: transparent;
-      }
-
-      .catalog-action.shopping-action {
-        background: rgba(217, 111, 50, 0.14);
-        color: var(--warm);
-      }
-
-      .catalog-store-choices {
+      .catalog-footer {
         display: flex;
-        justify-content: flex-end;
+        justify-content: space-between;
+        align-items: center;
         gap: 8px;
         flex-wrap: wrap;
-        max-width: 160px;
       }
 
-      .item-store-choice {
-        width: 36px;
-        height: 36px;
+      .catalog-state {
+        min-height: 34px;
+        padding: 8px 12px;
+        border-radius: 999px;
+        background: rgba(41, 99, 71, 0.1);
+        color: var(--fresh);
+        font-size: 0.86rem;
+        font-weight: 800;
+      }
+
+      .catalog-state.off {
+        background: rgba(98, 112, 96, 0.08);
+        color: var(--muted);
+      }
+
+      .catalog-store-button {
+        max-width: 100%;
+        min-height: 38px;
+        padding: 8px 14px;
+        border: 0;
+        border-radius: 999px;
+        background: rgba(217, 111, 50, 0.14);
+        color: var(--warm);
+        font: inherit;
+        font-size: 0.86rem;
+        font-weight: 800;
+        cursor: pointer;
+        transition: transform 150ms ease, background 150ms ease, color 150ms ease;
+        -webkit-tap-highlight-color: transparent;
       }
 
       .shopping-groups {
@@ -622,10 +682,6 @@
         opacity: 1;
       }
 
-      .catalog-item.on-list .catalog-action.shopping-action {
-        background: rgba(217, 111, 50, 0.22);
-      }
-
       .empty {
         margin: 8px 16px 0;
         padding: 22px 18px;
@@ -647,6 +703,7 @@
         }
 
         .panel-header,
+        .catalog-section,
         .search-wrap,
         .store-section,
         .toolbar,
@@ -659,7 +716,7 @@
         }
 
         .shopping-row,
-        .catalog-main {
+        .catalog-card {
           padding: 17px 16px 17px 18px;
         }
 
@@ -681,19 +738,6 @@
 
         .catalog-card {
           grid-template-columns: 1fr;
-        }
-
-        .catalog-actions {
-          grid-template-columns: 1fr;
-        }
-
-        .catalog-action {
-          min-height: 48px;
-        }
-
-        .catalog-store-choices {
-          justify-content: flex-start;
-          max-width: none;
         }
       }
 
@@ -727,8 +771,9 @@
         .search-box,
         .add-field,
         .shopping-row,
-        .catalog-main,
-        .catalog-action,
+        .catalog-card,
+        .catalog-store-button,
+        .catalog-section-toggle,
         .bottom-actions .action-btn,
         .empty {
           border-color: rgba(181, 209, 255, 0.08);
@@ -737,8 +782,9 @@
         .search-box,
         .add-field,
         .shopping-row,
-        .catalog-main,
-        .catalog-action,
+        .catalog-card,
+        .catalog-store-button,
+        .catalog-section-toggle,
         .bottom-actions .action-btn,
         .empty {
           box-shadow: 0 18px 32px rgba(0, 0, 0, 0.24);
@@ -821,14 +867,6 @@
             <section id="catalog-panel" class="panel panel-back" aria-label="All items">
               <div class="panel-header">
                 <div class="panel-actions">
-                  <label class="search-box" for="catalog-search">
-                    <input
-                      id="catalog-search"
-                      type="search"
-                      placeholder="search..."
-                      aria-label="Search all items"
-                    />
-                  </label>
                   <button id="show-shopping" class="action-btn alt" type="button" aria-label="Home">⌂</button>
                 </div>
               </div>
@@ -863,15 +901,38 @@
                 <datalist id="brand-store-suggestions"></datalist>
               </section>
 
-              <form id="add-form" class="add-form">
-                <label class="add-field" for="new-item">
-                  <input id="new-item" type="text" placeholder="add item..." aria-label="Add item" />
-                </label>
-                <button class="action-btn" type="submit">Add item</button>
-              </form>
+              <section id="catalog-section" class="catalog-section" aria-label="All items">
+                <button id="catalog-section-toggle" class="catalog-section-toggle" type="button" aria-expanded="true">
+                  <div class="catalog-section-title">
+                    <strong>All Items</strong>
+                    <span id="catalog-count">0 items</span>
+                  </div>
+                  <div id="catalog-section-chevron" class="catalog-section-chevron">-</div>
+                </button>
 
-              <ul id="catalog-list" class="list"></ul>
-              <div id="catalog-empty" class="empty" hidden>No matching items.</div>
+                <div class="catalog-section-body">
+                  <div class="search-wrap">
+                    <label class="search-box" for="catalog-search">
+                      <input
+                        id="catalog-search"
+                        type="search"
+                        placeholder="search..."
+                        aria-label="Search all items"
+                      />
+                    </label>
+                  </div>
+
+                  <form id="add-form" class="add-form">
+                    <label class="add-field" for="new-item">
+                      <input id="new-item" type="text" placeholder="add item..." aria-label="Add item" />
+                    </label>
+                    <button class="action-btn" type="submit">Add</button>
+                  </form>
+
+                  <ul id="catalog-list" class="list"></ul>
+                  <div id="catalog-empty" class="empty" hidden>No matching items.</div>
+                </div>
+              </section>
             </section>
           </div>
         </div>
@@ -1153,6 +1214,10 @@
       const catalogPanel = document.getElementById("catalog-panel");
       const shoppingSearch = document.getElementById("shopping-search");
       const catalogSearch = document.getElementById("catalog-search");
+      const catalogSection = document.getElementById("catalog-section");
+      const catalogSectionToggle = document.getElementById("catalog-section-toggle");
+      const catalogSectionChevron = document.getElementById("catalog-section-chevron");
+      const catalogCount = document.getElementById("catalog-count");
       const storeSection = document.getElementById("store-section");
       const storeSectionToggle = document.getElementById("store-section-toggle");
       const storeSectionChevron = document.getElementById("store-section-chevron");
@@ -1175,6 +1240,7 @@
       const catalogElements = new Map();
       const collapsedGroups = new Set();
       let isStoreSectionExpanded = stores.length === 0;
+      let isCatalogSectionExpanded = true;
 
       function persistState() {
         try {
@@ -1371,6 +1437,14 @@
         syncStageHeight();
       }
 
+      function renderCatalogSection() {
+        catalogSection.classList.toggle("collapsed", !isCatalogSectionExpanded);
+        catalogSectionToggle.setAttribute("aria-expanded", String(isCatalogSectionExpanded));
+        catalogSectionChevron.textContent = isCatalogSectionExpanded ? "-" : "+";
+        catalogCount.textContent = `${catalog.length} item${catalog.length === 1 ? "" : "s"}`;
+        syncStageHeight();
+      }
+
       function updateShoppingItemElement(item) {
         const parts = shoppingElements.get(item.id);
         if (!parts) {
@@ -1402,33 +1476,13 @@
           "aria-label",
           onList ? `Remove ${item.name} from shopping list` : `Add ${item.name} to shopping list`
         );
-        parts.shoppingButton.setAttribute(
-          "aria-label",
-          onList ? `Remove ${item.name} from shopping list` : `Add ${item.name} to shopping list`
-        );
         parts.note.hidden = !item.note;
         parts.note.textContent = item.note;
         parts.meta.textContent = formatRelativePurchase(getLastPurchased(item));
-        parts.store.textContent = storeLabel(item);
-        parts.shoppingButton.textContent = onList ? "Remove" : "Add";
-
-        const storeChoices = document.createDocumentFragment();
-        sortedStores().forEach((store) => {
-          const button = document.createElement("button");
-          button.type = "button";
-          button.className = `store-circle item-store-choice${
-            item.preferredStoreId === store.id ? " active" : ""
-          }`;
-          button.title = `Buy ${item.name} from ${store.name}`;
-          button.setAttribute("aria-label", `Buy ${item.name} from ${store.name}`);
-          button.textContent = store.name.charAt(0).toUpperCase();
-          applyStoreCircleStyle(button, store);
-          button.addEventListener("click", () => {
-            setPreferredStore(item.id, item.preferredStoreId === store.id ? null : store.id);
-          });
-          storeChoices.append(button);
-        });
-        parts.storeChoices.replaceChildren(storeChoices);
+        parts.state.classList.toggle("off", !onList);
+        parts.state.textContent = onList ? "On list" : "Add to list";
+        parts.storeButton.textContent = getStoreName(item.preferredStoreId) || "Any Store";
+        parts.storeButton.title = `Change store for ${item.name}`;
       }
 
       function createShoppingItemElement(item) {
@@ -1493,19 +1547,6 @@
           toggleShoppingListItem(item.id);
         });
 
-        const actions = document.createElement("div");
-        actions.className = "catalog-actions";
-
-        const shoppingButton = document.createElement("button");
-        shoppingButton.className = "catalog-action shopping-action";
-        shoppingButton.type = "button";
-        shoppingButton.addEventListener("click", () => {
-          toggleShoppingListItem(item.id);
-        });
-
-        const storeChoices = document.createElement("div");
-        storeChoices.className = "catalog-store-choices";
-
         const main = document.createElement("div");
         main.className = "item-main";
 
@@ -1519,23 +1560,47 @@
         const meta = document.createElement("div");
         meta.className = "item-meta";
 
-        const store = document.createElement("div");
-        store.className = "item-meta";
+        const footer = document.createElement("div");
+        footer.className = "catalog-footer";
 
-        main.append(name, note, meta, store);
+        const state = document.createElement("div");
+        state.className = "catalog-state";
+
+        const storeButton = document.createElement("button");
+        storeButton.className = "catalog-store-button";
+        storeButton.type = "button";
+        storeButton.addEventListener("click", () => {
+          if (stores.length === 0) {
+            isStoreSectionExpanded = true;
+            renderStoreList();
+            newStoreInput.focus();
+            return;
+          }
+
+          const orderedStoreIds = sortedStores().map((store) => store.id);
+          const currentIndex = orderedStoreIds.indexOf(item.preferredStoreId);
+          const nextStoreId =
+            currentIndex === -1
+              ? orderedStoreIds[0]
+              : currentIndex === orderedStoreIds.length - 1
+                ? null
+                : orderedStoreIds[currentIndex + 1];
+          setPreferredStore(item.id, nextStoreId);
+        });
+
+        footer.append(state, storeButton);
+        main.append(name, note, meta);
         mainButton.append(main);
-        actions.append(shoppingButton, storeChoices);
-        card.append(mainButton, actions);
+        card.append(mainButton, footer);
         li.append(card);
 
         catalogElements.set(item.id, {
           li,
           mainButton,
-          shoppingButton,
           note,
           meta,
-          store,
-          storeChoices
+          state,
+          storeButton
         });
         updateCatalogItemElement(item);
       }
@@ -1757,6 +1822,7 @@
 
       renderStoreSuggestions();
       renderStoreList();
+      renderCatalogSection();
       syncShoppingVisibleList();
       syncCatalogVisibleList();
 
@@ -1769,6 +1835,11 @@
         if (isStoreSectionExpanded) {
           newStoreInput.focus();
         }
+      });
+
+      catalogSectionToggle.addEventListener("click", () => {
+        isCatalogSectionExpanded = !isCatalogSectionExpanded;
+        renderCatalogSection();
       });
 
       storeForm.addEventListener("submit", (event) => {
@@ -1868,6 +1939,7 @@
         itemsById.set(item.id, item);
         createCatalogItemElement(item);
         persistState();
+        renderCatalogSection();
         newItemInput.value = "";
         syncCatalogVisibleList();
         newItemInput.focus();
