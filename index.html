@@ -275,8 +275,7 @@
       }
 
       .store-circle.active {
-        background: rgba(217, 111, 50, 0.18);
-        color: var(--warm);
+        box-shadow: 0 0 0 3px rgba(217, 111, 50, 0.32);
       }
 
       .store-circle.add-circle {
@@ -694,8 +693,7 @@
         }
 
         .store-circle.active {
-          background: rgba(135, 216, 199, 0.16);
-          color: var(--fresh);
+          box-shadow: 0 0 0 3px rgba(135, 216, 199, 0.28);
         }
 
         .store-circle.add-circle {
@@ -788,10 +786,17 @@
 
                 <form id="store-form" class="store-form" hidden>
                   <label class="add-field" for="new-store">
-                    <input id="new-store" type="text" placeholder="add store..." aria-label="Add store" />
+                    <input
+                      id="new-store"
+                      type="text"
+                      placeholder="add store..."
+                      aria-label="Add store"
+                      list="brand-store-suggestions"
+                    />
                   </label>
                   <button class="action-btn alt" type="submit">Add store</button>
                 </form>
+                <datalist id="brand-store-suggestions"></datalist>
               </section>
 
               <form id="add-form" class="add-form">
@@ -849,6 +854,113 @@
       ];
       const seedShoppingOrder = [1, 2, 3, 4, 5, 6, 7, 8];
       const seedStores = [];
+      const TOP_GROCERY_BRANDS = [
+        { key: "walmart", name: "Walmart", bg: "#0071ce", fg: "#ffc220" },
+        { key: "costco", name: "Costco", bg: "#e31837", fg: "#ffffff" },
+        { key: "kroger", name: "Kroger", bg: "#1f57c3", fg: "#ffffff" },
+        { key: "albertsons", name: "Albertsons", bg: "#0f6cbf", fg: "#ffffff" },
+        { key: "safeway", name: "Safeway", bg: "#e41f26", fg: "#ffffff" },
+        { key: "vons", name: "Vons", bg: "#0f5ea8", fg: "#ffffff" },
+        { key: "jewel-osco", name: "Jewel-Osco", bg: "#cf2027", fg: "#ffffff" },
+        { key: "acme", name: "Acme", bg: "#d71920", fg: "#ffffff" },
+        { key: "shaws", name: "Shaw's", bg: "#c8102e", fg: "#ffffff" },
+        { key: "star-market", name: "Star Market", bg: "#1f5aa6", fg: "#ffffff" },
+        { key: "tom-thumb", name: "Tom Thumb", bg: "#d71920", fg: "#ffffff" },
+        { key: "randalls", name: "Randalls", bg: "#005bbb", fg: "#ffffff" },
+        { key: "carrs", name: "Carrs", bg: "#d71920", fg: "#ffffff" },
+        { key: "publix", name: "Publix", bg: "#0b8f4d", fg: "#ffffff" },
+        { key: "heb", name: "H-E-B", bg: "#d52b1e", fg: "#ffffff" },
+        { key: "central-market", name: "Central Market", bg: "#2d5f2d", fg: "#ffffff" },
+        { key: "joe-vs", name: "Joe V's Smart Shop", bg: "#f58220", fg: "#ffffff" },
+        { key: "whole-foods", name: "Whole Foods Market", bg: "#2e6b3f", fg: "#ffffff" },
+        { key: "trader-joes", name: "Trader Joe's", bg: "#b3261e", fg: "#ffffff" },
+        { key: "aldi", name: "Aldi", bg: "#00539f", fg: "#f58220" },
+        { key: "lidl", name: "Lidl", bg: "#0050aa", fg: "#ffde00" },
+        { key: "sams-club", name: "Sam's Club", bg: "#0057b8", fg: "#ffffff" },
+        { key: "bjs", name: "BJ's Wholesale Club", bg: "#cc092f", fg: "#ffffff" },
+        { key: "target", name: "Target", bg: "#cc0000", fg: "#ffffff" },
+        { key: "amazon-fresh", name: "Amazon Fresh", bg: "#146eb4", fg: "#ffffff" },
+        { key: "sprouts", name: "Sprouts Farmers Market", bg: "#5a8f29", fg: "#ffffff" },
+        { key: "natural-grocers", name: "Natural Grocers", bg: "#4f8b2d", fg: "#ffffff" },
+        { key: "winco", name: "WinCo Foods", bg: "#c62828", fg: "#ffffff" },
+        { key: "grocery-outlet", name: "Grocery Outlet", bg: "#ef3d2f", fg: "#ffffff" },
+        { key: "meijer", name: "Meijer", bg: "#dd1f26", fg: "#ffffff" },
+        { key: "giant-eagle", name: "Giant Eagle", bg: "#0f4fa8", fg: "#ffffff" },
+        { key: "market-district", name: "Market District", bg: "#6f8f2f", fg: "#ffffff" },
+        { key: "stop-shop", name: "Stop & Shop", bg: "#7b2cbf", fg: "#ffffff" },
+        { key: "food-lion", name: "Food Lion", bg: "#0079c1", fg: "#ffffff" },
+        { key: "hannaford", name: "Hannaford", bg: "#0b8f4d", fg: "#ffffff" },
+        { key: "giant-food", name: "Giant Food", bg: "#d71920", fg: "#ffffff" },
+        { key: "giant-food-stores", name: "Giant Food Stores", bg: "#d71920", fg: "#ffffff" },
+        { key: "martins", name: "Martin's", bg: "#0f5ea8", fg: "#ffffff" },
+        { key: "ralphs", name: "Ralphs", bg: "#cc1f2f", fg: "#ffffff" },
+        { key: "fred-meyer", name: "Fred Meyer", bg: "#d71920", fg: "#ffffff" },
+        { key: "king-soopers", name: "King Soopers", bg: "#d71920", fg: "#ffffff" },
+        { key: "smiths", name: "Smith's", bg: "#004990", fg: "#ffffff" },
+        { key: "frys", name: "Fry's Food Stores", bg: "#0054a6", fg: "#ffffff" },
+        { key: "qfc", name: "QFC", bg: "#0077c8", fg: "#ffffff" },
+        { key: "dillons", name: "Dillons", bg: "#0066b3", fg: "#ffffff" },
+        { key: "city-market", name: "City Market", bg: "#0062b1", fg: "#ffffff" },
+        { key: "bakers", name: "Baker's", bg: "#b10f2e", fg: "#ffffff" },
+        { key: "marianos", name: "Mariano's", bg: "#c41230", fg: "#ffffff" },
+        { key: "picknsave", name: "Pick 'n Save", bg: "#0f5ea8", fg: "#ffffff" },
+        { key: "metro-market", name: "Metro Market", bg: "#0f5ea8", fg: "#ffffff" },
+        { key: "harris-teeter", name: "Harris Teeter", bg: "#d71920", fg: "#ffffff" },
+        { key: "hyvee", name: "Hy-Vee", bg: "#cc1f2f", fg: "#ffffff" },
+        { key: "fareway", name: "Fareway", bg: "#c62828", fg: "#ffffff" },
+        { key: "wegmans", name: "Wegmans", bg: "#1f7a3f", fg: "#ffffff" },
+        { key: "weis", name: "Weis Markets", bg: "#cc1f2f", fg: "#ffffff" },
+        { key: "schnucks", name: "Schnucks", bg: "#d71920", fg: "#ffffff" },
+        { key: "raleys", name: "Raley's", bg: "#c62828", fg: "#ffffff" },
+        { key: "bel-air", name: "Bel Air", bg: "#c62828", fg: "#ffffff" },
+        { key: "nob-hill", name: "Nob Hill Foods", bg: "#1c6b43", fg: "#ffffff" },
+        { key: "fresh-market", name: "The Fresh Market", bg: "#1f5e3b", fg: "#ffffff" },
+        { key: "save-mart", name: "Save Mart", bg: "#ef3d2f", fg: "#ffffff" },
+        { key: "lucky", name: "Lucky", bg: "#d71920", fg: "#ffffff" },
+        { key: "foodmaxx", name: "FoodMaxx", bg: "#f58220", fg: "#ffffff" },
+        { key: "ingles", name: "Ingles", bg: "#d71920", fg: "#ffffff" },
+        { key: "brookshires", name: "Brookshire's", bg: "#006747", fg: "#ffffff" },
+        { key: "super-1", name: "Super 1 Foods", bg: "#d71920", fg: "#ffffff" },
+        { key: "fresh-brookshires", name: "Fresh by Brookshire's", bg: "#5a8f29", fg: "#ffffff" },
+        { key: "piggly-wiggly", name: "Piggly Wiggly", bg: "#ef3d2f", fg: "#ffffff" },
+        { key: "festival-foods", name: "Festival Foods", bg: "#d71920", fg: "#ffffff" },
+        { key: "woodmans", name: "Woodman's Markets", bg: "#c62828", fg: "#ffffff" },
+        { key: "family-fare", name: "Family Fare", bg: "#c62828", fg: "#ffffff" },
+        { key: "dw-fresh", name: "D&W Fresh Market", bg: "#1f7a3f", fg: "#ffffff" },
+        { key: "price-chopper", name: "Price Chopper", bg: "#d71920", fg: "#ffffff" },
+        { key: "market-32", name: "Market 32", bg: "#7a9b36", fg: "#ffffff" },
+        { key: "shoprite", name: "ShopRite", bg: "#d71920", fg: "#ffffff" },
+        { key: "stater-bros", name: "Stater Bros.", bg: "#0f5ea8", fg: "#ffffff" },
+        { key: "food-4-less", name: "Food 4 Less", bg: "#f58220", fg: "#ffffff" },
+        { key: "save-a-lot", name: "Save A Lot", bg: "#f58220", fg: "#ffffff" },
+        { key: "smart-final", name: "Smart & Final", bg: "#0057b8", fg: "#ffffff" },
+        { key: "cardenas", name: "Cardenas Markets", bg: "#0b8f4d", fg: "#ffffff" },
+        { key: "el-super", name: "El Super", bg: "#ef3d2f", fg: "#ffffff" },
+        { key: "vallarta", name: "Vallarta Supermarkets", bg: "#00843d", fg: "#ffffff" },
+        { key: "northgate", name: "Northgate Market", bg: "#ef3d2f", fg: "#ffffff" },
+        { key: "sedanos", name: "Sedano's", bg: "#0f5ea8", fg: "#ffffff" },
+        { key: "fiesta-mart", name: "Fiesta Mart", bg: "#ef3d2f", fg: "#ffffff" },
+        { key: "bashas", name: "Bashas'", bg: "#c62828", fg: "#ffffff" },
+        { key: "food-city", name: "Food City", bg: "#d71920", fg: "#ffffff" },
+        { key: "hmart", name: "H Mart", bg: "#ef3d2f", fg: "#ffffff" },
+        { key: "99-ranch", name: "99 Ranch Market", bg: "#0f8f4d", fg: "#ffffff" },
+        { key: "patel-brothers", name: "Patel Brothers", bg: "#f58220", fg: "#ffffff" },
+        { key: "pcc", name: "PCC Community Markets", bg: "#3d7d3a", fg: "#ffffff" },
+        { key: "rouses", name: "Rouses Markets", bg: "#d71920", fg: "#ffffff" },
+        { key: "fresh-thyme", name: "Fresh Thyme Market", bg: "#7a9b36", fg: "#ffffff" },
+        { key: "gelsons", name: "Gelson's", bg: "#4a5f2a", fg: "#ffffff" },
+        { key: "bristol-farms", name: "Bristol Farms", bg: "#5a8f29", fg: "#ffffff" },
+        { key: "market-basket", name: "Market Basket", bg: "#ef3d2f", fg: "#ffffff" },
+        { key: "tops", name: "Tops Friendly Markets", bg: "#d71920", fg: "#ffffff" },
+        { key: "lowes-foods", name: "Lowe's Foods", bg: "#7b2cbf", fg: "#ffffff" },
+        { key: "gristedes", name: "Gristedes", bg: "#1f57c3", fg: "#ffffff" },
+        { key: "key-food", name: "Key Food", bg: "#d71920", fg: "#ffffff" }
+      ];
+      const groceryBrandByKey = new Map(TOP_GROCERY_BRANDS.map((brand) => [brand.key, brand]));
+      const normalizedBrandIndex = TOP_GROCERY_BRANDS.map((brand) => ({
+        ...brand,
+        normalizedName: brand.name.toLowerCase().replace(/[^a-z0-9]+/g, "")
+      }));
 
       function safeReadState() {
         try {
@@ -883,10 +995,56 @@
       }
 
       function normalizeStore(store) {
+        const inferredBrand = inferStoreBrand(store.name || "");
         return {
           id: Number(store.id),
-          name: String(store.name || "").trim()
+          name: String(store.name || "").trim(),
+          brandKey:
+            typeof store.brandKey === "string" && groceryBrandByKey.has(store.brandKey)
+              ? store.brandKey
+              : inferredBrand?.key || null
         };
+      }
+
+      function normalizeStoreName(name) {
+        return String(name || "")
+          .toLowerCase()
+          .replace(/[^a-z0-9]+/g, "");
+      }
+
+      function inferStoreBrand(name) {
+        const normalizedInput = normalizeStoreName(name);
+        if (!normalizedInput) {
+          return null;
+        }
+
+        const exact = normalizedBrandIndex.find((brand) => brand.normalizedName === normalizedInput);
+        if (exact) {
+          return exact;
+        }
+
+        const rankedMatches = normalizedBrandIndex
+          .map((brand) => {
+            let score = 0;
+
+            if (brand.normalizedName.startsWith(normalizedInput)) {
+              score += 4;
+            }
+
+            if (normalizedInput.startsWith(brand.normalizedName)) {
+              score += 3;
+            }
+
+            if (brand.normalizedName.includes(normalizedInput) || normalizedInput.includes(brand.normalizedName)) {
+              score += 2;
+            }
+
+            return { brand, score };
+          })
+          .filter((entry) => entry.score > 0)
+          .sort((a, b) => b.score - a.score || a.brand.name.length - b.brand.name.length);
+
+        return rankedMatches[0]?.brand || null;
       }
 
       function buildInitialState() {
@@ -976,6 +1134,50 @@
         }
 
         return stores.find((store) => store.id === storeId)?.name || "";
+      }
+
+      function getStoreById(storeId) {
+        return stores.find((store) => store.id === storeId) || null;
+      }
+
+      function getStoreBrand(store) {
+        if (!store?.brandKey) {
+          return null;
+        }
+
+        return groceryBrandByKey.get(store.brandKey) || null;
+      }
+
+      function applyStoreCircleStyle(element, store) {
+        const brand = getStoreBrand(store);
+        if (!brand) {
+          element.style.removeProperty("background");
+          element.style.removeProperty("color");
+          element.style.removeProperty("border-color");
+          return;
+        }
+
+        element.style.background = brand.bg;
+        element.style.color = brand.fg;
+        element.style.borderColor = brand.bg;
+      }
+
+      function renderStoreSuggestions() {
+        const suggestions = document.getElementById("brand-store-suggestions");
+        if (!suggestions) {
+          return;
+        }
+
+        const optionNodes = TOP_GROCERY_BRANDS
+          .map((brand) => brand.name)
+          .sort((a, b) => a.localeCompare(b))
+          .map((name) => {
+            const option = document.createElement("option");
+            option.value = name;
+            return option;
+          });
+
+        suggestions.replaceChildren(...optionNodes);
       }
 
       function formatRelativePurchase(dateString) {
@@ -1090,6 +1292,7 @@
           bubble.title = store.name;
           bubble.setAttribute("aria-label", store.name);
           bubble.textContent = store.name.charAt(0).toUpperCase();
+          applyStoreCircleStyle(bubble, store);
           fragment.append(bubble);
         });
 
@@ -1149,6 +1352,7 @@
           button.title = `Buy ${item.name} from ${store.name}`;
           button.setAttribute("aria-label", `Buy ${item.name} from ${store.name}`);
           button.textContent = store.name.charAt(0).toUpperCase();
+          applyStoreCircleStyle(button, store);
           button.addEventListener("click", () => {
             setPreferredStore(item.id, item.preferredStoreId === store.id ? null : store.id);
           });
@@ -1481,6 +1685,7 @@
         }
       });
 
+      renderStoreSuggestions();
       renderStoreList();
       syncShoppingVisibleList();
       syncCatalogVisibleList();
@@ -1499,14 +1704,27 @@
       storeForm.addEventListener("submit", (event) => {
         event.preventDefault();
 
-        const name = newStoreInput.value.trim();
-        if (!name) {
+        const rawName = newStoreInput.value.trim();
+        if (!rawName) {
           return;
         }
 
-        const existingStore = stores.find((store) => store.name.toLowerCase() === name.toLowerCase());
+        const matchedBrand = inferStoreBrand(rawName);
+        const resolvedName = matchedBrand?.name || rawName;
+
+        const existingStore = stores.find((store) => {
+          if (matchedBrand && store.brandKey === matchedBrand.key) {
+            return true;
+          }
+
+          return store.name.toLowerCase() === resolvedName.toLowerCase();
+        });
         if (!existingStore) {
-          const store = { id: nextStoreId++, name };
+          const store = {
+            id: nextStoreId++,
+            name: resolvedName,
+            brandKey: matchedBrand?.key || null
+          };
           stores.push(store);
         }
 
