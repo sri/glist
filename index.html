@@ -1084,7 +1084,7 @@
           "aria-label",
           `${item.done ? "Unmark" : "Mark"} ${item.name} ${item.done ? "as not done" : "done"}`
         );
-        parts.toggle.textContent = item.done ? "↺" : "○";
+        parts.toggle.textContent = item.done ? "↺" : "";
         parts.note.hidden = !item.note;
         parts.note.textContent = item.note;
         parts.store.hidden = item.preferredStoreId === null;
