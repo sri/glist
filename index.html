@@ -766,19 +766,16 @@
             <section id="catalog-panel" class="panel panel-back" aria-label="All items">
               <div class="panel-header">
                 <div class="panel-actions">
-                  <button id="show-shopping" class="action-btn alt" type="button">Shopping list</button>
+                  <label class="search-box" for="catalog-search">
+                    <input
+                      id="catalog-search"
+                      type="search"
+                      placeholder="search..."
+                      aria-label="Search all items"
+                    />
+                  </label>
+                  <button id="show-shopping" class="action-btn alt" type="button" aria-label="Home">⌂</button>
                 </div>
-              </div>
-
-              <div class="search-wrap">
-                <label class="search-box" for="catalog-search">
-                  <input
-                    id="catalog-search"
-                    type="search"
-                    placeholder="search..."
-                    aria-label="Search all items"
-                  />
-                </label>
               </div>
 
               <section class="store-section" aria-label="Stores">
