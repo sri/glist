@@ -343,6 +343,80 @@
         background: rgba(196, 112, 58, 0.1);
       }
 
+      .about-link {
+        background: none;
+        border: none;
+        color: var(--muted);
+        font: inherit;
+        font-size: 0.85rem;
+        cursor: pointer;
+        padding: 8px 0;
+        opacity: 0.6;
+      }
+
+      .about-panel {
+        padding: 24px 20px;
+        overflow-y: auto;
+        flex: 1;
+      }
+
+      .about-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 12px;
+      }
+
+      .about-title {
+        margin: 0;
+        font-size: 1.4rem;
+        color: var(--ink);
+      }
+
+      .about-close-btn {
+        background: none;
+        border: none;
+        font-size: 1.6rem;
+        color: var(--muted);
+        cursor: pointer;
+        padding: 4px 8px;
+        line-height: 1;
+      }
+
+      .about-tagline {
+        color: var(--muted);
+        font-size: 0.9rem;
+        line-height: 1.5;
+        margin: 0 0 18px;
+      }
+
+      .about-features {
+        list-style: none;
+        margin: 0 0 20px;
+        padding: 0;
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+      }
+
+      .about-features li {
+        font-size: 0.88rem;
+        line-height: 1.45;
+        color: var(--ink);
+      }
+
+      .about-features strong {
+        color: var(--fresh);
+      }
+
+      .about-repo-link {
+        display: inline-block;
+        color: var(--fresh);
+        font-size: 0.9rem;
+        font-weight: 700;
+        text-decoration: none;
+      }
+
       .search-box {
         display: flex;
         align-items: center;
@@ -1476,6 +1550,26 @@
               <div class="bottom-actions">
                 <button id="move-marked" class="action-btn" type="button">Move purchased to bottom</button>
                 <button id="clear-shopping" class="action-btn alt" type="button">Clear items</button>
+                <button id="about-btn" class="about-link" type="button">About</button>
+              </div>
+
+              <div id="about-panel" class="about-panel" hidden>
+                <div class="about-header">
+                  <h2 class="about-title">glist</h2>
+                  <button id="about-close" class="about-close-btn" type="button" aria-label="Close">&times;</button>
+                </div>
+                <p class="about-tagline">A fast, thumb-friendly grocery list that runs entirely in your browser. No backend, no accounts, no build step.</p>
+                <ul class="about-features">
+                  <li><strong>One-handed shopping</strong> — big tap targets designed for pushing a cart</li>
+                  <li><strong>Store groups</strong> — items organized by store, collapse/expand as you shop, move a store to the top when you walk in</li>
+                  <li><strong>Restock predictions</strong> — learns your purchase cadence and flags items as "due soon" or "overdue"</li>
+                  <li><strong>Smart catalog</strong> — filter by Needs Purchase, In Cart, Recent, Never Bought, Old, or Just Removed</li>
+                  <li><strong>Multi-store items</strong> — assign items to one or more stores with brand-colored chips</li>
+                  <li><strong>Purchase history</strong> — tracks when you last bought each item with expandable detail view</li>
+                  <li><strong>Dark mode</strong> — automatic, based on your system preference</li>
+                  <li><strong>100% local</strong> — everything lives in localStorage, nothing leaves your device</li>
+                </ul>
+                <a href="https://github.com/sri/glist" target="_blank" rel="noopener" class="about-repo-link">View on GitHub →</a>
               </div>
             </section>
 
@@ -3282,6 +3376,26 @@
       showShoppingButton.addEventListener("click", () => {
         setFlipped(false);
       });
+
+      const aboutBtn = document.getElementById("about-btn");
+      const aboutPanel = document.getElementById("about-panel");
+      const aboutClose = document.getElementById("about-close");
+      const shoppingContent = [
+        document.getElementById("shopping-list"),
+        shoppingEmpty,
+        document.querySelector(".bottom-actions"),
+        shoppingSearch.closest(".panel-header")
+      ];
+
+      function toggleAbout(show) {
+        aboutPanel.hidden = !show;
+        shoppingContent.forEach((el) => {
+          if (el) el.hidden = show;
+        });
+      }
+
+      aboutBtn.addEventListener("click", () => toggleAbout(true));
+      aboutClose.addEventListener("click", () => toggleAbout(false));
 
       function renderCatalogAddSuggestion() {
         const query = catalogSearch.value.trim();
