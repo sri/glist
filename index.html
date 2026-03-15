@@ -1212,9 +1212,23 @@
 
             <section id="catalog-panel" class="panel panel-back" aria-label="All items" hidden>
               <div class="panel-header">
-                <div class="panel-nav">
+                <div class="panel-row">
+                  <label class="search-box panel-search" for="catalog-search">
+                    <input
+                      id="catalog-search"
+                      type="search"
+                      placeholder="Search items..."
+                      aria-label="Search all items"
+                    />
+                  </label>
                   <button id="show-shopping" class="nav-btn" type="button" aria-label="Shopping list">🛒</button>
                 </div>
+                <form id="add-form" class="add-form">
+                  <label class="add-field" for="new-item">
+                    <input id="new-item" type="text" placeholder="Add item..." aria-label="Add item" />
+                  </label>
+                  <button class="action-btn" type="submit">Add</button>
+                </form>
               </div>
 
               <div class="tab-bar" role="tablist">
@@ -1223,23 +1237,6 @@
               </div>
 
               <section id="tab-content-items" class="tab-content active" role="tabpanel" aria-labelledby="tab-items">
-                <div class="search-wrap">
-                  <label class="search-box" for="catalog-search">
-                    <input
-                      id="catalog-search"
-                      type="search"
-                      placeholder="Search items..."
-                      aria-label="Search all items"
-                    />
-                  </label>
-                </div>
-
-                <form id="add-form" class="add-form">
-                  <label class="add-field" for="new-item">
-                    <input id="new-item" type="text" placeholder="add item..." aria-label="Add item" />
-                  </label>
-                  <button class="action-btn" type="submit">Add</button>
-                </form>
 
                 <ul id="catalog-list" class="list"></ul>
                 <div id="catalog-empty" class="empty" hidden>No matching items.</div>
