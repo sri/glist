@@ -1,6 +1,8 @@
 # glist
 
-A fast, thumb-friendly grocery list that runs entirely in your browser. No backend, no accounts, no build step — just open `index.html` and shop.
+A fast, thumb-friendly grocery list that runs entirely in your browser. No backend, no accounts, no build step.
+
+**[Open glist](https://sri.github.io/glist/)**
 
 ## Highlights
 
@@ -12,7 +14,3 @@ A fast, thumb-friendly grocery list that runs entirely in your browser. No backe
 - **Purchase history** — tracks when you last bought each item with expandable detail view
 - **Dark mode** — automatic, based on your system preference
 - **100% local** — everything lives in `localStorage`, nothing leaves your device
-
-## Run It
-
-Open `index.html` in a browser. That's it.
