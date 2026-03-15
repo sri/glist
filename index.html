@@ -1360,17 +1360,6 @@
                   <div id="store-list" class="store-list"></div>
                 </div>
 
-                <div class="search-wrap">
-                  <label class="search-box" for="store-search">
-                    <input
-                      id="store-search"
-                      type="text"
-                      placeholder="Search or add store..."
-                      aria-label="Search or add store"
-                    />
-                  </label>
-                </div>
-
                 <div id="store-suggestions" class="store-suggestions search-wrap"></div>
               </section>
             </section>
@@ -1664,7 +1653,6 @@
       const catalogCount = document.getElementById("catalog-count");
       const storeCount = document.getElementById("store-count");
       const catalogAddSuggestion = document.getElementById("catalog-add-suggestion");
-      const storeSearchInput = document.getElementById("store-search");
       const storeSuggestions = document.getElementById("store-suggestions");
       let activeStoreAddKey = null;
       const clearShoppingButton = document.getElementById("clear-shopping");
@@ -1913,7 +1901,7 @@
       }
 
       function renderStoreSuggestions() {
-        const query = storeSearchInput.value.trim().toLowerCase();
+        const query = catalogSearch.value.trim().toLowerCase();
         const existingStoreKeys = new Set(stores.map((s) => s.brandKey).filter(Boolean));
         const existingStoreNames = new Set(stores.map((s) => s.name.toLowerCase()));
 
@@ -1933,9 +1921,9 @@
           const customBtn = document.createElement("button");
           customBtn.type = "button";
           customBtn.className = "store-suggestion";
-          customBtn.textContent = `Add "${storeSearchInput.value.trim()}"`;
+          customBtn.textContent = `Add "${catalogSearch.value.trim()}"`;
           customBtn.addEventListener("click", () => {
-            addStoreByName(storeSearchInput.value.trim());
+            addStoreByName(catalogSearch.value.trim());
           });
           fragment.append(customBtn);
         }
@@ -1975,8 +1963,9 @@
           stores.push(store);
         }
 
-        storeSearchInput.value = "";
+        catalogSearch.value = "";
         renderStoreList();
+        renderStoreSuggestions();
         refreshCatalogPurchaseLabels();
         persistState();
       }
@@ -2096,6 +2085,22 @@
         tabStores.setAttribute("aria-selected", String(tab === "stores"));
         tabContentItems.classList.toggle("active", tab === "items");
         tabContentStores.classList.toggle("active", tab === "stores");
+
+        // Update search placeholder based on active tab
+        if (tab === "stores") {
+          catalogSearch.placeholder = "Search or add stores...";
+          catalogSearch.setAttribute("aria-label", "Search or add stores");
+          catalogAddSuggestion.classList.remove("active");
+          catalogAddSuggestion.replaceChildren();
+          renderStoreSuggestions();
+        } else {
+          catalogSearch.placeholder = "Search or add items...";
+          catalogSearch.setAttribute("aria-label", "Search or add items");
+          storeSuggestions.replaceChildren();
+          syncCatalogVisibleList();
+          renderCatalogAddSuggestion();
+        }
+
         syncStageHeight();
       }
 
@@ -2271,7 +2276,7 @@
           event.stopPropagation();
           if (stores.length === 0) {
             switchTab("stores");
-            storeSearchInput.focus();
+            catalogSearch.focus();
             return;
           }
 
@@ -2780,8 +2785,12 @@
 
       shoppingSearch.addEventListener("input", syncShoppingVisibleList);
       catalogSearch.addEventListener("input", () => {
-        syncCatalogVisibleList();
-        renderCatalogAddSuggestion();
+        if (activeTab === "stores") {
+          renderStoreSuggestions();
+        } else {
+          syncCatalogVisibleList();
+          renderCatalogAddSuggestion();
+        }
       });
       window.addEventListener("hashchange", syncPanelFromLocation);
       document.addEventListener("click", () => {
@@ -2814,8 +2823,6 @@
           renderCatalogAddSuggestion();
         });
       });
-
-      storeSearchInput.addEventListener("input", renderStoreSuggestions);
 
       clearShoppingButton.addEventListener("click", () => {
         const hasUnmarkedItems = shoppingOrder.some((id) => !itemsById.get(id).done);
