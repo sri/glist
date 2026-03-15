@@ -534,11 +534,62 @@
         flex-wrap: wrap;
       }
 
-      .store-list {
+      .store-grid {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 8px;
+      }
+
+      .store-grid-item {
         display: flex;
         align-items: center;
-        gap: 10px;
-        flex-wrap: wrap;
+        gap: 12px;
+        padding: 12px 14px;
+        border: 2px solid transparent;
+        border-radius: var(--radius-lg);
+        background: var(--panel-soft);
+        color: var(--ink);
+        font: inherit;
+        font-size: 0.95rem;
+        text-align: left;
+        cursor: pointer;
+        transition: all 150ms ease;
+        -webkit-tap-highlight-color: transparent;
+      }
+
+      .store-grid-item:hover {
+        background: var(--panel-strong);
+      }
+
+      .store-grid-item.selected {
+        border-color: var(--fresh);
+        background: var(--fresh-soft);
+      }
+
+      .store-grid-item .store-check {
+        width: 20px;
+        height: 20px;
+        border: 2px solid rgba(98, 112, 96, 0.3);
+        border-radius: 4px;
+        display: grid;
+        place-items: center;
+        flex-shrink: 0;
+        color: transparent;
+        font-size: 0.75rem;
+        transition: all 150ms ease;
+      }
+
+      .store-grid-item.selected .store-check {
+        border-color: var(--fresh);
+        background: var(--fresh);
+        color: white;
+      }
+
+      .store-grid-item .store-name {
+        flex: 1;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
       }
 
       .store-circle {
@@ -593,39 +644,6 @@
         font-size: 0.95rem;
         color: var(--muted);
         line-height: 1.4;
-      }
-
-      .store-suggestions {
-        display: flex;
-        flex-wrap: wrap;
-        gap: 8px;
-      }
-
-      .store-suggestion {
-        padding: 10px 16px;
-        border: 0;
-        border-radius: 999px;
-        background: var(--panel-soft);
-        color: var(--ink);
-        font: inherit;
-        font-size: 0.9rem;
-        cursor: pointer;
-        transition: transform 150ms ease, background 150ms ease;
-        -webkit-tap-highlight-color: transparent;
-      }
-
-      .store-suggestion:active {
-        transform: scale(0.985);
-      }
-
-      .store-suggestion:hover {
-        background: var(--fresh-soft);
-        color: var(--fresh);
-      }
-
-      .store-suggestion:focus-visible {
-        outline: 3px solid rgba(41, 99, 71, 0.24);
-        outline-offset: 3px;
       }
 
       .store-group-add {
@@ -1356,11 +1374,7 @@
                   <p class="store-tab-desc">Select the stores you shop at regularly. This helps organize your shopping list by store.</p>
                 </div>
 
-                <div class="search-wrap">
-                  <div id="store-list" class="store-list"></div>
-                </div>
-
-                <div id="store-suggestions" class="store-suggestions search-wrap"></div>
+                <div id="store-grid" class="store-grid search-wrap"></div>
               </section>
             </section>
           </div>
@@ -1653,7 +1667,7 @@
       const catalogCount = document.getElementById("catalog-count");
       const storeCount = document.getElementById("store-count");
       const catalogAddSuggestion = document.getElementById("catalog-add-suggestion");
-      const storeSuggestions = document.getElementById("store-suggestions");
+      const storeGrid = document.getElementById("store-grid");
       let activeStoreAddKey = null;
       const clearShoppingButton = document.getElementById("clear-shopping");
       const moveMarkedButton = document.getElementById("move-marked");
@@ -1662,7 +1676,6 @@
       const collapseAllButton = document.getElementById("collapse-all");
       const shoppingList = document.getElementById("shopping-list");
       const catalogList = document.getElementById("catalog-list");
-      const storeList = document.getElementById("store-list");
       const shoppingEmpty = document.getElementById("shopping-empty");
       const catalogEmpty = document.getElementById("catalog-empty");
 
@@ -1877,76 +1890,107 @@
         return [...stores].sort((a, b) => a.name.localeCompare(b.name));
       }
 
-      function renderStoreList() {
-        const fragment = document.createDocumentFragment();
+      function renderStoreGrid() {
+        const query = catalogSearch.value.trim().toLowerCase();
+        const selectedStoreKeys = new Set(stores.map((s) => s.brandKey).filter(Boolean));
+        const selectedStoreNames = new Set(stores.map((s) => s.name.toLowerCase()));
 
-        sortedStores().forEach((store) => {
-          const bubble = document.createElement("button");
-          bubble.type = "button";
-          bubble.className = "store-circle store-pill";
-          bubble.title = `Remove ${store.name}`;
-          bubble.setAttribute("aria-label", `Remove ${store.name}`);
-          bubble.textContent = store.name;
-          bubble.addEventListener("click", () => {
-            removeStore(store.id);
+        // Build list of all stores (brands + custom selected stores)
+        const allStores = [];
+
+        // Add all brands
+        TOP_GROCERY_BRANDS.forEach((brand) => {
+          const isSelected = selectedStoreKeys.has(brand.key) ||
+            selectedStoreNames.has(brand.name.toLowerCase());
+          allStores.push({
+            name: brand.name,
+            brandKey: brand.key,
+            isSelected,
+            isBrand: true
           });
-          applyStoreCircleStyle(bubble, store);
-          fragment.append(bubble);
         });
 
-        storeList.replaceChildren(fragment);
-        storeCount.textContent = stores.length;
-        renderStoreSuggestions();
-        syncStageHeight();
-      }
+        // Add custom stores (not matching any brand)
+        stores.forEach((store) => {
+          if (!store.brandKey && !TOP_GROCERY_BRANDS.some((b) => b.name.toLowerCase() === store.name.toLowerCase())) {
+            allStores.push({
+              name: store.name,
+              brandKey: null,
+              isSelected: true,
+              isBrand: false,
+              storeId: store.id
+            });
+          }
+        });
 
-      function renderStoreSuggestions() {
-        const query = catalogSearch.value.trim().toLowerCase();
-        const existingStoreKeys = new Set(stores.map((s) => s.brandKey).filter(Boolean));
-        const existingStoreNames = new Set(stores.map((s) => s.name.toLowerCase()));
+        // Sort: selected first, then alphabetically
+        allStores.sort((a, b) => {
+          if (a.isSelected !== b.isSelected) return a.isSelected ? -1 : 1;
+          return a.name.localeCompare(b.name);
+        });
 
-        const filteredBrands = TOP_GROCERY_BRANDS
-          .filter((brand) => {
-            if (existingStoreKeys.has(brand.key)) return false;
-            if (existingStoreNames.has(brand.name.toLowerCase())) return false;
-            if (!query) return true;
-            return brand.name.toLowerCase().includes(query);
-          })
-          .sort((a, b) => a.name.localeCompare(b.name));
+        // Filter by search query
+        const filteredStores = query
+          ? allStores.filter((s) => s.name.toLowerCase().includes(query))
+          : allStores;
 
         const fragment = document.createDocumentFragment();
 
-        // If user typed something that doesn't match any brand, show "Add custom" option
-        if (query && !filteredBrands.some((b) => b.name.toLowerCase() === query)) {
+        // Show "Add custom" option if query doesn't match any existing store exactly
+        if (query && !allStores.some((s) => s.name.toLowerCase() === query)) {
           const customBtn = document.createElement("button");
           customBtn.type = "button";
-          customBtn.className = "store-suggestion";
-          customBtn.textContent = `Add "${catalogSearch.value.trim()}"`;
+          customBtn.className = "store-grid-item";
+          customBtn.innerHTML = `<span class="store-check">+</span><span class="store-name">Add "${catalogSearch.value.trim()}"</span>`;
           customBtn.addEventListener("click", () => {
-            addStoreByName(catalogSearch.value.trim());
+            addStoreByName(catalogSearch.value.trim(), true); // Skip brand inference for custom names
           });
           fragment.append(customBtn);
         }
 
-        filteredBrands.forEach((brand) => {
+        filteredStores.forEach((store) => {
           const btn = document.createElement("button");
           btn.type = "button";
-          btn.className = "store-suggestion";
-          btn.textContent = brand.name;
+          btn.className = `store-grid-item${store.isSelected ? " selected" : ""}`;
+          btn.innerHTML = `<span class="store-check">✓</span><span class="store-name">${store.name}</span>`;
           btn.addEventListener("click", () => {
-            addStoreByName(brand.name);
+            toggleStore(store.name, store.brandKey);
           });
           fragment.append(btn);
         });
 
-        storeSuggestions.replaceChildren(fragment);
+        storeGrid.replaceChildren(fragment);
+        storeCount.textContent = stores.length;
+        syncStageHeight();
       }
 
-      function addStoreByName(rawName) {
+      function toggleStore(name, brandKey) {
+        const existingStore = stores.find((s) => {
+          if (brandKey && s.brandKey === brandKey) return true;
+          return s.name.toLowerCase() === name.toLowerCase();
+        });
+
+        if (existingStore) {
+          removeStore(existingStore.id);
+        } else {
+          addStoreByName(name);
+        }
+      }
+
+      // Keep old function name as alias for compatibility
+      function renderStoreList() {
+        renderStoreGrid();
+      }
+
+      function renderStoreSuggestions() {
+        renderStoreGrid();
+      }
+
+      function addStoreByName(rawName, skipBrandInference = false) {
         const name = rawName.trim();
         if (!name) return;
 
-        const matchedBrand = inferStoreBrand(name);
+        const matchedBrand = skipBrandInference ? null : inferStoreBrand(name);
         const resolvedName = matchedBrand?.name || name;
 
         const existingStore = stores.find((store) => {
@@ -2096,7 +2140,6 @@
         } else {
           catalogSearch.placeholder = "Search or add items...";
           catalogSearch.setAttribute("aria-label", "Search or add items");
-          storeSuggestions.replaceChildren();
           syncCatalogVisibleList();
           renderCatalogAddSuggestion();
         }
