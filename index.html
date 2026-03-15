@@ -944,6 +944,15 @@
         color: var(--muted);
       }
 
+      .just-removed-pill {
+        padding: 6px 10px;
+        border-radius: 999px;
+        background: var(--warm-soft);
+        color: var(--warm);
+        font-size: 0.8rem;
+        font-weight: 600;
+      }
+
       .catalog-store-button {
         max-width: 100%;
         min-height: 38px;
@@ -1360,6 +1369,7 @@
               <section id="tab-content-items" class="tab-content active" role="tabpanel" aria-labelledby="tab-items">
                 <div class="filter-chips">
                   <button type="button" class="filter-chip" data-filter="in-cart">In Cart</button>
+                  <button type="button" class="filter-chip" data-filter="just-removed">Just Removed</button>
                   <button type="button" class="filter-chip" data-filter="recent">Recent</button>
                   <button type="button" class="filter-chip" data-filter="never">Never Bought</button>
                   <button type="button" class="filter-chip" data-filter="old">Old</button>
@@ -1688,7 +1698,9 @@
       const CATALOG_HASH = "#all";
       let activeTab = "items";
       let openStoreMenuItemId = null;
-      let activeCatalogFilter = null; // "in-cart", "recent", "never", "old"
+      let activeCatalogFilter = null; // "in-cart", "just-removed", "recent", "never", "old"
+      const recentlyRemovedItems = new Map(); // itemId -> timestamp
+      const JUST_REMOVED_DURATION = 60000; // 1 minute
 
       function persistState() {
         try {
@@ -1707,6 +1719,21 @@
 
       function getLastPurchased(item) {
         return item.purchaseHistory[item.purchaseHistory.length - 1] || null;
+      }
+
+      function isJustRemoved(itemId) {
+        const removedAt = recentlyRemovedItems.get(itemId);
+        if (!removedAt) return false;
+        const now = Date.now();
+        if (now - removedAt > JUST_REMOVED_DURATION) {
+          recentlyRemovedItems.delete(itemId);
+          return false;
+        }
+        return true;
+      }
+
+      function markAsJustRemoved(itemId) {
+        recentlyRemovedItems.set(itemId, Date.now());
       }
 
       function getStoreName(storeId) {
@@ -1851,6 +1878,9 @@
             switch (activeCatalogFilter) {
               case "in-cart":
                 if (!shoppingSet.has(item.id)) return false;
+                break;
+              case "just-removed":
+                if (!isJustRemoved(item.id)) return false;
                 break;
               case "never":
                 if (lastPurchased) return false;
@@ -2181,6 +2211,7 @@
         parts.meta.textContent = formatRelativePurchase(getLastPurchased(item));
         parts.state.classList.toggle("off", !onList);
         parts.state.textContent = onList ? "On list" : "Add to list";
+        parts.justRemovedPill.hidden = !isJustRemoved(item.id);
         parts.storeButton.textContent = "Stores";
         parts.storeButton.title = `Choose stores for ${item.name}`;
         parts.storeMenu.hidden = openStoreMenuItemId !== item.id || stores.length === 0;
@@ -2306,6 +2337,11 @@
         const state = document.createElement("div");
         state.className = "catalog-state";
 
+        const justRemovedPill = document.createElement("span");
+        justRemovedPill.className = "just-removed-pill";
+        justRemovedPill.textContent = "just removed";
+        justRemovedPill.hidden = true;
+
         const storeTools = document.createElement("div");
         storeTools.className = "catalog-store-tools";
 
@@ -2334,7 +2370,7 @@
         });
 
         storeTools.append(storeChips, storeButton, storeMenu);
-        footer.append(state, storeTools);
+        footer.append(state, justRemovedPill, storeTools);
         itemMain.append(name, note, meta);
         main.append(itemMain);
         card.append(main, footer);
@@ -2346,6 +2382,7 @@
           note,
           meta,
           state,
+          justRemovedPill,
           storeChips,
           storeButton,
           storeMenu
@@ -2651,6 +2688,7 @@
 
         item.done = false;
         shoppingSet.delete(id);
+        markAsJustRemoved(id);
 
         const index = shoppingOrder.indexOf(id);
         if (index !== -1) {
