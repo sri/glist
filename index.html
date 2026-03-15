@@ -948,6 +948,20 @@
         color: var(--muted);
       }
 
+      .restock-pill {
+        padding: 6px 10px;
+        border-radius: 999px;
+        background: var(--fresh-soft);
+        color: var(--fresh);
+        font-size: 0.8rem;
+        font-weight: 600;
+      }
+
+      .restock-pill.overdue {
+        background: var(--warm-soft);
+        color: var(--warm);
+      }
+
       .just-removed-pill {
         padding: 6px 10px;
         border-radius: 999px;
@@ -1488,6 +1502,7 @@
 
               <section id="tab-content-items" class="tab-content active" role="tabpanel" aria-labelledby="tab-items">
                 <div class="filter-chips">
+                  <button type="button" class="filter-chip" data-filter="needs-purchase">Needs Purchase</button>
                   <button type="button" class="filter-chip" data-filter="in-cart">In Cart</button>
                   <button type="button" class="filter-chip" data-filter="just-removed">Just Removed</button>
                   <button type="button" class="filter-chip" data-filter="recent">Recent</button>
@@ -1857,6 +1872,29 @@
         recentlyRemovedItems.set(itemId, Date.now());
       }
 
+      function getPurchaseCadence(item) {
+        if (!item.purchaseHistory || item.purchaseHistory.length < 2) return null;
+        const timestamps = item.purchaseHistory.map((d) => Date.parse(d)).filter((t) => !Number.isNaN(t));
+        if (timestamps.length < 2) return null;
+        let totalGap = 0;
+        for (let i = 1; i < timestamps.length; i++) {
+          totalGap += timestamps[i] - timestamps[i - 1];
+        }
+        const avgMs = totalGap / (timestamps.length - 1);
+        const avgDays = avgMs / 86400000;
+        const elapsed = Date.now() - timestamps[timestamps.length - 1];
+        const elapsedDays = elapsed / 86400000;
+        const ratio = elapsedDays / avgDays;
+        return { avgDays, elapsedDays, ratio };
+      }
+
+      function needsPurchase(item) {
+        if (shoppingSet.has(item.id)) return false;
+        const cadence = getPurchaseCadence(item);
+        if (!cadence) return false;
+        return cadence.ratio >= 0.8;
+      }
+
       function getStoreName(storeId) {
         if (storeId === null || storeId === undefined) {
           return "";
@@ -2003,6 +2041,9 @@
               case "just-removed":
                 if (!isJustRemoved(item.id)) return false;
                 break;
+              case "needs-purchase":
+                if (!needsPurchase(item)) return false;
+                break;
               case "never":
                 if (lastPurchased) return false;
                 break;
@@ -2013,6 +2054,11 @@
           return true;
         }).sort((a, b) => {
           // Sort by purchase date for recent/old filters
+          if (activeCatalogFilter === "needs-purchase") {
+            const aCadence = getPurchaseCadence(a);
+            const bCadence = getPurchaseCadence(b);
+            return (bCadence?.ratio || 0) - (aCadence?.ratio || 0);
+          }
           if (activeCatalogFilter === "recent" || activeCatalogFilter === "old") {
             const aLast = getLastPurchased(a);
             const bLast = getLastPurchased(b);
@@ -2334,6 +2380,15 @@
         parts.state.textContent = onList ? "On list" : "Add to list";
         parts.justRemovedPill.hidden = !isJustRemoved(item.id);
 
+        const cadence = getPurchaseCadence(item);
+        const isRestock = !onList && cadence && cadence.ratio >= 0.8;
+        parts.restockPill.hidden = !isRestock;
+        if (isRestock) {
+          const isOverdue = cadence.ratio >= 1.0;
+          parts.restockPill.textContent = isOverdue ? "overdue" : "due soon";
+          parts.restockPill.classList.toggle("overdue", isOverdue);
+        }
+
         const isExpanded = expandedCatalogItemId === item.id;
         parts.li.classList.toggle("expanded", isExpanded);
         if (isExpanded) {
@@ -2515,6 +2570,10 @@
         justRemovedPill.textContent = "just removed";
         justRemovedPill.hidden = true;
 
+        const restockPill = document.createElement("span");
+        restockPill.className = "restock-pill";
+        restockPill.hidden = true;
+
         const storeTools = document.createElement("div");
         storeTools.className = "catalog-store-tools";
 
@@ -2543,7 +2602,7 @@
         });
 
         storeTools.append(storeChips, storeButton, storeMenu);
-        footer.append(state, justRemovedPill, storeTools);
+        footer.append(state, restockPill, justRemovedPill, storeTools);
         itemMain.append(name, note, meta);
         main.append(itemMain, expandBtn);
         card.append(main, footer);
@@ -2599,6 +2658,7 @@
           meta,
           state,
           justRemovedPill,
+          restockPill,
           storeChips,
           storeButton,
           storeMenu,
