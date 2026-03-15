@@ -762,6 +762,45 @@
         flex-wrap: wrap;
       }
 
+      .selected-stores {
+        margin-bottom: 12px;
+      }
+
+      .selected-stores-label {
+        font-size: 0.75rem;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+        color: var(--muted);
+        margin-bottom: 8px;
+      }
+
+      .selected-stores-list {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+      }
+
+      .selected-store-chip {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        padding: 8px 14px;
+        border: 2px solid var(--fresh);
+        border-radius: 999px;
+        background: var(--fresh-soft);
+        color: var(--fresh);
+        font: inherit;
+        font-size: 0.85rem;
+        font-weight: 600;
+        cursor: pointer;
+      }
+
+      .selected-store-chip .chip-x {
+        font-size: 0.75rem;
+        opacity: 0.6;
+      }
+
       .store-grid {
         display: grid;
         grid-template-columns: repeat(2, 1fr);
@@ -2110,9 +2149,10 @@
 
               <section id="tab-content-stores" class="tab-content" role="tabpanel" aria-labelledby="tab-stores">
                 <div class="store-tab-intro search-wrap">
-                  <p class="store-tab-desc">Select the stores you shop at regularly. This helps organize your shopping list by store.</p>
+                  <p class="store-tab-desc">Select the stores you shop at regularly. This helps organize your shopping list by store. To add a new store, type its name in the search field above.</p>
                 </div>
 
+                <div id="selected-stores" class="selected-stores search-wrap" hidden></div>
                 <div id="store-grid" class="store-grid search-wrap"></div>
               </section>
             </section>
@@ -2415,6 +2455,7 @@
       const storeCount = document.getElementById("store-count");
       const catalogAddSuggestion = document.getElementById("catalog-add-suggestion");
       const storeGrid = document.getElementById("store-grid");
+      const selectedStoresPanel = document.getElementById("selected-stores");
       let activeStoreAddKey = null;
       const clearShoppingButton = document.getElementById("clear-shopping");
       const moveMarkedButton = document.getElementById("move-marked");
@@ -2723,11 +2764,36 @@
           }
         });
 
-        // Sort: selected first, then alphabetically
-        allStores.sort((a, b) => {
-          if (a.isSelected !== b.isSelected) return a.isSelected ? -1 : 1;
-          return a.name.localeCompare(b.name);
-        });
+        // Sort alphabetically (selected stores stay in place)
+        allStores.sort((a, b) => a.name.localeCompare(b.name));
+
+        // Render selected stores chips
+        const selectedList = allStores.filter((s) => s.isSelected);
+        if (selectedList.length > 0) {
+          selectedStoresPanel.hidden = false;
+          const chipFragment = document.createDocumentFragment();
+          const label = document.createElement("div");
+          label.className = "selected-stores-label";
+          label.textContent = "Your Stores";
+          chipFragment.append(label);
+          const chipList = document.createElement("div");
+          chipList.className = "selected-stores-list";
+          selectedList.forEach((store) => {
+            const chip = document.createElement("button");
+            chip.type = "button";
+            chip.className = "selected-store-chip";
+            chip.innerHTML = `${store.name} <span class="chip-x">✕</span>`;
+            chip.addEventListener("click", () => {
+              toggleStore(store.name, store.brandKey);
+            });
+            chipList.append(chip);
+          });
+          chipFragment.append(chipList);
+          selectedStoresPanel.replaceChildren(chipFragment);
+        } else {
+          selectedStoresPanel.hidden = true;
+          selectedStoresPanel.replaceChildren();
+        }
 
         // Filter by search query
         const filteredStores = query
@@ -2743,7 +2809,9 @@
           customBtn.className = "store-grid-item";
           customBtn.innerHTML = `<span class="store-check">+</span><span class="store-name">Add "${catalogSearch.value.trim()}"</span>`;
           customBtn.addEventListener("click", () => {
-            addStoreByName(catalogSearch.value.trim(), true); // Skip brand inference for custom names
+            addStoreByName(catalogSearch.value.trim(), true);
+            catalogSearch.value = "";
+            renderStoreGrid();
           });
           fragment.append(customBtn);
         }
@@ -2807,7 +2875,6 @@
           stores.push(store);
         }
 
-        catalogSearch.value = "";
         renderStoreList();
         renderStoreSuggestions();
         refreshCatalogPurchaseLabels();
