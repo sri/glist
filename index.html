@@ -417,6 +417,62 @@
         text-decoration: none;
       }
 
+      .about-debug {
+        margin-top: 24px;
+        padding-top: 16px;
+        border-top: 1px solid rgba(68, 81, 66, 0.08);
+      }
+
+      .about-debug-btn {
+        background: none;
+        border: none;
+        color: var(--muted);
+        font: inherit;
+        font-size: 0.8rem;
+        cursor: pointer;
+        padding: 0;
+        opacity: 0.5;
+      }
+
+      .debug-toolbar {
+        max-width: 480px;
+        margin: 12px auto 0;
+        padding: 14px 18px;
+        border-radius: var(--radius-lg);
+        background: rgba(180, 40, 40, 0.08);
+        border: 1px solid rgba(180, 40, 40, 0.15);
+        font-size: 0.82rem;
+      }
+
+      .debug-toolbar-header {
+        color: #b83030;
+        font-size: 0.75rem;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+        margin-bottom: 8px;
+      }
+
+      .debug-toolbar-content {
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
+        color: var(--ink);
+        font-variant-numeric: tabular-nums;
+      }
+
+      .debug-row {
+        display: flex;
+        justify-content: space-between;
+      }
+
+      .debug-label {
+        color: var(--muted);
+      }
+
+      .debug-value {
+        font-weight: 600;
+      }
+
       .search-box {
         display: flex;
         align-items: center;
@@ -1570,6 +1626,9 @@
                   <li><strong>100% local</strong> — everything lives in localStorage, nothing leaves your device</li>
                 </ul>
                 <a href="https://github.com/sri/glist" target="_blank" rel="noopener" class="about-repo-link">View on GitHub →</a>
+                <div class="about-debug">
+                  <button id="debug-toggle" class="about-debug-btn" type="button">Enable Debug Toolbar</button>
+                </div>
               </div>
             </section>
 
@@ -1619,6 +1678,12 @@
           </div>
         </div>
       </section>
+      <div id="debug-toolbar" class="debug-toolbar" hidden>
+        <div class="debug-toolbar-header">
+          <strong>Debug</strong>
+        </div>
+        <div id="debug-toolbar-content" class="debug-toolbar-content"></div>
+      </div>
     </main>
 
     <script>
@@ -3396,6 +3461,46 @@
 
       aboutBtn.addEventListener("click", () => toggleAbout(true));
       aboutClose.addEventListener("click", () => toggleAbout(false));
+
+      const debugToolbar = document.getElementById("debug-toolbar");
+      const debugContent = document.getElementById("debug-toolbar-content");
+      const debugToggle = document.getElementById("debug-toggle");
+      let debugInterval = null;
+
+      function updateDebugToolbar() {
+        const totalItems = catalog.length;
+        const onList = shoppingSet.size;
+        const done = shoppingOrder.filter((id) => itemsById.get(id)?.done).length;
+        const totalStores = stores.length;
+        const needsRestock = catalog.filter((item) => needsPurchase(item)).length;
+        const withHistory = catalog.filter((item) => item.purchaseHistory.length > 0).length;
+        const storageBytes = new Blob([window.localStorage.getItem(STORAGE_KEY) || ""]).size;
+        const storageKB = (storageBytes / 1024).toFixed(1);
+
+        debugContent.innerHTML = [
+          ["Catalog items", totalItems],
+          ["On shopping list", `${onList} (${done} done)`],
+          ["Stores", totalStores],
+          ["Needs restock", needsRestock],
+          ["With purchase history", withHistory],
+          ["localStorage", `${storageKB} KB`]
+        ].map(([label, value]) =>
+          `<div class="debug-row"><span class="debug-label">${label}</span><span class="debug-value">${value}</span></div>`
+        ).join("");
+      }
+
+      debugToggle.addEventListener("click", () => {
+        const enabling = debugToolbar.hidden;
+        debugToolbar.hidden = !enabling;
+        debugToggle.textContent = enabling ? "Disable Debug Toolbar" : "Enable Debug Toolbar";
+        if (enabling) {
+          updateDebugToolbar();
+          debugInterval = setInterval(updateDebugToolbar, 2000);
+        } else {
+          clearInterval(debugInterval);
+          debugInterval = null;
+        }
+      });
 
       function renderCatalogAddSuggestion() {
         const query = catalogSearch.value.trim();
