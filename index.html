@@ -482,6 +482,39 @@
         color: var(--muted);
       }
 
+      .import-panel {
+        padding: 24px 20px;
+        overflow-y: auto;
+        flex: 1;
+      }
+
+      .import-textarea {
+        width: 100%;
+        padding: 12px 14px;
+        border: 1px solid color-mix(in srgb, var(--muted) 20%, transparent);
+        border-radius: var(--radius-md);
+        background: var(--panel);
+        color: var(--ink);
+        font: inherit;
+        font-size: 0.9rem;
+        resize: vertical;
+        outline: none;
+      }
+
+      .import-textarea:focus {
+        border-color: var(--fresh);
+      }
+
+      .import-result {
+        margin-top: 12px;
+        padding: 10px 14px;
+        border-radius: var(--radius-md);
+        background: var(--fresh-soft);
+        color: var(--fresh);
+        font-size: 0.88rem;
+        font-weight: 600;
+      }
+
       .about-debug {
         margin-top: 24px;
         padding-top: 16px;
@@ -1960,7 +1993,19 @@
               <div class="bottom-actions">
                 <button id="move-marked" class="action-btn" type="button">Move purchased to bottom</button>
                 <button id="clear-shopping" class="action-btn alt" type="button">Clear items</button>
+                <button id="import-btn" class="action-btn" type="button">Import list</button>
                 <button id="about-btn" class="about-link" type="button">About</button>
+              </div>
+
+              <div id="import-panel" class="import-panel" hidden>
+                <div class="about-header">
+                  <h2 class="about-title">Import Items</h2>
+                  <button id="import-close" class="about-close-btn" type="button" aria-label="Close">&times;</button>
+                </div>
+                <p class="about-tagline">Paste your items below, one per line. Duplicates will be skipped automatically.</p>
+                <textarea id="import-textarea" class="import-textarea" rows="10" placeholder="Bananas&#10;Whole milk&#10;Eggs&#10;Sourdough bread"></textarea>
+                <button id="import-submit" class="action-btn" type="button" style="width:100%;margin-top:12px;">Import</button>
+                <div id="import-result" class="import-result" hidden></div>
               </div>
 
               <div id="about-panel" class="about-panel" hidden>
@@ -2058,6 +2103,9 @@
 
                 <ul id="catalog-list" class="list"></ul>
                 <div id="catalog-empty" class="empty" hidden>No matching items.</div>
+                <div class="bottom-actions" style="margin-top:12px;">
+                  <button id="delete-all-items" class="action-btn alt" type="button">Delete all items</button>
+                </div>
               </section>
 
               <section id="tab-content-stores" class="tab-content" role="tabpanel" aria-labelledby="tab-stores">
@@ -3854,6 +3902,86 @@
 
       aboutBtn.addEventListener("click", () => toggleAbout(true));
       aboutClose.addEventListener("click", () => toggleAbout(false));
+
+      const importBtn = document.getElementById("import-btn");
+      const importPanel = document.getElementById("import-panel");
+      const importClose = document.getElementById("import-close");
+      const importTextarea = document.getElementById("import-textarea");
+      const importSubmit = document.getElementById("import-submit");
+      const importResult = document.getElementById("import-result");
+
+      function toggleImport(show) {
+        importPanel.hidden = !show;
+        aboutPanel.hidden = true;
+        shoppingContent.forEach((el) => {
+          if (el) el.hidden = show;
+        });
+        if (!show) {
+          importTextarea.value = "";
+          importResult.hidden = true;
+        }
+      }
+
+      importBtn.addEventListener("click", () => toggleImport(true));
+      importClose.addEventListener("click", () => toggleImport(false));
+
+      importSubmit.addEventListener("click", () => {
+        const lines = importTextarea.value.split("\n").map((l) => l.trim()).filter(Boolean);
+        if (lines.length === 0) return;
+
+        const existingNames = new Set(catalog.map((item) => item.name.toLowerCase()));
+        let added = 0;
+        let skipped = 0;
+
+        lines.forEach((name) => {
+          if (existingNames.has(name.toLowerCase())) {
+            skipped++;
+            return;
+          }
+          existingNames.add(name.toLowerCase());
+          const item = {
+            id: nextId++,
+            name,
+            note: "",
+            done: false,
+            purchaseHistory: [],
+            selectedStoreIds: []
+          };
+          catalog.unshift(item);
+          itemsById.set(item.id, item);
+          createCatalogItemElement(item);
+          added++;
+        });
+
+        persistState();
+        renderCatalogSection();
+        syncCatalogVisibleList();
+
+        importResult.hidden = false;
+        importResult.textContent = `Added ${added} item${added === 1 ? "" : "s"}${skipped > 0 ? `, ${skipped} duplicate${skipped === 1 ? "" : "s"} skipped` : ""}`;
+        importTextarea.value = "";
+      });
+
+      document.getElementById("delete-all-items").addEventListener("click", () => {
+        if (catalog.length === 0) return;
+        const confirmed = window.confirm(`Delete all ${catalog.length} items? This cannot be undone.`);
+        if (!confirmed) return;
+
+        shoppingOrder.splice(0, shoppingOrder.length);
+        shoppingSet.clear();
+        catalog.splice(0, catalog.length);
+        itemsById.clear();
+        catalogElements.clear();
+        shoppingElements.clear();
+        recentlyRemovedItems.clear();
+        expandedCatalogItemId = null;
+
+        persistState();
+        renderCatalogSection();
+        syncCatalogVisibleList();
+        syncShoppingVisibleList();
+        refreshShoppingButtons();
+      });
 
       const aboutTabs = aboutPanel.querySelectorAll(".about-tab");
       const aboutTabInfo = document.getElementById("about-tab-info");
