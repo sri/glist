@@ -2033,6 +2033,7 @@
                 <button id="move-marked" class="action-btn" type="button">Move purchased to bottom</button>
                 <button id="clear-shopping" class="action-btn alt" type="button">Clear items</button>
                 <button id="import-btn" class="action-btn" type="button">Import list</button>
+                <button id="export-btn" class="action-btn" type="button">Export list</button>
                 <button id="about-btn" class="about-link" type="button">About</button>
               </div>
 
@@ -2045,6 +2046,17 @@
                 <textarea id="import-textarea" class="import-textarea" rows="10" placeholder="Bananas&#10;Whole milk&#10;Eggs&#10;Sourdough bread"></textarea>
                 <button id="import-submit" class="action-btn" type="button" style="width:100%;margin-top:12px;">Import</button>
                 <div id="import-result" class="import-result" hidden></div>
+              </div>
+
+              <div id="export-panel" class="import-panel" hidden>
+                <div class="about-header">
+                  <h2 class="about-title">Export</h2>
+                  <button id="export-close" class="about-close-btn" type="button" aria-label="Close">&times;</button>
+                </div>
+                <p class="about-tagline">Your full grocery list data. Copy and save it to back up or transfer to another device.</p>
+                <textarea id="export-textarea" class="import-textarea" rows="12" readonly></textarea>
+                <button id="export-copy" class="action-btn" type="button" style="width:100%;margin-top:12px;">Copy to clipboard</button>
+                <div id="export-result" class="import-result" hidden></div>
               </div>
 
               <div id="about-panel" class="about-panel" hidden>
@@ -3991,6 +4003,40 @@
 
       importBtn.addEventListener("click", () => toggleImport(true));
       importClose.addEventListener("click", () => toggleImport(false));
+
+      const exportBtn = document.getElementById("export-btn");
+      const exportPanel = document.getElementById("export-panel");
+      const exportClose = document.getElementById("export-close");
+      const exportTextarea = document.getElementById("export-textarea");
+      const exportCopy = document.getElementById("export-copy");
+      const exportResult = document.getElementById("export-result");
+
+      function toggleExport(show) {
+        exportPanel.hidden = !show;
+        aboutPanel.hidden = true;
+        importPanel.hidden = true;
+        shoppingContent.forEach((el) => {
+          if (el) el.hidden = show;
+        });
+        if (show) {
+          const data = {
+            ui: JSON.parse(window.localStorage.getItem(STORAGE_KEY) || "{}"),
+            "all-items": catalog.map((item) => item.name)
+          };
+          exportTextarea.value = JSON.stringify(data, null, 2);
+          exportResult.hidden = true;
+        }
+      }
+
+      exportBtn.addEventListener("click", () => toggleExport(true));
+      exportClose.addEventListener("click", () => toggleExport(false));
+
+      exportCopy.addEventListener("click", () => {
+        navigator.clipboard.writeText(exportTextarea.value).then(() => {
+          exportResult.hidden = false;
+          exportResult.textContent = "Copied to clipboard";
+        });
+      });
 
       importSubmit.addEventListener("click", () => {
         const lines = importTextarea.value.split("\n").map((l) => l.trim()).filter(Boolean);
