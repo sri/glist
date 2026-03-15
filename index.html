@@ -1789,7 +1789,9 @@
         const nextId = Math.max(0, ...catalog.map((item) => item.id)) + 1;
         const nextStoreId = Math.max(0, ...stores.map((store) => store.id)) + 1;
 
-        return { catalog, shoppingOrder, stores, nextId, nextStoreId };
+        const savedCollapsedGroups = Array.isArray(saved?.collapsedGroups) ? saved.collapsedGroups : [];
+
+        return { catalog, shoppingOrder, stores, nextId, nextStoreId, savedCollapsedGroups };
       }
 
       const state = buildInitialState();
@@ -1826,7 +1828,7 @@
 
       const shoppingElements = new Map();
       const catalogElements = new Map();
-      const collapsedGroups = new Set();
+      const collapsedGroups = new Set(state.savedCollapsedGroups);
       const autoCollapsedGroups = new Set();
       const storeGroupOrder = []; // Track order for move-to-top
       const SHOPPING_HASH = "#shopping";
@@ -1845,7 +1847,8 @@
             JSON.stringify({
               catalog,
               shoppingOrder,
-              stores
+              stores,
+              collapsedGroups: [...collapsedGroups]
             })
           );
         } catch (error) {
@@ -2780,6 +2783,7 @@
             } else {
               collapsedGroups.add(group.key);
             }
+            persistState();
             syncShoppingVisibleList();
           });
 
@@ -3271,6 +3275,7 @@
         } else {
           groups.forEach((group) => collapsedGroups.add(group.key));
         }
+        persistState();
         syncShoppingVisibleList();
       });
 
