@@ -417,6 +417,71 @@
         text-decoration: none;
       }
 
+      .about-tabs {
+        display: flex;
+        gap: 0;
+        margin-bottom: 16px;
+        border-bottom: 1px solid rgba(68, 81, 66, 0.1);
+      }
+
+      .about-tab {
+        padding: 10px 18px;
+        border: none;
+        background: none;
+        color: var(--muted);
+        font: inherit;
+        font-size: 0.9rem;
+        font-weight: 600;
+        cursor: pointer;
+        border-bottom: 2px solid transparent;
+        margin-bottom: -1px;
+      }
+
+      .about-tab.active {
+        color: var(--fresh);
+        border-bottom-color: var(--fresh);
+      }
+
+      .theme-list {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+      }
+
+      .theme-option {
+        display: flex;
+        flex-direction: column;
+        gap: 2px;
+        padding: 12px 16px;
+        border: 2px solid rgba(68, 81, 66, 0.1);
+        border-radius: var(--radius-md);
+        background: var(--panel-soft);
+        color: var(--ink);
+        font: inherit;
+        text-align: left;
+        cursor: pointer;
+        transition: border-color 150ms ease;
+      }
+
+      .theme-option.active {
+        border-color: var(--fresh);
+        background: var(--fresh-soft);
+      }
+
+      .theme-option-name {
+        font-size: 0.9rem;
+        font-weight: 700;
+      }
+
+      .theme-option.active .theme-option-name {
+        color: var(--fresh);
+      }
+
+      .theme-option-desc {
+        font-size: 0.8rem;
+        color: var(--muted);
+      }
+
       .about-debug {
         margin-top: 24px;
         padding-top: 16px;
@@ -1485,8 +1550,366 @@
         }
       }
 
+      /* Light theme (explicit override for dark OS preference) */
+      .theme-light {
+        --bg: #f6f0e3;
+        --bg-accent: #efe0ba;
+        --panel: rgba(255, 251, 244, 0.92);
+        --panel-strong: #fff7eb;
+        --panel-soft: rgba(255, 255, 255, 0.68);
+        --ink: #263127;
+        --muted: #617060;
+        --fresh: #296347;
+        --fresh-soft: rgba(41, 99, 71, 0.12);
+        --warm: #d96f32;
+        --warm-soft: rgba(217, 111, 50, 0.14);
+        --done: #8f978d;
+        --shadow: 0 24px 50px rgba(78, 60, 32, 0.16);
+        --blob-top: rgba(124, 184, 116, 0.22);
+        --blob-bottom: rgba(255, 190, 118, 0.22);
+      }
+
+      /* Dark theme base (applied via media query or class) */
+      .theme-dark,
+      .theme-matrix,
+      .theme-ocean {
+        --bg: #081120;
+        --bg-accent: #0d213d;
+        --panel: rgba(10, 22, 42, 0.9);
+        --panel-strong: rgba(16, 31, 58, 0.98);
+        --panel-soft: rgba(17, 30, 54, 0.78);
+        --ink: #edf4ff;
+        --muted: #9bb0cf;
+        --fresh: #87d8c7;
+        --fresh-soft: rgba(135, 216, 199, 0.16);
+        --warm: #ffb36e;
+        --warm-soft: rgba(255, 179, 110, 0.14);
+        --done: #7f8da7;
+        --shadow: 0 26px 60px rgba(0, 0, 0, 0.38);
+        --blob-top: rgba(70, 136, 255, 0.22);
+        --blob-bottom: rgba(13, 103, 168, 0.24);
+      }
+
+      /* Forest theme */
+      .theme-forest {
+        --bg: #1a2e1a;
+        --bg-accent: #243524;
+        --panel: rgba(26, 46, 26, 0.92);
+        --panel-strong: rgba(30, 52, 30, 0.98);
+        --panel-soft: rgba(32, 54, 32, 0.78);
+        --ink: #e8f5e8;
+        --muted: #9ab89a;
+        --fresh: #6ecf6e;
+        --fresh-soft: rgba(110, 207, 110, 0.16);
+        --warm: #e8a94e;
+        --warm-soft: rgba(232, 169, 78, 0.14);
+        --done: #7a9a7a;
+        --shadow: 0 26px 60px rgba(0, 0, 0, 0.38);
+        --blob-top: rgba(80, 180, 80, 0.22);
+        --blob-bottom: rgba(50, 140, 50, 0.24);
+      }
+
+      /* Ocean theme */
+      .theme-ocean {
+        --bg: #0a1628;
+        --bg-accent: #0f2040;
+        --panel: rgba(12, 24, 48, 0.92);
+        --panel-strong: rgba(16, 30, 56, 0.98);
+        --panel-soft: rgba(18, 32, 58, 0.78);
+        --ink: #e0f0ff;
+        --muted: #88b0d8;
+        --fresh: #5cc8e8;
+        --fresh-soft: rgba(92, 200, 232, 0.16);
+        --warm: #f0a060;
+        --warm-soft: rgba(240, 160, 96, 0.14);
+        --done: #7090b0;
+        --shadow: 0 26px 60px rgba(0, 0, 0, 0.38);
+        --blob-top: rgba(60, 160, 240, 0.22);
+        --blob-bottom: rgba(30, 80, 180, 0.24);
+      }
+
+      /* Matrix theme */
+      .theme-matrix {
+        --bg: #0a0a0a;
+        --bg-accent: #111;
+        --panel: rgba(10, 10, 10, 0.95);
+        --panel-strong: rgba(15, 15, 15, 0.98);
+        --panel-soft: rgba(18, 18, 18, 0.85);
+        --ink: #00ff41;
+        --muted: #33aa33;
+        --fresh: #00ff41;
+        --fresh-soft: rgba(0, 255, 65, 0.1);
+        --warm: #ffcc00;
+        --warm-soft: rgba(255, 204, 0, 0.1);
+        --done: #338833;
+        --shadow: 0 26px 60px rgba(0, 255, 65, 0.06);
+        --blob-top: rgba(0, 255, 65, 0.08);
+        --blob-bottom: rgba(0, 180, 40, 0.08);
+      }
+
+      /* Warm Sand theme */
+      .theme-sand {
+        --bg: #f5e6d0;
+        --bg-accent: #e8d4b8;
+        --panel: rgba(245, 235, 218, 0.92);
+        --panel-strong: #f8ecd8;
+        --panel-soft: rgba(255, 248, 238, 0.68);
+        --ink: #3d2e1e;
+        --muted: #8a7460;
+        --fresh: #b8720a;
+        --fresh-soft: rgba(184, 114, 10, 0.12);
+        --warm: #c44e20;
+        --warm-soft: rgba(196, 78, 32, 0.14);
+        --done: #a09080;
+        --shadow: 0 24px 50px rgba(80, 50, 20, 0.16);
+        --blob-top: rgba(210, 160, 80, 0.22);
+        --blob-bottom: rgba(196, 120, 60, 0.22);
+      }
+
+      /* Dark theme overrides for components */
+      .theme-dark .shell,
+      .theme-dark .search-box,
+      .theme-dark .add-field,
+      .theme-dark .shopping-row,
+      .theme-dark .catalog-card,
+      .theme-dark .catalog-store-button,
+      .theme-dark .catalog-section-toggle,
+      .theme-dark .bottom-actions .action-btn,
+      .theme-dark .empty,
+      .theme-forest .shell,
+      .theme-forest .search-box,
+      .theme-forest .add-field,
+      .theme-forest .shopping-row,
+      .theme-forest .catalog-card,
+      .theme-forest .catalog-store-button,
+      .theme-forest .catalog-section-toggle,
+      .theme-forest .bottom-actions .action-btn,
+      .theme-forest .empty,
+      .theme-ocean .shell,
+      .theme-ocean .search-box,
+      .theme-ocean .add-field,
+      .theme-ocean .shopping-row,
+      .theme-ocean .catalog-card,
+      .theme-ocean .catalog-store-button,
+      .theme-ocean .catalog-section-toggle,
+      .theme-ocean .bottom-actions .action-btn,
+      .theme-ocean .empty,
+      .theme-matrix .shell,
+      .theme-matrix .search-box,
+      .theme-matrix .add-field,
+      .theme-matrix .shopping-row,
+      .theme-matrix .catalog-card,
+      .theme-matrix .catalog-store-button,
+      .theme-matrix .catalog-section-toggle,
+      .theme-matrix .bottom-actions .action-btn,
+      .theme-matrix .empty {
+        border-color: rgba(181, 209, 255, 0.08);
+      }
+
+      .theme-dark .search-box,
+      .theme-dark .add-field,
+      .theme-dark .shopping-row,
+      .theme-dark .catalog-card,
+      .theme-dark .catalog-store-button,
+      .theme-dark .catalog-section-toggle,
+      .theme-dark .bottom-actions .action-btn,
+      .theme-dark .empty,
+      .theme-forest .search-box,
+      .theme-forest .add-field,
+      .theme-forest .shopping-row,
+      .theme-forest .catalog-card,
+      .theme-forest .catalog-store-button,
+      .theme-forest .catalog-section-toggle,
+      .theme-forest .bottom-actions .action-btn,
+      .theme-forest .empty,
+      .theme-ocean .search-box,
+      .theme-ocean .add-field,
+      .theme-ocean .shopping-row,
+      .theme-ocean .catalog-card,
+      .theme-ocean .catalog-store-button,
+      .theme-ocean .catalog-section-toggle,
+      .theme-ocean .bottom-actions .action-btn,
+      .theme-ocean .empty,
+      .theme-matrix .search-box,
+      .theme-matrix .add-field,
+      .theme-matrix .shopping-row,
+      .theme-matrix .catalog-card,
+      .theme-matrix .catalog-store-button,
+      .theme-matrix .catalog-section-toggle,
+      .theme-matrix .bottom-actions .action-btn,
+      .theme-matrix .empty {
+        box-shadow: 0 18px 32px rgba(0, 0, 0, 0.24);
+      }
+
+      .theme-dark .store-circle,
+      .theme-forest .store-circle,
+      .theme-ocean .store-circle,
+      .theme-matrix .store-circle {
+        background: rgba(130, 169, 224, 0.12);
+        color: #98afd1;
+      }
+
+      .theme-dark .store-circle.active,
+      .theme-forest .store-circle.active,
+      .theme-ocean .store-circle.active,
+      .theme-matrix .store-circle.active {
+        box-shadow: 0 0 0 3px rgba(135, 216, 199, 0.28);
+      }
+
+      .theme-dark .store-circle.add-circle,
+      .theme-forest .store-circle.add-circle,
+      .theme-ocean .store-circle.add-circle,
+      .theme-matrix .store-circle.add-circle {
+        background: rgba(255, 179, 110, 0.14);
+        color: var(--warm);
+      }
+
+      .theme-dark .store-group,
+      .theme-forest .store-group,
+      .theme-ocean .store-group,
+      .theme-matrix .store-group {
+        background: rgba(17, 30, 54, 0.42);
+        border-color: rgba(181, 209, 255, 0.08);
+      }
+
+      .theme-dark .store-group-icon,
+      .theme-forest .store-group-icon,
+      .theme-ocean .store-group-icon,
+      .theme-matrix .store-group-icon {
+        background: rgba(130, 169, 224, 0.12);
+        color: #98afd1;
+      }
+
+      .theme-dark .empty,
+      .theme-forest .empty,
+      .theme-ocean .empty,
+      .theme-matrix .empty {
+        background: rgba(20, 34, 60, 0.92);
+        color: #90a7cb;
+      }
+
+      .theme-dark .shopping-item.done .shopping-row,
+      .theme-forest .shopping-item.done .shopping-row,
+      .theme-ocean .shopping-item.done .shopping-row,
+      .theme-matrix .shopping-item.done .shopping-row {
+        background: rgba(12, 24, 44, 0.92);
+      }
+
+      .theme-dark .item.done .item-note,
+      .theme-forest .item.done .item-note,
+      .theme-ocean .item.done .item-note,
+      .theme-matrix .item.done .item-note {
+        color: #7988a2;
+      }
+
+      .theme-dark .search-box input::placeholder,
+      .theme-dark .add-form input::placeholder,
+      .theme-dark .store-form input::placeholder,
+      .theme-forest .search-box input::placeholder,
+      .theme-forest .add-form input::placeholder,
+      .theme-forest .store-form input::placeholder,
+      .theme-ocean .search-box input::placeholder,
+      .theme-ocean .add-form input::placeholder,
+      .theme-ocean .store-form input::placeholder,
+      .theme-matrix .search-box input::placeholder,
+      .theme-matrix .add-form input::placeholder,
+      .theme-matrix .store-form input::placeholder {
+        color: #7d94b7;
+      }
+
+      /* Matrix-specific overrides */
+      .theme-matrix .store-circle {
+        background: rgba(0, 255, 65, 0.08);
+        color: #33aa33;
+      }
+
+      .theme-matrix .store-circle.active {
+        box-shadow: 0 0 0 3px rgba(0, 255, 65, 0.2);
+      }
+
+      .theme-matrix .store-group {
+        background: rgba(0, 20, 0, 0.5);
+        border-color: rgba(0, 255, 65, 0.1);
+      }
+
+      .theme-matrix .store-group-icon {
+        background: rgba(0, 255, 65, 0.08);
+        color: #33aa33;
+      }
+
+      .theme-matrix .empty {
+        background: rgba(10, 10, 10, 0.92);
+        color: #33aa33;
+      }
+
+      .theme-matrix .shopping-item.done .shopping-row {
+        background: rgba(5, 5, 5, 0.92);
+      }
+
+      .theme-matrix .search-box input::placeholder,
+      .theme-matrix .add-form input::placeholder,
+      .theme-matrix .store-form input::placeholder {
+        color: #338833;
+      }
+
+      .theme-matrix .shell,
+      .theme-matrix .search-box,
+      .theme-matrix .add-field,
+      .theme-matrix .shopping-row,
+      .theme-matrix .catalog-card,
+      .theme-matrix .catalog-store-button,
+      .theme-matrix .catalog-section-toggle,
+      .theme-matrix .bottom-actions .action-btn,
+      .theme-matrix .empty {
+        border-color: rgba(0, 255, 65, 0.08);
+      }
+
+      /* Forest-specific overrides */
+      .theme-forest .store-circle {
+        background: rgba(110, 207, 110, 0.1);
+        color: #6ecf6e;
+      }
+
+      .theme-forest .store-group {
+        background: rgba(20, 40, 20, 0.5);
+        border-color: rgba(110, 207, 110, 0.1);
+      }
+
+      .theme-forest .store-group-icon {
+        background: rgba(110, 207, 110, 0.1);
+        color: #6ecf6e;
+      }
+
+      .theme-forest .empty {
+        background: rgba(24, 42, 24, 0.92);
+        color: #9ab89a;
+      }
+
+      .theme-forest .shopping-item.done .shopping-row {
+        background: rgba(18, 34, 18, 0.92);
+      }
+
+      .theme-forest .shell,
+      .theme-forest .search-box,
+      .theme-forest .add-field,
+      .theme-forest .shopping-row,
+      .theme-forest .catalog-card,
+      .theme-forest .catalog-store-button,
+      .theme-forest .catalog-section-toggle,
+      .theme-forest .bottom-actions .action-btn,
+      .theme-forest .empty {
+        border-color: rgba(110, 207, 110, 0.06);
+      }
+
+      .theme-forest .search-box input::placeholder,
+      .theme-forest .add-form input::placeholder,
+      .theme-forest .store-form input::placeholder {
+        color: #6a8a6a;
+      }
+
+      /* System dark fallback (when no theme class is set) */
       @media (prefers-color-scheme: dark) {
-        :root {
+        :root:not([class*="theme-"]) {
           --bg: #081120;
           --bg-accent: #0d213d;
           --panel: rgba(10, 22, 42, 0.9);
@@ -1504,76 +1927,77 @@
           --blob-bottom: rgba(13, 103, 168, 0.24);
         }
 
-        body {
+        :root:not([class*="theme-"]) body,
+        body:not([class*="theme-"]) {
           background:
             radial-gradient(circle at top right, rgba(129, 180, 255, 0.14), transparent 30%),
             radial-gradient(circle at bottom left, rgba(20, 116, 194, 0.2), transparent 28%),
             linear-gradient(160deg, var(--bg) 0%, #07182d 45%, var(--bg-accent) 100%);
         }
 
-        .shell,
-        .search-box,
-        .add-field,
-        .shopping-row,
-        .catalog-card,
-        .catalog-store-button,
-        .catalog-section-toggle,
-        .bottom-actions .action-btn,
-        .empty {
+        :root:not([class*="theme-"]) .shell,
+        :root:not([class*="theme-"]) .search-box,
+        :root:not([class*="theme-"]) .add-field,
+        :root:not([class*="theme-"]) .shopping-row,
+        :root:not([class*="theme-"]) .catalog-card,
+        :root:not([class*="theme-"]) .catalog-store-button,
+        :root:not([class*="theme-"]) .catalog-section-toggle,
+        :root:not([class*="theme-"]) .bottom-actions .action-btn,
+        :root:not([class*="theme-"]) .empty {
           border-color: rgba(181, 209, 255, 0.08);
         }
 
-        .search-box,
-        .add-field,
-        .shopping-row,
-        .catalog-card,
-        .catalog-store-button,
-        .catalog-section-toggle,
-        .bottom-actions .action-btn,
-        .empty {
+        :root:not([class*="theme-"]) .search-box,
+        :root:not([class*="theme-"]) .add-field,
+        :root:not([class*="theme-"]) .shopping-row,
+        :root:not([class*="theme-"]) .catalog-card,
+        :root:not([class*="theme-"]) .catalog-store-button,
+        :root:not([class*="theme-"]) .catalog-section-toggle,
+        :root:not([class*="theme-"]) .bottom-actions .action-btn,
+        :root:not([class*="theme-"]) .empty {
           box-shadow: 0 18px 32px rgba(0, 0, 0, 0.24);
         }
 
-        .store-circle {
+        :root:not([class*="theme-"]) .store-circle {
           background: rgba(130, 169, 224, 0.12);
           color: #98afd1;
         }
 
-        .store-circle.active {
+        :root:not([class*="theme-"]) .store-circle.active {
           box-shadow: 0 0 0 3px rgba(135, 216, 199, 0.28);
         }
 
-        .store-circle.add-circle {
+        :root:not([class*="theme-"]) .store-circle.add-circle {
           background: rgba(255, 179, 110, 0.14);
           color: var(--warm);
         }
 
-        .store-group {
+        :root:not([class*="theme-"]) .store-group {
           background: rgba(17, 30, 54, 0.42);
           border-color: rgba(181, 209, 255, 0.08);
         }
 
-        .store-group-icon {
+        :root:not([class*="theme-"]) .store-group-icon {
           background: rgba(130, 169, 224, 0.12);
           color: #98afd1;
         }
 
-        .empty {
+        :root:not([class*="theme-"]) .empty {
           background: rgba(20, 34, 60, 0.92);
           color: #90a7cb;
         }
 
-        .shopping-item.done .shopping-row {
+        :root:not([class*="theme-"]) .shopping-item.done .shopping-row {
           background: rgba(12, 24, 44, 0.92);
         }
 
-        .item.done .item-note {
+        :root:not([class*="theme-"]) .item.done .item-note {
           color: #7988a2;
         }
 
-        .search-box input::placeholder,
-        .add-form input::placeholder,
-        .store-form input::placeholder {
+        :root:not([class*="theme-"]) .search-box input::placeholder,
+        :root:not([class*="theme-"]) .add-form input::placeholder,
+        :root:not([class*="theme-"]) .store-form input::placeholder {
           color: #7d94b7;
         }
       }
@@ -1614,20 +2038,59 @@
                   <h2 class="about-title">glist</h2>
                   <button id="about-close" class="about-close-btn" type="button" aria-label="Close">&times;</button>
                 </div>
-                <p class="about-tagline">A fast, thumb-friendly grocery list that runs entirely in your browser. No backend, no accounts, no build step.</p>
-                <ul class="about-features">
-                  <li><strong>One-handed shopping</strong> — big tap targets designed for pushing a cart</li>
-                  <li><strong>Store groups</strong> — items organized by store, collapse/expand as you shop, move a store to the top when you walk in</li>
-                  <li><strong>Restock predictions</strong> — learns your purchase cadence and flags items as "due soon" or "overdue"</li>
-                  <li><strong>Smart catalog</strong> — filter by Needs Purchase, In Cart, Recent, Never Bought, Old, or Just Removed</li>
-                  <li><strong>Multi-store items</strong> — assign items to one or more stores with brand-colored chips</li>
-                  <li><strong>Purchase history</strong> — tracks when you last bought each item with expandable detail view</li>
-                  <li><strong>Dark mode</strong> — automatic, based on your system preference</li>
-                  <li><strong>100% local</strong> — everything lives in localStorage, nothing leaves your device</li>
-                </ul>
-                <a href="https://github.com/sri/glist" target="_blank" rel="noopener" class="about-repo-link">View on GitHub →</a>
-                <div class="about-debug">
-                  <button id="debug-toggle" class="about-debug-btn" type="button">Enable Debug Toolbar</button>
+                <div class="about-tabs">
+                  <button type="button" class="about-tab active" data-about-tab="info">About</button>
+                  <button type="button" class="about-tab" data-about-tab="themes">Themes</button>
+                </div>
+                <div id="about-tab-info" class="about-tab-content">
+                  <p class="about-tagline">A fast, thumb-friendly grocery list that runs entirely in your browser. No backend, no accounts, no build step.</p>
+                  <ul class="about-features">
+                    <li><strong>One-handed shopping</strong> — big tap targets designed for pushing a cart</li>
+                    <li><strong>Store groups</strong> — items organized by store, collapse/expand as you shop, move a store to the top when you walk in</li>
+                    <li><strong>Restock predictions</strong> — learns your purchase cadence and flags items as "due soon" or "overdue"</li>
+                    <li><strong>Smart catalog</strong> — filter by Needs Purchase, In Cart, Recent, Never Bought, Old, or Just Removed</li>
+                    <li><strong>Multi-store items</strong> — assign items to one or more stores with brand-colored chips</li>
+                    <li><strong>Purchase history</strong> — tracks when you last bought each item with expandable detail view</li>
+                    <li><strong>Dark mode</strong> — automatic, based on your system preference</li>
+                    <li><strong>100% local</strong> — everything lives in localStorage, nothing leaves your device</li>
+                  </ul>
+                  <a href="https://github.com/sri/glist" target="_blank" rel="noopener" class="about-repo-link">View on GitHub →</a>
+                  <div class="about-debug">
+                    <button id="debug-toggle" class="about-debug-btn" type="button">Enable Debug Toolbar</button>
+                  </div>
+                </div>
+                <div id="about-tab-themes" class="about-tab-content" hidden>
+                  <p class="about-tagline">Pick a look that suits you. Your choice is saved and applied automatically on every visit.</p>
+                  <div class="theme-list" id="theme-pills">
+                    <button type="button" class="theme-option active" data-theme="system">
+                      <span class="theme-option-name">System</span>
+                      <span class="theme-option-desc">Follows your device's light or dark setting</span>
+                    </button>
+                    <button type="button" class="theme-option" data-theme="light">
+                      <span class="theme-option-name">Light</span>
+                      <span class="theme-option-desc">Warm cream tones with green accents</span>
+                    </button>
+                    <button type="button" class="theme-option" data-theme="dark">
+                      <span class="theme-option-name">Dark</span>
+                      <span class="theme-option-desc">Deep navy with cool blue highlights</span>
+                    </button>
+                    <button type="button" class="theme-option" data-theme="matrix">
+                      <span class="theme-option-name">Matrix</span>
+                      <span class="theme-option-desc">Green on black, terminal style</span>
+                    </button>
+                    <button type="button" class="theme-option" data-theme="forest">
+                      <span class="theme-option-name">Forest</span>
+                      <span class="theme-option-desc">Rich greens like a walk through the woods</span>
+                    </button>
+                    <button type="button" class="theme-option" data-theme="ocean">
+                      <span class="theme-option-name">Ocean</span>
+                      <span class="theme-option-desc">Cool blues inspired by deep water</span>
+                    </button>
+                    <button type="button" class="theme-option" data-theme="sand">
+                      <span class="theme-option-name">Sand</span>
+                      <span class="theme-option-desc">Warm tan and terracotta earth tones</span>
+                    </button>
+                  </div>
                 </div>
               </div>
             </section>
@@ -3461,6 +3924,60 @@
 
       aboutBtn.addEventListener("click", () => toggleAbout(true));
       aboutClose.addEventListener("click", () => toggleAbout(false));
+
+      const aboutTabs = aboutPanel.querySelectorAll(".about-tab");
+      const aboutTabInfo = document.getElementById("about-tab-info");
+      const aboutTabThemes = document.getElementById("about-tab-themes");
+
+      aboutTabs.forEach((tab) => {
+        tab.addEventListener("click", () => {
+          aboutTabs.forEach((t) => t.classList.remove("active"));
+          tab.classList.add("active");
+          const target = tab.dataset.aboutTab;
+          aboutTabInfo.hidden = target !== "info";
+          aboutTabThemes.hidden = target !== "themes";
+        });
+      });
+
+      const THEME_KEY = "glist-theme";
+      const themePills = document.getElementById("theme-pills");
+
+      function applyTheme(theme) {
+        const root = document.documentElement;
+        root.className = root.className.replace(/\btheme-\S+/g, "").trim();
+
+        if (theme && theme !== "system") {
+          root.classList.add(`theme-${theme}`);
+        }
+
+        // Set color-scheme for UA defaults (scrollbars, form controls)
+        if (theme === "light" || theme === "sand") {
+          root.style.colorScheme = "light";
+        } else if (theme === "system") {
+          root.style.colorScheme = "";
+        } else {
+          root.style.colorScheme = "dark";
+        }
+
+        // Update active pill
+        themePills.querySelectorAll(".theme-option").forEach((pill) => {
+          pill.classList.toggle("active", pill.dataset.theme === theme);
+        });
+
+        localStorage.setItem(THEME_KEY, theme);
+      }
+
+      themePills.addEventListener("click", (event) => {
+        const pill = event.target.closest(".theme-option");
+        if (!pill) return;
+        applyTheme(pill.dataset.theme);
+      });
+
+      // Restore saved theme
+      const savedTheme = localStorage.getItem(THEME_KEY);
+      if (savedTheme && savedTheme !== "system") {
+        applyTheme(savedTheme);
+      }
 
       const debugToolbar = document.getElementById("debug-toolbar");
       const debugContent = document.getElementById("debug-toolbar-content");
