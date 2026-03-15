@@ -2782,6 +2782,7 @@
         }
 
         item.done = false;
+        recentlyRemovedItems.delete(id);
 
         if (shoppingSet.has(id)) {
           moveItemToTop(id);
