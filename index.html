@@ -262,6 +262,44 @@
         gap: 10px;
       }
 
+      .filter-chips {
+        display: flex;
+        gap: 8px;
+        padding: 0 16px;
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+        scrollbar-width: none;
+      }
+
+      .filter-chips::-webkit-scrollbar {
+        display: none;
+      }
+
+      .filter-chip {
+        flex-shrink: 0;
+        padding: 8px 14px;
+        border: 1px solid rgba(98, 112, 96, 0.2);
+        border-radius: 20px;
+        background: transparent;
+        color: var(--muted);
+        font: inherit;
+        font-size: 0.875rem;
+        cursor: pointer;
+        transition: all 150ms ease;
+        -webkit-tap-highlight-color: transparent;
+      }
+
+      .filter-chip:hover {
+        border-color: var(--fresh);
+        color: var(--fresh);
+      }
+
+      .filter-chip.active {
+        background: var(--fresh);
+        border-color: var(--fresh);
+        color: white;
+      }
+
       .search-wrap {
         padding: 0 16px;
       }
@@ -1302,6 +1340,12 @@
               </div>
 
               <section id="tab-content-items" class="tab-content active" role="tabpanel" aria-labelledby="tab-items">
+                <div class="filter-chips">
+                  <button type="button" class="filter-chip" data-filter="in-cart">In Cart</button>
+                  <button type="button" class="filter-chip" data-filter="recent">Recent</button>
+                  <button type="button" class="filter-chip" data-filter="never">Never Bought</button>
+                  <button type="button" class="filter-chip" data-filter="old">Old</button>
+                </div>
 
                 <ul id="catalog-list" class="list"></ul>
                 <div id="catalog-empty" class="empty" hidden>No matching items.</div>
@@ -1643,6 +1687,8 @@
       const CATALOG_HASH = "#all";
       let activeTab = "items";
       let openStoreMenuItemId = null;
+      let activeCatalogFilter = null; // "in-cart", "recent", "never", "old"
+      const OLD_PURCHASE_DAYS = 30; // Items not purchased in this many days are "old"
 
       function persistState() {
         try {
@@ -1787,16 +1833,48 @@
 
       function catalogItems() {
         const query = catalogSearch.value.trim().toLowerCase();
+        const now = Date.now();
+        const oldThreshold = now - (OLD_PURCHASE_DAYS * 24 * 60 * 60 * 1000);
+
         return catalog.filter((item) => {
-          if (!query) {
-            return true;
+          // Apply search filter
+          if (query) {
+            const matchesSearch = (
+              item.name.toLowerCase().includes(query) ||
+              item.note.toLowerCase().includes(query) ||
+              getItemStoreNames(item).some((storeName) => storeName.toLowerCase().includes(query))
+            );
+            if (!matchesSearch) return false;
           }
 
-          return (
-            item.name.toLowerCase().includes(query) ||
-            item.note.toLowerCase().includes(query) ||
-            getItemStoreNames(item).some((storeName) => storeName.toLowerCase().includes(query))
-          );
+          // Apply category filter
+          if (activeCatalogFilter) {
+            const lastPurchased = getLastPurchased(item);
+            switch (activeCatalogFilter) {
+              case "in-cart":
+                if (!shoppingSet.has(item.id)) return false;
+                break;
+              case "recent":
+                if (!lastPurchased) return false;
+                break;
+              case "never":
+                if (lastPurchased) return false;
+                break;
+              case "old":
+                if (!lastPurchased || lastPurchased > oldThreshold) return false;
+                break;
+            }
+          }
+
+          return true;
+        }).sort((a, b) => {
+          // Sort by purchase date if "recent" filter is active
+          if (activeCatalogFilter === "recent") {
+            const aLast = getLastPurchased(a) || 0;
+            const bLast = getLastPurchased(b) || 0;
+            return bLast - aLast; // Most recent first
+          }
+          return 0; // Keep original order
         });
       }
 
@@ -2476,6 +2554,29 @@
         const nodes = catalogItems().map((item) => catalogElements.get(item.id).li);
         catalogList.replaceChildren(...nodes);
         catalogEmpty.hidden = nodes.length > 0;
+
+        // Update empty message based on active filter
+        if (nodes.length === 0) {
+          const query = catalogSearch.value.trim();
+          let message = "No matching items.";
+
+          if (activeCatalogFilter && query) {
+            const filterNames = { "in-cart": "in cart", "recent": "recently purchased", "never": "never bought", "old": "old" };
+            message = `No items matching "${query}" that are ${filterNames[activeCatalogFilter]}.`;
+          } else if (activeCatalogFilter) {
+            switch (activeCatalogFilter) {
+              case "in-cart": message = "No items in cart."; break;
+              case "recent": message = "No recently purchased items."; break;
+              case "never": message = "No items that were never bought."; break;
+              case "old": message = "No old items."; break;
+            }
+          } else if (query) {
+            message = `No items matching "${query}".`;
+          }
+
+          catalogEmpty.textContent = message;
+        }
+
         syncStageHeight();
       }
 
@@ -2694,6 +2795,23 @@
 
       tabStores.addEventListener("click", () => {
         switchTab("stores");
+      });
+
+      // Filter chip handlers
+      document.querySelectorAll(".filter-chip").forEach((chip) => {
+        chip.addEventListener("click", () => {
+          const filter = chip.dataset.filter;
+          if (activeCatalogFilter === filter) {
+            activeCatalogFilter = null;
+            chip.classList.remove("active");
+          } else {
+            document.querySelectorAll(".filter-chip").forEach((c) => c.classList.remove("active"));
+            activeCatalogFilter = filter;
+            chip.classList.add("active");
+          }
+          syncCatalogVisibleList();
+          renderCatalogAddSuggestion();
+        });
       });
 
       storeSearchInput.addEventListener("input", renderStoreSuggestions);
