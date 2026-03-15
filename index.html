@@ -1688,7 +1688,6 @@
       let activeTab = "items";
       let openStoreMenuItemId = null;
       let activeCatalogFilter = null; // "in-cart", "recent", "never", "old"
-      const OLD_PURCHASE_DAYS = 30; // Items not purchased in this many days are "old"
 
       function persistState() {
         try {
@@ -1833,8 +1832,6 @@
 
       function catalogItems() {
         const query = catalogSearch.value.trim().toLowerCase();
-        const now = Date.now();
-        const oldThreshold = now - (OLD_PURCHASE_DAYS * 24 * 60 * 60 * 1000);
 
         return catalog.filter((item) => {
           // Apply search filter
@@ -1854,25 +1851,30 @@
               case "in-cart":
                 if (!shoppingSet.has(item.id)) return false;
                 break;
-              case "recent":
-                if (!lastPurchased) return false;
-                break;
               case "never":
                 if (lastPurchased) return false;
                 break;
-              case "old":
-                if (!lastPurchased || lastPurchased > oldThreshold) return false;
-                break;
+              // "recent" and "old" show all items, just sorted
             }
           }
 
           return true;
         }).sort((a, b) => {
-          // Sort by purchase date if "recent" filter is active
-          if (activeCatalogFilter === "recent") {
-            const aLast = getLastPurchased(a) || 0;
-            const bLast = getLastPurchased(b) || 0;
-            return bLast - aLast; // Most recent first
+          // Sort by purchase date for recent/old filters
+          if (activeCatalogFilter === "recent" || activeCatalogFilter === "old") {
+            const aLast = getLastPurchased(a);
+            const bLast = getLastPurchased(b);
+
+            // Handle never-purchased items
+            if (!aLast && !bLast) return 0; // Both never purchased, keep order
+            if (!aLast) return activeCatalogFilter === "recent" ? 1 : -1; // Never purchased: end for recent, top for old
+            if (!bLast) return activeCatalogFilter === "recent" ? -1 : 1;
+
+            if (activeCatalogFilter === "recent") {
+              return bLast - aLast; // Most recent first
+            } else {
+              return aLast - bLast; // Oldest first
+            }
           }
           return 0; // Keep original order
         });
@@ -2561,14 +2563,13 @@
           let message = "No matching items.";
 
           if (activeCatalogFilter && query) {
-            const filterNames = { "in-cart": "in cart", "recent": "recently purchased", "never": "never bought", "old": "old" };
-            message = `No items matching "${query}" that are ${filterNames[activeCatalogFilter]}.`;
+            const filterNames = { "in-cart": "in cart", "recent": "purchased", "never": "never bought", "old": "purchased" };
+            message = `No items matching "${query}" that were ${filterNames[activeCatalogFilter]}.`;
           } else if (activeCatalogFilter) {
             switch (activeCatalogFilter) {
               case "in-cart": message = "No items in cart."; break;
-              case "recent": message = "No recently purchased items."; break;
-              case "never": message = "No items that were never bought."; break;
-              case "old": message = "No old items."; break;
+              case "never": message = "All items have been purchased."; break;
+              default: message = "No items."; break;
             }
           } else if (query) {
             message = `No items matching "${query}".`;
