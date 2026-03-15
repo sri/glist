@@ -848,6 +848,8 @@
       .item-main {
         display: grid;
         gap: 6px;
+        flex: 1;
+        min-width: 0;
       }
 
       .item-name {
@@ -886,7 +888,9 @@
       }
 
       .catalog-main {
-        display: block;
+        display: flex;
+        align-items: flex-start;
+        gap: 8px;
       }
 
       .catalog-footer {
@@ -951,6 +955,122 @@
         color: var(--warm);
         font-size: 0.8rem;
         font-weight: 600;
+      }
+
+      .catalog-expand-btn {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        width: 32px;
+        height: 32px;
+        padding: 0;
+        border: 0;
+        border-radius: 50%;
+        background: transparent;
+        color: var(--muted);
+        font-size: 1.1rem;
+        cursor: pointer;
+        transition: transform 200ms ease;
+        -webkit-tap-highlight-color: transparent;
+        flex-shrink: 0;
+      }
+
+      .catalog-item.expanded .catalog-expand-btn {
+        transform: rotate(180deg);
+      }
+
+      .catalog-detail {
+        display: none;
+        padding: 14px 20px 18px;
+        border-top: 1px solid rgba(68, 81, 66, 0.08);
+        background: var(--panel-soft);
+        border-radius: 0 0 var(--radius-lg) var(--radius-lg);
+      }
+
+      .catalog-item.expanded .catalog-detail {
+        display: block;
+      }
+
+      .catalog-item.expanded .catalog-card {
+        border-radius: var(--radius-lg) var(--radius-lg) 0 0;
+      }
+
+      .catalog-detail-section {
+        margin-bottom: 14px;
+      }
+
+      .catalog-detail-section:last-child {
+        margin-bottom: 0;
+      }
+
+      .catalog-detail-label {
+        font-size: 0.75rem;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+        color: var(--muted);
+        margin-bottom: 6px;
+      }
+
+      .catalog-history-list {
+        list-style: none;
+        margin: 0;
+        padding: 0;
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
+      }
+
+      .catalog-history-item {
+        font-size: 0.85rem;
+        color: var(--ink);
+      }
+
+      .catalog-history-gap {
+        font-size: 0.75rem;
+        color: var(--muted);
+        padding: 2px 0;
+        opacity: 0.7;
+      }
+
+      .catalog-history-empty {
+        font-size: 0.85rem;
+        color: var(--muted);
+        font-style: italic;
+      }
+
+      .catalog-note-input {
+        width: 100%;
+        padding: 10px 12px;
+        border: 1px solid rgba(68, 81, 66, 0.15);
+        border-radius: var(--radius-md);
+        background: var(--panel);
+        color: var(--ink);
+        font: inherit;
+        font-size: 0.9rem;
+        resize: none;
+        outline: none;
+      }
+
+      .catalog-note-input:focus {
+        border-color: var(--fresh);
+      }
+
+      .catalog-delete-btn {
+        width: 100%;
+        padding: 10px;
+        border: 2px solid var(--warm);
+        border-radius: var(--radius-md);
+        background: transparent;
+        color: var(--warm);
+        font: inherit;
+        font-size: 0.85rem;
+        font-weight: 700;
+        cursor: pointer;
+      }
+
+      .catalog-delete-btn:active {
+        background: var(--warm-soft);
       }
 
       .catalog-store-button {
@@ -1698,6 +1818,7 @@
       const CATALOG_HASH = "#all";
       let activeTab = "items";
       let openStoreMenuItemId = null;
+      let expandedCatalogItemId = null;
       let activeCatalogFilter = null; // "in-cart", "just-removed", "recent", "never", "old"
       const recentlyRemovedItems = new Map(); // itemId -> timestamp
       const JUST_REMOVED_DURATION = 60000; // 1 minute
@@ -2212,6 +2333,48 @@
         parts.state.classList.toggle("off", !onList);
         parts.state.textContent = onList ? "On list" : "Add to list";
         parts.justRemovedPill.hidden = !isJustRemoved(item.id);
+
+        const isExpanded = expandedCatalogItemId === item.id;
+        parts.li.classList.toggle("expanded", isExpanded);
+        if (isExpanded) {
+          const historyItems = document.createDocumentFragment();
+          if (item.purchaseHistory.length === 0) {
+            const empty = document.createElement("li");
+            empty.className = "catalog-history-empty";
+            empty.textContent = "No purchases yet";
+            historyItems.append(empty);
+          } else {
+            const reversed = [...item.purchaseHistory].reverse();
+            reversed.forEach((dateStr, i) => {
+              const li = document.createElement("li");
+              li.className = "catalog-history-item";
+              const d = new Date(dateStr);
+              li.textContent = d.toLocaleDateString(undefined, { year: "numeric", month: "short", day: "numeric", hour: "numeric", minute: "2-digit" });
+              historyItems.append(li);
+
+              if (i < reversed.length - 1) {
+                const gap = document.createElement("li");
+                gap.className = "catalog-history-gap";
+                const prev = new Date(reversed[i + 1]);
+                const diff = d - prev;
+                const mins = Math.floor(diff / 60000);
+                const hrs = Math.floor(diff / 3600000);
+                const days = Math.floor(diff / 86400000);
+                let label;
+                if (days > 0) label = `${days} day${days === 1 ? "" : "s"} later`;
+                else if (hrs > 0) label = `${hrs} hour${hrs === 1 ? "" : "s"} later`;
+                else label = `${mins} minute${mins === 1 ? "" : "s"} later`;
+                gap.textContent = `↕ ${label}`;
+                historyItems.append(gap);
+              }
+            });
+          }
+          parts.historyList.replaceChildren(historyItems);
+          if (document.activeElement !== parts.noteInput) {
+            parts.noteInput.value = item.note || "";
+          }
+        }
+
         parts.storeButton.textContent = "Stores";
         parts.storeButton.title = `Choose stores for ${item.name}`;
         parts.storeMenu.hidden = openStoreMenuItemId !== item.id || stores.length === 0;
@@ -2331,6 +2494,16 @@
         const meta = document.createElement("div");
         meta.className = "item-meta";
 
+        const expandBtn = document.createElement("button");
+        expandBtn.type = "button";
+        expandBtn.className = "catalog-expand-btn";
+        expandBtn.innerHTML = "&#x25BE;";
+        expandBtn.title = "Show details";
+        expandBtn.addEventListener("click", (event) => {
+          event.stopPropagation();
+          toggleExpandedCatalogItem(item.id);
+        });
+
         const footer = document.createElement("div");
         footer.className = "catalog-footer";
 
@@ -2372,9 +2545,52 @@
         storeTools.append(storeChips, storeButton, storeMenu);
         footer.append(state, justRemovedPill, storeTools);
         itemMain.append(name, note, meta);
-        main.append(itemMain);
+        main.append(itemMain, expandBtn);
         card.append(main, footer);
-        li.append(card);
+
+        const detail = document.createElement("div");
+        detail.className = "catalog-detail";
+
+        const historySection = document.createElement("div");
+        historySection.className = "catalog-detail-section";
+        const historyLabel = document.createElement("div");
+        historyLabel.className = "catalog-detail-label";
+        historyLabel.textContent = "Purchase History";
+        const historyList = document.createElement("ul");
+        historyList.className = "catalog-history-list";
+        historySection.append(historyLabel, historyList);
+
+        const noteSection = document.createElement("div");
+        noteSection.className = "catalog-detail-section";
+        const noteLabel = document.createElement("div");
+        noteLabel.className = "catalog-detail-label";
+        noteLabel.textContent = "Note";
+        const noteInput = document.createElement("textarea");
+        noteInput.className = "catalog-note-input";
+        noteInput.rows = 2;
+        noteInput.placeholder = "Add a note...";
+        noteInput.addEventListener("click", (event) => event.stopPropagation());
+        noteInput.addEventListener("input", () => {
+          item.note = noteInput.value.trim();
+          updateCatalogItemElement(item);
+          persistState();
+        });
+        noteSection.append(noteLabel, noteInput);
+
+        const deleteSection = document.createElement("div");
+        deleteSection.className = "catalog-detail-section";
+        const deleteBtn = document.createElement("button");
+        deleteBtn.type = "button";
+        deleteBtn.className = "catalog-delete-btn";
+        deleteBtn.textContent = "Delete Item";
+        deleteBtn.addEventListener("click", (event) => {
+          event.stopPropagation();
+          deleteCatalogItem(item.id);
+        });
+        deleteSection.append(deleteBtn);
+
+        detail.append(historySection, noteSection, deleteSection);
+        li.append(card, detail);
 
         catalogElements.set(item.id, {
           li,
@@ -2385,7 +2601,9 @@
           justRemovedPill,
           storeChips,
           storeButton,
-          storeMenu
+          storeMenu,
+          historyList,
+          noteInput
         });
         updateCatalogItemElement(item);
       }
@@ -2698,6 +2916,48 @@
         updateShoppingItemElement(item);
         updateCatalogItemElement(item);
         persistState();
+      }
+
+      function toggleExpandedCatalogItem(itemId) {
+        const previousId = expandedCatalogItemId;
+        expandedCatalogItemId = expandedCatalogItemId === itemId ? null : itemId;
+
+        if (previousId !== null) {
+          const previousItem = itemsById.get(previousId);
+          if (previousItem) updateCatalogItemElement(previousItem);
+        }
+
+        if (expandedCatalogItemId !== null) {
+          const item = itemsById.get(expandedCatalogItemId);
+          if (item) updateCatalogItemElement(item);
+        }
+      }
+
+      function deleteCatalogItem(id) {
+        const item = itemsById.get(id);
+        if (!item) return;
+
+        // Remove from shopping list if present
+        if (shoppingSet.has(id)) {
+          shoppingSet.delete(id);
+          const index = shoppingOrder.indexOf(id);
+          if (index !== -1) shoppingOrder.splice(index, 1);
+        }
+
+        // Remove from catalog
+        const catalogIndex = catalog.indexOf(item);
+        if (catalogIndex !== -1) catalog.splice(catalogIndex, 1);
+        itemsById.delete(id);
+        catalogElements.delete(id);
+        shoppingElements.delete(id);
+        recentlyRemovedItems.delete(id);
+
+        if (expandedCatalogItemId === id) expandedCatalogItemId = null;
+
+        persistState();
+        renderCatalogSection();
+        syncCatalogVisibleList();
+        syncShoppingVisibleList();
       }
 
       function setOpenStoreMenu(itemId) {
