@@ -315,7 +315,7 @@
         width: 100%;
         min-height: 48px;
         padding: 12px 16px;
-        border: 2px solid rgba(98, 112, 96, 0.2);
+        border: 2px solid color-mix(in srgb, var(--muted) 20%, transparent);
         border-radius: var(--radius-lg);
         background: transparent;
         color: var(--muted);
@@ -333,14 +333,14 @@
       }
 
       .bottom-actions .action-btn.alt {
-        border-color: rgba(180, 120, 60, 0.3);
-        color: #b87830;
+        border-color: color-mix(in srgb, var(--warm) 30%, transparent);
+        color: var(--warm);
       }
 
       .bottom-actions .action-btn.alt:hover {
-        border-color: #c4703a;
-        color: #c4703a;
-        background: rgba(196, 112, 58, 0.1);
+        border-color: var(--warm);
+        color: var(--warm);
+        background: var(--warm-soft);
       }
 
       .about-link {
@@ -1132,14 +1132,14 @@
         min-height: 34px;
         padding: 8px 12px;
         border-radius: 999px;
-        background: rgba(41, 99, 71, 0.1);
+        background: var(--fresh-soft);
         color: var(--fresh);
         font-size: 0.86rem;
         font-weight: 800;
       }
 
       .catalog-state.off {
-        background: rgba(98, 112, 96, 0.08);
+        background: color-mix(in srgb, var(--muted) 8%, transparent);
         color: var(--muted);
       }
 
@@ -1362,8 +1362,8 @@
 
       .store-group {
         border-radius: var(--radius-lg);
-        background: rgba(255, 255, 255, 0.14);
-        border: 1px solid rgba(68, 81, 66, 0.08);
+        background: color-mix(in srgb, var(--panel) 14%, transparent);
+        border: 1px solid color-mix(in srgb, var(--muted) 8%, transparent);
         overflow: hidden;
       }
 
@@ -1396,7 +1396,7 @@
         border-radius: 50%;
         display: grid;
         place-items: center;
-        background: rgba(41, 99, 71, 0.1);
+        background: var(--fresh-soft);
         color: var(--fresh);
         font: inherit;
         font-size: 1rem;
@@ -1464,25 +1464,25 @@
       }
 
       .shopping-item.done .shopping-row {
-        background: rgba(247, 240, 228, 0.86);
+        background: color-mix(in srgb, var(--bg) 86%, transparent);
       }
 
       .item.done .item-name {
         color: var(--done);
         text-decoration: line-through;
         text-decoration-thickness: 3px;
-        text-decoration-color: rgba(143, 151, 141, 0.85);
+        text-decoration-color: color-mix(in srgb, var(--done) 85%, transparent);
       }
 
       .item.done .item-note {
-        color: #8b8f86;
+        color: var(--done);
       }
 
       .empty {
         margin: 8px 16px 0;
         padding: 22px 18px;
         border-radius: var(--radius-md);
-        background: rgba(255, 255, 255, 0.62);
+        background: var(--panel-soft);
         color: var(--muted);
         text-align: center;
         font-size: 1rem;
@@ -1772,35 +1772,7 @@
         border-color: rgba(181, 209, 255, 0.08);
       }
 
-      .theme-dark .store-group-icon,
-      .theme-forest .store-group-icon,
-      .theme-ocean .store-group-icon,
-      .theme-matrix .store-group-icon {
-        background: rgba(130, 169, 224, 0.12);
-        color: #98afd1;
-      }
-
-      .theme-dark .empty,
-      .theme-forest .empty,
-      .theme-ocean .empty,
-      .theme-matrix .empty {
-        background: rgba(20, 34, 60, 0.92);
-        color: #90a7cb;
-      }
-
-      .theme-dark .shopping-item.done .shopping-row,
-      .theme-forest .shopping-item.done .shopping-row,
-      .theme-ocean .shopping-item.done .shopping-row,
-      .theme-matrix .shopping-item.done .shopping-row {
-        background: rgba(12, 24, 44, 0.92);
-      }
-
-      .theme-dark .item.done .item-note,
-      .theme-forest .item.done .item-note,
-      .theme-ocean .item.done .item-note,
-      .theme-matrix .item.done .item-note {
-        color: #7988a2;
-      }
+      /* These now use CSS variables from the base styles */
 
       .theme-dark .search-box input::placeholder,
       .theme-dark .add-form input::placeholder,
@@ -1832,19 +1804,7 @@
         border-color: rgba(0, 255, 65, 0.1);
       }
 
-      .theme-matrix .store-group-icon {
-        background: rgba(0, 255, 65, 0.08);
-        color: #33aa33;
-      }
-
-      .theme-matrix .empty {
-        background: rgba(10, 10, 10, 0.92);
-        color: #33aa33;
-      }
-
-      .theme-matrix .shopping-item.done .shopping-row {
-        background: rgba(5, 5, 5, 0.92);
-      }
+      /* Matrix store-group-icon, empty, done row now use CSS variables */
 
       .theme-matrix .search-box input::placeholder,
       .theme-matrix .add-form input::placeholder,
@@ -1875,19 +1835,7 @@
         border-color: rgba(110, 207, 110, 0.1);
       }
 
-      .theme-forest .store-group-icon {
-        background: rgba(110, 207, 110, 0.1);
-        color: #6ecf6e;
-      }
-
-      .theme-forest .empty {
-        background: rgba(24, 42, 24, 0.92);
-        color: #9ab89a;
-      }
-
-      .theme-forest .shopping-item.done .shopping-row {
-        background: rgba(18, 34, 18, 0.92);
-      }
+      /* Forest store-group-icon, empty, done row now use CSS variables */
 
       .theme-forest .shell,
       .theme-forest .search-box,
@@ -1975,24 +1923,6 @@
         :root:not([class*="theme-"]) .store-group {
           background: rgba(17, 30, 54, 0.42);
           border-color: rgba(181, 209, 255, 0.08);
-        }
-
-        :root:not([class*="theme-"]) .store-group-icon {
-          background: rgba(130, 169, 224, 0.12);
-          color: #98afd1;
-        }
-
-        :root:not([class*="theme-"]) .empty {
-          background: rgba(20, 34, 60, 0.92);
-          color: #90a7cb;
-        }
-
-        :root:not([class*="theme-"]) .shopping-item.done .shopping-row {
-          background: rgba(12, 24, 44, 0.92);
-        }
-
-        :root:not([class*="theme-"]) .item.done .item-note {
-          color: #7988a2;
         }
 
         :root:not([class*="theme-"]) .search-box input::placeholder,
