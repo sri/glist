@@ -181,6 +181,42 @@
         width: 100%;
       }
 
+      .catalog-add-suggestion {
+        display: none;
+      }
+
+      .catalog-add-suggestion.active {
+        display: block;
+      }
+
+      .catalog-add-btn {
+        width: 100%;
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        padding: 14px 16px;
+        border: 0;
+        border-radius: var(--radius-lg);
+        background: var(--fresh-soft);
+        color: var(--fresh);
+        font: inherit;
+        font-size: 1rem;
+        text-align: left;
+        cursor: pointer;
+        transition: background 150ms ease;
+        -webkit-tap-highlight-color: transparent;
+      }
+
+      .catalog-add-btn:hover {
+        background: var(--fresh-wash);
+      }
+
+      .catalog-add-btn::before {
+        content: "+";
+        font-size: 1.25rem;
+        font-weight: 500;
+      }
+
       .tab-bar {
         display: flex;
         gap: 8px;
@@ -1034,6 +1070,16 @@
         font-size: 1rem;
       }
 
+      .empty a {
+        color: var(--fresh);
+        text-decoration: underline;
+        text-underline-offset: 2px;
+      }
+
+      .empty a:hover {
+        color: var(--fresh-deep);
+      }
+
       @media (max-width: 480px) {
         .app {
           padding-left: 10px;
@@ -1202,7 +1248,7 @@
               </div>
 
               <div id="shopping-list" class="shopping-groups" aria-live="polite"></div>
-              <div id="shopping-empty" class="empty" hidden>No matching items.</div>
+              <div id="shopping-empty" class="empty" hidden>No items in cart. <a href="#all" id="go-to-catalog">Add from All Items</a></div>
 
               <div class="bottom-actions">
                 <button id="move-marked" class="action-btn" type="button">Move check items down</button>
@@ -1217,18 +1263,13 @@
                     <input
                       id="catalog-search"
                       type="search"
-                      placeholder="Search items..."
-                      aria-label="Search all items"
+                      placeholder="Search or add items..."
+                      aria-label="Search or add items"
                     />
                   </label>
                   <button id="show-shopping" class="nav-btn" type="button" aria-label="Shopping list">🛒</button>
                 </div>
-                <form id="add-form" class="add-form">
-                  <label class="add-field" for="new-item">
-                    <input id="new-item" type="text" placeholder="Add item..." aria-label="Add item" />
-                  </label>
-                  <button class="action-btn" type="submit">Add</button>
-                </form>
+                <div id="catalog-add-suggestion" class="catalog-add-suggestion"></div>
               </div>
 
               <div class="tab-bar" role="tablist">
@@ -1554,10 +1595,9 @@
       const tabContentStores = document.getElementById("tab-content-stores");
       const catalogCount = document.getElementById("catalog-count");
       const storeCount = document.getElementById("store-count");
-      const newItemInput = document.getElementById("new-item");
+      const catalogAddSuggestion = document.getElementById("catalog-add-suggestion");
       const storeSearchInput = document.getElementById("store-search");
       const storeSuggestions = document.getElementById("store-suggestions");
-      const addForm = document.getElementById("add-form");
       let activeStoreAddKey = null;
       const clearShoppingButton = document.getElementById("clear-shopping");
       const moveMarkedButton = document.getElementById("move-marked");
@@ -2613,7 +2653,10 @@
       syncPanelFromLocation();
 
       shoppingSearch.addEventListener("input", syncShoppingVisibleList);
-      catalogSearch.addEventListener("input", syncCatalogVisibleList);
+      catalogSearch.addEventListener("input", () => {
+        syncCatalogVisibleList();
+        renderCatalogAddSuggestion();
+      });
       window.addEventListener("hashchange", syncPanelFromLocation);
       document.addEventListener("click", () => {
         if (openStoreMenuItemId !== null) {
@@ -2683,14 +2726,35 @@
         setFlipped(false);
       });
 
-      addForm.addEventListener("submit", (event) => {
-        event.preventDefault();
-
-        const name = newItemInput.value.trim();
-        if (!name) {
+      function renderCatalogAddSuggestion() {
+        const query = catalogSearch.value.trim();
+        if (!query) {
+          catalogAddSuggestion.classList.remove("active");
+          catalogAddSuggestion.replaceChildren();
           return;
         }
 
+        // Check if exact match exists (case-insensitive)
+        const exactMatch = catalog.some((item) => item.name.toLowerCase() === query.toLowerCase());
+        if (exactMatch) {
+          catalogAddSuggestion.classList.remove("active");
+          catalogAddSuggestion.replaceChildren();
+          return;
+        }
+
+        const btn = document.createElement("button");
+        btn.type = "button";
+        btn.className = "catalog-add-btn";
+        btn.textContent = `Add "${query}"`;
+        btn.addEventListener("click", () => {
+          addNewCatalogItem(query);
+        });
+
+        catalogAddSuggestion.replaceChildren(btn);
+        catalogAddSuggestion.classList.add("active");
+      }
+
+      function addNewCatalogItem(name) {
         const item = {
           id: nextId++,
           name,
@@ -2705,10 +2769,11 @@
         createCatalogItemElement(item);
         persistState();
         renderCatalogSection();
-        newItemInput.value = "";
+        catalogSearch.value = "";
         syncCatalogVisibleList();
-        newItemInput.focus();
-      });
+        renderCatalogAddSuggestion();
+        catalogSearch.focus();
+      }
 
       window.addEventListener("resize", syncStageHeight);
       window.setInterval(refreshCatalogPurchaseLabels, 60 * 1000);
