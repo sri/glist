@@ -123,6 +123,16 @@
         align-items: center;
       }
 
+      .panel-row {
+        display: flex;
+        gap: 12px;
+        align-items: center;
+      }
+
+      .panel-row .panel-search {
+        flex: 1;
+      }
+
       .nav-btn {
         width: 44px;
         height: 44px;
@@ -144,6 +154,27 @@
 
       .nav-btn:not(:disabled):hover {
         transform: translateY(-1px);
+      }
+
+      .collapse-all-btn {
+        align-self: flex-end;
+        width: 32px;
+        height: 32px;
+        padding: 0;
+        border: 0;
+        border-radius: 50%;
+        background: transparent;
+        color: var(--muted);
+        font: inherit;
+        font-size: 1.25rem;
+        cursor: pointer;
+        transition: color 150ms ease, background 150ms ease;
+        -webkit-tap-highlight-color: transparent;
+      }
+
+      .collapse-all-btn:hover {
+        background: var(--panel-soft);
+        color: var(--ink);
       }
 
       .panel-search {
@@ -1156,17 +1187,18 @@
           <div class="flip-card">
             <section id="shopping-panel" class="panel panel-front" aria-label="Shopping list">
               <div class="panel-header">
-                <div class="panel-nav">
+                <div class="panel-row">
+                  <label class="search-box panel-search" for="shopping-search">
+                    <input
+                      id="shopping-search"
+                      type="search"
+                      placeholder="Search items..."
+                      aria-label="Search shopping list"
+                    />
+                  </label>
                   <button id="show-catalog" class="nav-btn" type="button" aria-label="All items">▤</button>
                 </div>
-                <label class="search-box panel-search" for="shopping-search">
-                  <input
-                    id="shopping-search"
-                    type="search"
-                    placeholder="Search items..."
-                    aria-label="Search shopping list"
-                  />
-                </label>
+                <button id="collapse-all" class="collapse-all-btn" type="button" aria-label="Collapse all stores">−</button>
               </div>
 
               <div id="shopping-list" class="shopping-groups" aria-live="polite"></div>
@@ -1534,6 +1566,7 @@
       const moveMarkedButton = document.getElementById("move-marked");
       const showCatalogButton = document.getElementById("show-catalog");
       const showShoppingButton = document.getElementById("show-shopping");
+      const collapseAllButton = document.getElementById("collapse-all");
       const shoppingList = document.getElementById("shopping-list");
       const catalogList = document.getElementById("catalog-list");
       const storeList = document.getElementById("store-list");
@@ -1544,6 +1577,7 @@
       const catalogElements = new Map();
       const collapsedGroups = new Set();
       const autoCollapsedGroups = new Set();
+      const storeGroupOrder = []; // Track order for move-to-top
       const SHOPPING_HASH = "#shopping";
       const CATALOG_HASH = "#all";
       let activeTab = "items";
@@ -2179,8 +2213,16 @@
           }
         });
 
-        // Sort groups: "Any Store" first, then alphabetically by store name
+        // Sort groups: by storeGroupOrder first, then "Any Store", then alphabetically
         return [...groups.values()].sort((a, b) => {
+          const aIndex = storeGroupOrder.indexOf(a.key);
+          const bIndex = storeGroupOrder.indexOf(b.key);
+          // If both are in order array, sort by that order
+          if (aIndex !== -1 && bIndex !== -1) return aIndex - bIndex;
+          // If only one is in order array, it comes first
+          if (aIndex !== -1) return -1;
+          if (bIndex !== -1) return 1;
+          // Otherwise: "Any Store" first, then alphabetically
           if (a.storeId === null) return -1;
           if (b.storeId === null) return 1;
           return a.name.localeCompare(b.name);
@@ -2188,21 +2230,14 @@
       }
 
       function moveStoreToTop(storeId) {
-        const targetIds = shoppingOrder.filter((id) => {
-          const item = itemsById.get(id);
-          if (storeId === null) {
-            return getItemStoreIds(item).length === 0;
-          }
-          return getItemStoreIds(item).includes(storeId);
-        });
-        if (targetIds.length === 0) {
-          return;
+        const key = storeGroupKey(storeId);
+        // Remove from current position if present
+        const currentIndex = storeGroupOrder.indexOf(key);
+        if (currentIndex !== -1) {
+          storeGroupOrder.splice(currentIndex, 1);
         }
-
-        const targetSet = new Set(targetIds);
-        const remainingIds = shoppingOrder.filter((id) => !targetSet.has(id));
-        shoppingOrder.splice(0, shoppingOrder.length, ...targetIds, ...remainingIds);
-        persistState();
+        // Add to front
+        storeGroupOrder.unshift(key);
         syncShoppingVisibleList();
       }
 
@@ -2366,6 +2401,14 @@
         shoppingEmpty.hidden = nodes.length > 0;
         refreshShoppingButtons();
         syncStageHeight();
+        updateCollapseAllButton();
+      }
+
+      function updateCollapseAllButton() {
+        const groups = groupedShoppingItems();
+        const allCollapsed = groups.length > 0 && groups.every((group) => collapsedGroups.has(group.key));
+        collapseAllButton.textContent = allCollapsed ? "+" : "−";
+        collapseAllButton.setAttribute("aria-label", allCollapsed ? "Expand all stores" : "Collapse all stores");
       }
 
       function syncCatalogVisibleList() {
@@ -2626,6 +2669,17 @@
 
       showCatalogButton.addEventListener("click", () => {
         setFlipped(true);
+      });
+
+      collapseAllButton.addEventListener("click", () => {
+        const groups = groupedShoppingItems();
+        const allCollapsed = groups.length > 0 && groups.every((group) => collapsedGroups.has(group.key));
+        if (allCollapsed) {
+          groups.forEach((group) => collapsedGroups.delete(group.key));
+        } else {
+          groups.forEach((group) => collapsedGroups.add(group.key));
+        }
+        syncShoppingVisibleList();
       });
 
       showShoppingButton.addEventListener("click", () => {
