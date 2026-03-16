@@ -4211,7 +4211,8 @@
 
         config.matches.replaceChildren(fragment);
         const first = config.matches.querySelector(".quick-add-match");
-        if (first) first.classList.add("highlighted");
+        const isMobile = window.matchMedia("(pointer: coarse)").matches;
+        if (first && !isMobile) first.classList.add("highlighted");
       }
 
       function handleQuickAddEnter(config) {
