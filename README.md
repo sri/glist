@@ -12,5 +12,6 @@ A fast, thumb-friendly grocery list that runs entirely in your browser. No backe
 - **Smart catalog** — filter by Needs Purchase, In Cart, Recent, Never Bought, Old, or Just Removed
 - **Multi-store items** — assign items to one or more stores with brand-colored chips
 - **Purchase history** — tracks when you last bought each item with expandable detail view
+- **Quick add** — rapidly add items to your cart with ⚡, toggle items with a tap
 - **Dark mode** — automatic, based on your system preference
 - **100% local** — everything lives in `localStorage`, nothing leaves your device
