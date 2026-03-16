@@ -2163,7 +2163,7 @@
                     <input
                       id="shopping-search"
                       type="search"
-                      placeholder="Search items..."
+                      placeholder="Find in shopping list..."
                       aria-label="Search shopping list"
                     />
                   </label>
@@ -2283,8 +2283,8 @@
                     <input
                       id="catalog-search"
                       type="search"
-                      placeholder="Search or add items..."
-                      aria-label="Search or add items"
+                      placeholder="Find or add item..."
+                      aria-label="Find or add item"
                     />
                   </label>
                   <button id="show-shopping" class="nav-btn" type="button" aria-label="Shopping list">🛒</button>
@@ -2300,8 +2300,8 @@
               </div>
 
               <div class="tab-bar" role="tablist">
-                <button id="tab-items" class="tab-btn active" type="button" role="tab" aria-selected="true" aria-controls="tab-content-items">Items(<span id="catalog-count">0</span>)</button>
-                <button id="tab-stores" class="tab-btn" type="button" role="tab" aria-selected="false" aria-controls="tab-content-stores">Store(<span id="store-count">0</span>)</button>
+                <button id="tab-items" class="tab-btn active" type="button" role="tab" aria-selected="true" aria-controls="tab-content-items">All Items(<span id="catalog-count">0</span>)</button>
+                <button id="tab-stores" class="tab-btn" type="button" role="tab" aria-selected="false" aria-controls="tab-content-stores">Stores(<span id="store-count">0</span>)</button>
               </div>
 
               <section id="tab-content-items" class="tab-content active" role="tabpanel" aria-labelledby="tab-items">
@@ -3176,14 +3176,14 @@
 
         // Update search placeholder based on active tab
         if (tab === "stores") {
-          catalogSearch.placeholder = "Search or add stores...";
-          catalogSearch.setAttribute("aria-label", "Search or add stores");
+          catalogSearch.placeholder = "Find or add store...";
+          catalogSearch.setAttribute("aria-label", "Find or add store");
           catalogAddSuggestion.classList.remove("active");
           catalogAddSuggestion.replaceChildren();
           renderStoreSuggestions();
         } else {
-          catalogSearch.placeholder = "Search or add items...";
-          catalogSearch.setAttribute("aria-label", "Search or add items");
+          catalogSearch.placeholder = "Find or add item...";
+          catalogSearch.setAttribute("aria-label", "Find or add item");
           syncCatalogVisibleList();
           renderCatalogAddSuggestion();
         }
@@ -4100,6 +4100,7 @@
       });
 
       showCatalogButton.addEventListener("click", () => {
+        switchTab("items");
         setFlipped(true);
       });
 
@@ -4133,7 +4134,7 @@
           search: shoppingSearch,
           navBtns: [showCatalogButton],
           hiddenEls: () => [document.getElementById("shopping-list"), shoppingEmpty, document.querySelector(".bottom-actions"), collapseAllButton],
-          defaultPlaceholder: "Search items...",
+          defaultPlaceholder: "Find in shopping list...",
           onExit: () => { setFlipped(false); syncShoppingVisibleList(); }
         },
         catalog: {
@@ -4145,7 +4146,7 @@
           search: catalogSearch,
           navBtns: [showShoppingButton],
           hiddenEls: () => [document.querySelector(".tab-bar"), tabContentItems, tabContentStores, document.getElementById("catalog-add-suggestion")],
-          defaultPlaceholder: "Search or add items...",
+          defaultPlaceholder: "Find or add item...",
           onExit: () => { setFlipped(false); syncShoppingVisibleList(); }
         }
       };
