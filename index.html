@@ -426,6 +426,11 @@
         color: var(--fresh);
       }
 
+      .quick-add-match.highlighted {
+        border-color: #e6b800;
+        box-shadow: 0 0 0 2px #e6b80066;
+      }
+
       .quick-add-create {
         display: flex;
         align-items: center;
@@ -4131,6 +4136,7 @@
         matches.forEach((item) => {
           const btn = document.createElement("button");
           btn.type = "button";
+          btn.dataset.itemId = item.id;
           const onList = shoppingSet.has(item.id);
           btn.className = `quick-add-match${onList ? " on-list" : ""}`;
           btn.innerHTML = `<span>${item.name}</span><span class="quick-add-match-status">${onList ? "✓ In cart" : "Add"}</span>`;
@@ -4177,6 +4183,8 @@
         }
 
         config.matches.replaceChildren(fragment);
+        const first = config.matches.querySelector(".quick-add-match");
+        if (first) first.classList.add("highlighted");
       }
 
       function handleQuickAddEnter(config) {
@@ -4206,9 +4214,59 @@
         config.close.addEventListener("click", () => setQuickAddMode(key, false));
 
         config.search.addEventListener("keydown", (event) => {
-          if (!quickAddMode || activeQuickAdd !== config || event.key !== "Enter") return;
-          event.preventDefault();
-          handleQuickAddEnter(config);
+          if (!quickAddMode || activeQuickAdd !== config) return;
+
+          if (event.key === " ") {
+            const highlighted = config.matches.querySelector(".quick-add-match.highlighted");
+            if (!highlighted) return;
+            event.preventDefault();
+            const itemId = Number(highlighted.dataset.itemId);
+            if (shoppingSet.has(itemId)) {
+              removeFromShoppingList(itemId);
+            } else {
+              addToShoppingList(itemId);
+              quickAddTotal++;
+              config.count.hidden = false;
+              config.count.textContent = `Added ${quickAddTotal} item${quickAddTotal === 1 ? "" : "s"} to cart`;
+            }
+            config.search.value = "";
+            renderQuickAddMatches(config, "");
+            config.search.focus();
+            return;
+          }
+
+          if (event.key === "Enter") {
+            event.preventDefault();
+            const highlighted = config.matches.querySelector(".quick-add-match.highlighted");
+            if (highlighted) {
+              const itemId = Number(highlighted.dataset.itemId);
+              if (!shoppingSet.has(itemId)) {
+                addToShoppingList(itemId);
+                quickAddTotal++;
+                config.count.hidden = false;
+                config.count.textContent = `Added ${quickAddTotal} item${quickAddTotal === 1 ? "" : "s"} to cart`;
+              }
+              config.search.value = "";
+              renderQuickAddMatches(config, "");
+              config.search.focus();
+            } else {
+              handleQuickAddEnter(config);
+            }
+            return;
+          }
+
+          if (event.key === "ArrowDown" || event.key === "ArrowUp") {
+            event.preventDefault();
+            const items = [...config.matches.querySelectorAll(".quick-add-match")];
+            if (!items.length) return;
+            const idx = items.findIndex((el) => el.classList.contains("highlighted"));
+            items.forEach((el) => el.classList.remove("highlighted"));
+            const next = event.key === "ArrowDown"
+              ? (idx + 1) % items.length
+              : (idx - 1 + items.length) % items.length;
+            items[next].classList.add("highlighted");
+            items[next].scrollIntoView({ block: "nearest" });
+          }
         });
       });
 
