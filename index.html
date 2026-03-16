@@ -4127,7 +4127,7 @@
 
         if (active) {
           config.count.hidden = true;
-          config.search.placeholder = "Type an item and press Enter...";
+          config.search.placeholder = "Quick add item...";
           config.search.value = "";
           config.search.focus();
           config.matches.replaceChildren();
@@ -4155,7 +4155,11 @@
           btn.className = `quick-add-match${onList ? " on-list" : ""}`;
           btn.innerHTML = `<span>${item.name}</span><span class="quick-add-match-status">${onList ? "✓ In cart" : "Add"}</span>`;
           btn.addEventListener("click", () => {
-            if (!shoppingSet.has(item.id)) {
+            if (shoppingSet.has(item.id)) {
+              removeFromShoppingList(item.id);
+              config.count.hidden = false;
+              config.count.textContent = `Removed ${item.name} from cart`;
+            } else {
               addToShoppingList(item.id);
               config.count.hidden = false;
               config.count.textContent = `Added ${item.name} to cart`;
