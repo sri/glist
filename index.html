@@ -3548,9 +3548,10 @@
             collapsedGroups.add(group.key);
           }
 
-          // If group is no longer all done, allow auto-collapse again next time
+          // If group is no longer all done, expand it and allow auto-collapse again next time
           if (!allDone) {
             autoCollapsedGroups.delete(group.key);
+            collapsedGroups.delete(group.key);
           }
 
           const isCollapsed = collapsedGroups.has(group.key);
@@ -4077,7 +4078,7 @@
           navBtns: [showCatalogButton],
           hiddenEls: () => [document.getElementById("shopping-list"), shoppingEmpty, document.querySelector(".bottom-actions"), collapseAllButton],
           defaultPlaceholder: "Search items...",
-          onExit: () => syncShoppingVisibleList()
+          onExit: () => { setFlipped(false); syncShoppingVisibleList(); }
         },
         catalog: {
           btn: document.getElementById("quick-add-btn-catalog"),
@@ -4089,7 +4090,7 @@
           navBtns: [showShoppingButton],
           hiddenEls: () => [document.querySelector(".tab-bar"), tabContentItems, tabContentStores, document.getElementById("catalog-add-suggestion")],
           defaultPlaceholder: "Search or add items...",
-          onExit: () => { syncCatalogVisibleList(); renderCatalogAddSuggestion(); }
+          onExit: () => { setFlipped(false); syncShoppingVisibleList(); }
         }
       };
 
