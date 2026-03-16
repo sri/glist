@@ -4069,7 +4069,7 @@
       clearShoppingButton.addEventListener("click", () => {
         const hasUnmarkedItems = shoppingOrder.some((id) => !itemsById.get(id).done);
         if (hasUnmarkedItems) {
-          const confirmed = window.confirm("Clear the shopping list? You still have unpurchased items.");
+          const confirmed = window.confirm("Empty the shopping cart? You still have unpurchased items.");
           if (!confirmed) {
             return;
           }
