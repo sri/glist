@@ -448,6 +448,22 @@
         width: 100%;
       }
 
+      .quick-add-new-search {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 12px 16px;
+        border: 1px solid color-mix(in srgb, var(--muted) 20%, transparent);
+        border-radius: var(--radius-md);
+        background: transparent;
+        color: var(--muted);
+        font: inherit;
+        font-size: 0.88rem;
+        font-weight: 600;
+        cursor: pointer;
+        width: 100%;
+      }
+
       .about-panel {
         padding: 24px 20px;
         overflow-y: auto;
@@ -4177,6 +4193,17 @@
           });
           fragment.append(createBtn);
         }
+
+        const newSearchBtn = document.createElement("button");
+        newSearchBtn.type = "button";
+        newSearchBtn.className = "quick-add-new-search";
+        newSearchBtn.textContent = "New search";
+        newSearchBtn.addEventListener("click", () => {
+          config.search.value = "";
+          renderQuickAddMatches(config, "");
+          config.search.focus();
+        });
+        fragment.append(newSearchBtn);
 
         config.matches.replaceChildren(fragment);
         const first = config.matches.querySelector(".quick-add-match");
