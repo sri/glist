@@ -946,7 +946,7 @@
       .store-grid-item .store-check {
         width: 20px;
         height: 20px;
-        border: 2px solid rgba(98, 112, 96, 0.3);
+        border: 2px solid color-mix(in srgb, var(--muted) 30%, transparent);
         border-radius: 4px;
         display: grid;
         place-items: center;
@@ -967,6 +967,41 @@
         overflow: hidden;
         text-overflow: ellipsis;
         white-space: nowrap;
+      }
+
+      @media (max-width: 600px) {
+        .store-grid {
+          display: flex;
+          flex-wrap: wrap;
+          gap: 6px;
+        }
+
+        .store-grid-item {
+          gap: 6px;
+          padding: 7px 12px;
+          border-width: 1.5px;
+          border-radius: 999px;
+          font-size: 0.8rem;
+        }
+
+        .store-grid-item .store-check {
+          width: 16px;
+          height: 16px;
+          border-width: 1.5px;
+          border-radius: 3px;
+          font-size: 0.6rem;
+        }
+
+        .store-grid-item .store-name {
+          flex: none;
+        }
+
+        .selected-store-chip {
+          gap: 5px;
+          padding: 6px 12px;
+          border-width: 1.5px;
+          font-size: 0.8rem;
+        }
       }
 
       .store-circle {
