@@ -353,6 +353,96 @@
         opacity: 0.6;
       }
 
+      .quick-add-btn {
+        background: var(--warm-soft);
+        color: var(--warm);
+      }
+
+      .quick-add-close {
+        background: color-mix(in srgb, var(--muted) 12%, transparent);
+        color: var(--muted);
+        font-size: 1rem;
+      }
+
+      .quick-add-panel {
+        padding: 0 16px;
+        flex: 1;
+        overflow-y: auto;
+      }
+
+      .quick-add-hint {
+        text-align: center;
+        color: var(--muted);
+        font-size: 0.85rem;
+        padding: 12px 0;
+      }
+
+      .quick-add-count {
+        text-align: center;
+        color: var(--fresh);
+        font-size: 0.85rem;
+        font-weight: 700;
+        padding: 0 0 10px;
+      }
+
+      .quick-add-matches {
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+      }
+
+      .quick-add-match {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 12px 16px;
+        border: 1px solid color-mix(in srgb, var(--muted) 12%, transparent);
+        border-radius: var(--radius-md);
+        background: var(--panel-soft);
+        color: var(--ink);
+        font: inherit;
+        font-size: 0.92rem;
+        text-align: left;
+        cursor: pointer;
+        transition: border-color 150ms ease;
+      }
+
+      .quick-add-match:active {
+        transform: scale(0.98);
+      }
+
+      .quick-add-match.on-list {
+        border-color: var(--fresh);
+        background: var(--fresh-soft);
+      }
+
+      .quick-add-match-status {
+        font-size: 0.8rem;
+        font-weight: 700;
+        color: var(--muted);
+      }
+
+      .quick-add-match.on-list .quick-add-match-status {
+        color: var(--fresh);
+      }
+
+      .quick-add-create {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 12px 16px;
+        border: 2px dashed color-mix(in srgb, var(--warm) 30%, transparent);
+        border-radius: var(--radius-md);
+        background: transparent;
+        color: var(--warm);
+        font: inherit;
+        font-size: 0.92rem;
+        font-weight: 600;
+        text-align: left;
+        cursor: pointer;
+        width: 100%;
+      }
+
       .about-panel {
         padding: 24px 20px;
         overflow-y: auto;
@@ -2012,6 +2102,7 @@
             <section id="shopping-panel" class="panel panel-front" aria-label="Shopping list">
               <div class="panel-header">
                 <div class="panel-row">
+                  <button id="quick-add-btn" class="nav-btn quick-add-btn" type="button" aria-label="Quick add">⚡</button>
                   <label class="search-box panel-search" for="shopping-search">
                     <input
                       id="shopping-search"
@@ -2021,12 +2112,19 @@
                     />
                   </label>
                   <button id="show-catalog" class="nav-btn" type="button" aria-label="All items">▤</button>
+                  <button id="quick-add-close" class="nav-btn quick-add-close" type="button" aria-label="Exit quick add" hidden>✕</button>
                 </div>
                 <button id="collapse-all" class="collapse-all-btn" type="button" aria-label="Collapse all stores">−</button>
               </div>
 
               <div id="shopping-list" class="shopping-groups" aria-live="polite"></div>
               <div id="shopping-empty" class="empty" hidden>No items in cart. <a href="#all" id="go-to-catalog">Add from All Items</a></div>
+
+              <div id="quick-add-panel" class="quick-add-panel" hidden>
+                <div class="quick-add-hint">Quickly add items to your shopping cart. Type and press Enter.</div>
+                <div id="quick-add-count" class="quick-add-count" hidden></div>
+                <div id="quick-add-matches" class="quick-add-matches"></div>
+              </div>
 
               <div class="bottom-actions">
                 <button id="move-marked" class="action-btn" type="button">Move purchased to bottom</button>
@@ -2123,6 +2221,7 @@
             <section id="catalog-panel" class="panel panel-back" aria-label="All items" hidden>
               <div class="panel-header">
                 <div class="panel-row">
+                  <button id="quick-add-btn-catalog" class="nav-btn quick-add-btn" type="button" aria-label="Quick add">⚡</button>
                   <label class="search-box panel-search" for="catalog-search">
                     <input
                       id="catalog-search"
@@ -2132,8 +2231,15 @@
                     />
                   </label>
                   <button id="show-shopping" class="nav-btn" type="button" aria-label="Shopping list">🛒</button>
+                  <button id="quick-add-close-catalog" class="nav-btn quick-add-close" type="button" aria-label="Exit quick add" hidden>✕</button>
                 </div>
                 <div id="catalog-add-suggestion" class="catalog-add-suggestion"></div>
+              </div>
+
+              <div id="quick-add-panel-catalog" class="quick-add-panel" hidden>
+                <div class="quick-add-hint">Quickly add items to your shopping cart. Type and press Enter.</div>
+                <div id="quick-add-count-catalog" class="quick-add-count" hidden></div>
+                <div id="quick-add-matches-catalog" class="quick-add-matches"></div>
               </div>
 
               <div class="tab-bar" role="tablist">
@@ -3870,15 +3976,6 @@
       }
       syncPanelFromLocation();
 
-      shoppingSearch.addEventListener("input", syncShoppingVisibleList);
-      catalogSearch.addEventListener("input", () => {
-        if (activeTab === "stores") {
-          renderStoreSuggestions();
-        } else {
-          syncCatalogVisibleList();
-          renderCatalogAddSuggestion();
-        }
-      });
       window.addEventListener("hashchange", syncPanelFromLocation);
       document.addEventListener("click", () => {
         if (openStoreMenuItemId !== null) {
@@ -3962,6 +4059,177 @@
 
       showShoppingButton.addEventListener("click", () => {
         setFlipped(false);
+      });
+
+      // Quick Add (works on both shopping and catalog panels)
+      let quickAddMode = false;
+      let quickAddTotal = 0;
+      let activeQuickAdd = null; // which panel is active
+
+      const quickAddConfigs = {
+        shopping: {
+          btn: document.getElementById("quick-add-btn"),
+          close: document.getElementById("quick-add-close"),
+          panel: document.getElementById("quick-add-panel"),
+          matches: document.getElementById("quick-add-matches"),
+          count: document.getElementById("quick-add-count"),
+          search: shoppingSearch,
+          navBtns: [showCatalogButton],
+          hiddenEls: () => [document.getElementById("shopping-list"), shoppingEmpty, document.querySelector(".bottom-actions"), collapseAllButton],
+          defaultPlaceholder: "Search items...",
+          onExit: () => syncShoppingVisibleList()
+        },
+        catalog: {
+          btn: document.getElementById("quick-add-btn-catalog"),
+          close: document.getElementById("quick-add-close-catalog"),
+          panel: document.getElementById("quick-add-panel-catalog"),
+          matches: document.getElementById("quick-add-matches-catalog"),
+          count: document.getElementById("quick-add-count-catalog"),
+          search: catalogSearch,
+          navBtns: [showShoppingButton],
+          hiddenEls: () => [document.querySelector(".tab-bar"), tabContentItems, tabContentStores, document.getElementById("catalog-add-suggestion")],
+          defaultPlaceholder: "Search or add items...",
+          onExit: () => { syncCatalogVisibleList(); renderCatalogAddSuggestion(); }
+        }
+      };
+
+      function setQuickAddMode(configKey, active) {
+        const config = quickAddConfigs[configKey];
+        quickAddMode = active;
+        activeQuickAdd = active ? config : null;
+
+        config.panel.hidden = !active;
+        config.btn.hidden = active;
+        config.close.hidden = !active;
+        config.navBtns.forEach((btn) => { btn.hidden = active; });
+        config.hiddenEls().forEach((el) => { if (el) el.hidden = active; });
+
+        if (active) {
+          quickAddTotal = 0;
+          config.count.hidden = true;
+          config.search.placeholder = "Type an item and press Enter...";
+          config.search.value = "";
+          config.search.focus();
+          config.matches.replaceChildren();
+        } else {
+          config.search.placeholder = config.defaultPlaceholder;
+          config.search.value = "";
+          config.matches.replaceChildren();
+          config.onExit();
+        }
+      }
+
+      function renderQuickAddMatches(config, query) {
+        config.matches.replaceChildren();
+        if (!query) return;
+
+        const q = query.toLowerCase();
+        const matches = catalog.filter((item) => item.name.toLowerCase().includes(q)).slice(0, 8);
+        const fragment = document.createDocumentFragment();
+
+        matches.forEach((item) => {
+          const btn = document.createElement("button");
+          btn.type = "button";
+          const onList = shoppingSet.has(item.id);
+          btn.className = `quick-add-match${onList ? " on-list" : ""}`;
+          btn.innerHTML = `<span>${item.name}</span><span class="quick-add-match-status">${onList ? "✓ In cart" : "Add"}</span>`;
+          btn.addEventListener("click", () => {
+            if (!shoppingSet.has(item.id)) {
+              addToShoppingList(item.id);
+              quickAddTotal++;
+              config.count.hidden = false;
+              config.count.textContent = `Added ${quickAddTotal} item${quickAddTotal === 1 ? "" : "s"} to cart`;
+            }
+            renderQuickAddMatches(config, config.search.value.trim());
+          });
+          fragment.append(btn);
+        });
+
+        const exactMatch = matches.some((item) => item.name.toLowerCase() === q);
+        if (!exactMatch && query.trim()) {
+          const createBtn = document.createElement("button");
+          createBtn.type = "button";
+          createBtn.className = "quick-add-create";
+          createBtn.innerHTML = `<span>Create "${query.trim()}" and add to cart</span><span>+</span>`;
+          createBtn.addEventListener("click", () => {
+            const item = {
+              id: nextId++,
+              name: query.trim(),
+              note: "",
+              done: false,
+              purchaseHistory: [],
+              selectedStoreIds: []
+            };
+            catalog.unshift(item);
+            itemsById.set(item.id, item);
+            createCatalogItemElement(item);
+            addToShoppingList(item.id);
+            renderCatalogSection();
+            quickAddTotal++;
+            config.count.hidden = false;
+            config.count.textContent = `Added ${quickAddTotal} item${quickAddTotal === 1 ? "" : "s"} to cart`;
+            config.search.value = "";
+            renderQuickAddMatches(config, "");
+            config.search.focus();
+          });
+          fragment.append(createBtn);
+        }
+
+        config.matches.replaceChildren(fragment);
+      }
+
+      function handleQuickAddEnter(config) {
+        const query = config.search.value.trim();
+        if (!query) return;
+
+        const q = query.toLowerCase();
+        const matches = catalog.filter((item) => item.name.toLowerCase().includes(q));
+        const exactMatch = matches.find((item) => item.name.toLowerCase() === q);
+        const singleMatch = matches.length === 1 ? matches[0] : null;
+        const target = exactMatch || singleMatch;
+
+        if (target && !shoppingSet.has(target.id)) {
+          addToShoppingList(target.id);
+          quickAddTotal++;
+          config.count.hidden = false;
+          config.count.textContent = `Added ${quickAddTotal} item${quickAddTotal === 1 ? "" : "s"} to cart`;
+          config.search.value = "";
+          renderQuickAddMatches(config, "");
+          config.search.focus();
+        }
+      }
+
+      // Wire up both panels
+      Object.entries(quickAddConfigs).forEach(([key, config]) => {
+        config.btn.addEventListener("click", () => setQuickAddMode(key, true));
+        config.close.addEventListener("click", () => setQuickAddMode(key, false));
+
+        config.search.addEventListener("keydown", (event) => {
+          if (!quickAddMode || activeQuickAdd !== config || event.key !== "Enter") return;
+          event.preventDefault();
+          handleQuickAddEnter(config);
+        });
+      });
+
+      shoppingSearch.addEventListener("input", () => {
+        if (quickAddMode && activeQuickAdd === quickAddConfigs.shopping) {
+          renderQuickAddMatches(activeQuickAdd, shoppingSearch.value.trim());
+          return;
+        }
+        syncShoppingVisibleList();
+      });
+
+      catalogSearch.addEventListener("input", () => {
+        if (quickAddMode && activeQuickAdd === quickAddConfigs.catalog) {
+          renderQuickAddMatches(activeQuickAdd, catalogSearch.value.trim());
+          return;
+        }
+        if (activeTab === "stores") {
+          renderStoreSuggestions();
+        } else {
+          syncCatalogVisibleList();
+          renderCatalogAddSuggestion();
+        }
       });
 
       const aboutBtn = document.getElementById("about-btn");
