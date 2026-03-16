@@ -3569,8 +3569,8 @@
             collapsedGroups.add(group.key);
           }
 
-          // If group is no longer all done, expand it and allow auto-collapse again next time
-          if (!allDone) {
+          // If group was auto-collapsed and is no longer all done, expand it
+          if (!allDone && autoCollapsedGroups.has(group.key)) {
             autoCollapsedGroups.delete(group.key);
             collapsedGroups.delete(group.key);
           }
@@ -4033,7 +4033,7 @@
       clearShoppingButton.addEventListener("click", () => {
         const hasUnmarkedItems = shoppingOrder.some((id) => !itemsById.get(id).done);
         if (hasUnmarkedItems) {
-          const confirmed = window.confirm("Clear the shopping list? You still have unmarked items.");
+          const confirmed = window.confirm("Clear the shopping list? You still have unpurchased items.");
           if (!confirmed) {
             return;
           }
