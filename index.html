@@ -4069,7 +4069,6 @@
 
       // Quick Add (works on both shopping and catalog panels)
       let quickAddMode = false;
-      let quickAddTotal = 0;
       let activeQuickAdd = null; // which panel is active
 
       const quickAddConfigs = {
@@ -4111,7 +4110,6 @@
         config.hiddenEls().forEach((el) => { if (el) el.hidden = active; });
 
         if (active) {
-          quickAddTotal = 0;
           config.count.hidden = true;
           config.search.placeholder = "Type an item and press Enter...";
           config.search.value = "";
@@ -4143,9 +4141,8 @@
           btn.addEventListener("click", () => {
             if (!shoppingSet.has(item.id)) {
               addToShoppingList(item.id);
-              quickAddTotal++;
               config.count.hidden = false;
-              config.count.textContent = `Added ${quickAddTotal} item${quickAddTotal === 1 ? "" : "s"} to cart`;
+              config.count.textContent = `Added ${item.name} to cart`;
             }
             renderQuickAddMatches(config, config.search.value.trim());
           });
@@ -4172,9 +4169,8 @@
             createCatalogItemElement(item);
             addToShoppingList(item.id);
             renderCatalogSection();
-            quickAddTotal++;
             config.count.hidden = false;
-            config.count.textContent = `Added ${quickAddTotal} item${quickAddTotal === 1 ? "" : "s"} to cart`;
+            config.count.textContent = `Added ${item.name} to cart`;
             config.search.value = "";
             renderQuickAddMatches(config, "");
             config.search.focus();
@@ -4199,9 +4195,8 @@
 
         if (target && !shoppingSet.has(target.id)) {
           addToShoppingList(target.id);
-          quickAddTotal++;
           config.count.hidden = false;
-          config.count.textContent = `Added ${quickAddTotal} item${quickAddTotal === 1 ? "" : "s"} to cart`;
+          config.count.textContent = `Added ${target.name} to cart`;
           config.search.value = "";
           renderQuickAddMatches(config, "");
           config.search.focus();
@@ -4221,17 +4216,22 @@
             if (!highlighted) return;
             event.preventDefault();
             const itemId = Number(highlighted.dataset.itemId);
+            const item = itemsById.get(itemId);
             if (shoppingSet.has(itemId)) {
               removeFromShoppingList(itemId);
+              config.count.hidden = false;
+              config.count.textContent = `Removed ${item.name} from cart`;
             } else {
               addToShoppingList(itemId);
-              quickAddTotal++;
               config.count.hidden = false;
-              config.count.textContent = `Added ${quickAddTotal} item${quickAddTotal === 1 ? "" : "s"} to cart`;
+              config.count.textContent = `Added ${item.name} to cart`;
             }
-            config.search.value = "";
-            renderQuickAddMatches(config, "");
-            config.search.focus();
+            renderQuickAddMatches(config, config.search.value.trim());
+            const reHighlight = config.matches.querySelector(`.quick-add-match[data-item-id="${itemId}"]`);
+            if (reHighlight) {
+              config.matches.querySelector(".quick-add-match.highlighted")?.classList.remove("highlighted");
+              reHighlight.classList.add("highlighted");
+            }
             return;
           }
 
@@ -4240,11 +4240,11 @@
             const highlighted = config.matches.querySelector(".quick-add-match.highlighted");
             if (highlighted) {
               const itemId = Number(highlighted.dataset.itemId);
+              const item = itemsById.get(itemId);
               if (!shoppingSet.has(itemId)) {
                 addToShoppingList(itemId);
-                quickAddTotal++;
                 config.count.hidden = false;
-                config.count.textContent = `Added ${quickAddTotal} item${quickAddTotal === 1 ? "" : "s"} to cart`;
+                config.count.textContent = `Added ${item.name} to cart`;
               }
               config.search.value = "";
               renderQuickAddMatches(config, "");
