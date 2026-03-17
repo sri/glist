@@ -4437,7 +4437,105 @@
       });
 
       importSubmit.addEventListener("click", () => {
-        const lines = importTextarea.value.split("\n").map((l) => l.trim()).filter(Boolean);
+        const raw = importTextarea.value.trim();
+        if (!raw) return;
+
+        // Detect exported JSON format
+        if (raw.startsWith("{")) {
+          try {
+            const data = JSON.parse(raw);
+            const imported = data.ui || data;
+            const importedCatalog = Array.isArray(imported.catalog) ? imported.catalog.map(normalizeItem) : [];
+            const importedStores = Array.isArray(imported.stores) ? imported.stores.map(normalizeStore) : [];
+            const importedOrder = Array.isArray(imported.shoppingOrder) ? imported.shoppingOrder.map(Number) : [];
+
+            // Merge stores (de-dupe by lowercase name)
+            const existingStoreNames = new Set(stores.map((s) => s.name.toLowerCase()));
+            const storeIdMap = new Map(); // old id -> new id
+            let addedStores = 0;
+            importedStores.forEach((s) => {
+              const existing = stores.find((e) => e.name.toLowerCase() === s.name.toLowerCase());
+              if (existing) {
+                storeIdMap.set(s.id, existing.id);
+              } else {
+                const newId = nextStoreId++;
+                storeIdMap.set(s.id, newId);
+                stores.push({ ...s, id: newId });
+                existingStoreNames.add(s.name.toLowerCase());
+                addedStores++;
+              }
+            });
+
+            // Merge catalog items (de-dupe by lowercase name)
+            const existingNames = new Set(catalog.map((item) => item.name.toLowerCase()));
+            const itemIdMap = new Map(); // old id -> new id
+            let addedItems = 0;
+            let skippedItems = 0;
+            importedCatalog.forEach((importedItem) => {
+              const existing = catalog.find((e) => e.name.toLowerCase() === importedItem.name.toLowerCase());
+              if (existing) {
+                itemIdMap.set(importedItem.id, existing.id);
+                // Merge purchase history
+                const existingDates = new Set(existing.purchaseHistory);
+                importedItem.purchaseHistory.forEach((d) => {
+                  if (!existingDates.has(d)) existing.purchaseHistory.push(d);
+                });
+                existing.purchaseHistory.sort();
+                // Merge store associations
+                const remappedStoreIds = importedItem.selectedStoreIds
+                  .map((id) => storeIdMap.get(id) ?? id)
+                  .filter((id) => stores.some((s) => s.id === id));
+                const existingStoreSet = new Set(existing.selectedStoreIds);
+                remappedStoreIds.forEach((id) => existingStoreSet.add(id));
+                existing.selectedStoreIds = [...existingStoreSet];
+                skippedItems++;
+              } else {
+                const newId = nextId++;
+                itemIdMap.set(importedItem.id, newId);
+                const remappedStoreIds = importedItem.selectedStoreIds
+                  .map((id) => storeIdMap.get(id) ?? id)
+                  .filter((id) => stores.some((s) => s.id === id));
+                const newItem = { ...importedItem, id: newId, selectedStoreIds: remappedStoreIds };
+                catalog.unshift(newItem);
+                itemsById.set(newItem.id, newItem);
+                createCatalogItemElement(newItem);
+                existingNames.add(newItem.name.toLowerCase());
+                addedItems++;
+              }
+            });
+
+            // Merge shopping order (add items not already in cart)
+            importedOrder.forEach((oldId) => {
+              const newId = itemIdMap.get(oldId);
+              if (newId && !shoppingSet.has(newId)) {
+                shoppingOrder.push(newId);
+                shoppingSet.add(newId);
+              }
+            });
+
+            persistState();
+            renderCatalogSection();
+            syncCatalogVisibleList();
+            renderStoreGrid();
+            syncShoppingVisibleList();
+            refreshShoppingButtons();
+
+            const parts = [];
+            if (addedItems > 0) parts.push(`${addedItems} item${addedItems === 1 ? "" : "s"} added`);
+            if (skippedItems > 0) parts.push(`${skippedItems} duplicate${skippedItems === 1 ? "" : "s"} merged`);
+            if (addedStores > 0) parts.push(`${addedStores} store${addedStores === 1 ? "" : "s"} added`);
+            if (parts.length === 0) parts.push("Nothing new to import");
+
+            importResult.hidden = false;
+            importResult.textContent = parts.join(", ");
+            importTextarea.value = "";
+            return;
+          } catch (e) {
+            // Not valid JSON — fall through to line-by-line import
+          }
+        }
+
+        const lines = raw.split("\n").map((l) => l.trim()).filter(Boolean);
         if (lines.length === 0) return;
 
         const existingNames = new Set(catalog.map((item) => item.name.toLowerCase()));
