@@ -156,26 +156,6 @@
         transform: translateY(-1px);
       }
 
-      .collapse-all-btn {
-        align-self: flex-end;
-        width: 32px;
-        height: 32px;
-        padding: 0;
-        border: 0;
-        border-radius: 50%;
-        background: transparent;
-        color: var(--muted);
-        font: inherit;
-        font-size: 1.25rem;
-        cursor: pointer;
-        transition: color 150ms ease, background 150ms ease;
-        -webkit-tap-highlight-color: transparent;
-      }
-
-      .collapse-all-btn:hover {
-        background: var(--panel-soft);
-        color: var(--ink);
-      }
 
       .panel-search {
         width: 100%;
@@ -2170,7 +2150,6 @@
                   <button id="show-catalog" class="nav-btn" type="button" aria-label="All items">▤</button>
                   <button id="quick-add-close" class="nav-btn quick-add-close" type="button" aria-label="Exit quick add" hidden>✕</button>
                 </div>
-                <button id="collapse-all" class="collapse-all-btn" type="button" aria-label="Collapse all stores">−</button>
               </div>
 
               <div id="shopping-list" class="shopping-groups" aria-live="polite"></div>
@@ -2184,6 +2163,7 @@
 
               <div class="bottom-actions">
                 <button id="move-marked" class="action-btn" type="button">Move purchased to bottom</button>
+                <button id="collapse-all" class="action-btn" type="button">Collapse all stores</button>
                 <button id="clear-shopping" class="action-btn alt" type="button">Empty shopping cart</button>
                 <button id="import-btn" class="action-btn" type="button">Import shopping list</button>
                 <button id="export-btn" class="action-btn" type="button">Export shopping list</button>
@@ -2338,6 +2318,7 @@
           <strong>Debug</strong>
         </div>
         <div id="debug-toolbar-content" class="debug-toolbar-content"></div>
+        <button id="debug-populate" class="action-btn" type="button" style="margin:8px;font-size:0.75rem;background:#e65100;color:#fff;border:none;">Populate items</button>
       </div>
     </main>
 
@@ -3760,8 +3741,7 @@
       function updateCollapseAllButton() {
         const groups = groupedShoppingItems();
         const allCollapsed = groups.length > 0 && groups.every((group) => collapsedGroups.has(group.key));
-        collapseAllButton.textContent = allCollapsed ? "+" : "−";
-        collapseAllButton.setAttribute("aria-label", allCollapsed ? "Expand all stores" : "Collapse all stores");
+        collapseAllButton.textContent = allCollapsed ? "Expand all stores" : "Collapse all stores";
       }
 
       function syncCatalogVisibleList() {
@@ -4133,7 +4113,7 @@
           count: document.getElementById("quick-add-count"),
           search: shoppingSearch,
           navBtns: [showCatalogButton],
-          hiddenEls: () => [document.getElementById("shopping-list"), shoppingEmpty, document.querySelector(".bottom-actions"), collapseAllButton],
+          hiddenEls: () => [document.getElementById("shopping-list"), shoppingEmpty, document.querySelector(".bottom-actions")],
           defaultPlaceholder: "Find in shopping list...",
           onExit: () => { setFlipped(false); syncShoppingVisibleList(); }
         },
@@ -4684,6 +4664,103 @@
           clearInterval(debugInterval);
           debugInterval = null;
         }
+      });
+
+      document.getElementById("debug-populate").addEventListener("click", () => {
+        if (!window.confirm("This will delete all existing items and stores, then populate with 20 test items and 5 stores. Continue?")) return;
+
+        // Clear all existing data
+        shoppingOrder.splice(0, shoppingOrder.length);
+        shoppingSet.clear();
+        catalog.splice(0, catalog.length);
+        itemsById.clear();
+        catalogElements.clear();
+        shoppingElements.clear();
+        recentlyRemovedItems.clear();
+        expandedCatalogItemId = null;
+        stores.splice(0, stores.length);
+        nextId = 1;
+        nextStoreId = 1;
+
+        const today = new Date();
+        const day = (n) => {
+          const d = new Date(today);
+          d.setDate(d.getDate() - n);
+          d.setHours(12, 0, 0, 0);
+          return d.toISOString();
+        };
+
+        // Ensure 5 stores exist
+        const storeNames = ["Costco", "Albertsons", "Safeway", "Walmart", "Walgreens"];
+        const storeIds = [];
+        storeNames.forEach((name) => {
+          const existing = stores.find((s) => s.name.toLowerCase() === name.toLowerCase());
+          if (existing) {
+            storeIds.push(existing.id);
+          } else {
+            const s = normalizeStore({ id: nextStoreId++, name });
+            stores.push(s);
+            storeIds.push(s.id);
+          }
+        });
+
+        // 20 items with varied store assignments and purchase histories
+        const populateItems = [
+          // 5 items with NO stores
+          { name: "Paper Towels", note: "2 rolls", stores: [], history: [day(45), day(30), day(14)] },
+          { name: "Dish Soap", note: "", stores: [], history: [day(60), day(30)] },
+          { name: "Aluminum Foil", note: "", stores: [], history: [] },  // never bought
+          { name: "Baking Soda", note: "1 box", stores: [], history: [] },  // never bought
+          { name: "Sponges", note: "3-pack", stores: [], history: [day(20)] },
+
+          // 5 items with 1 store
+          { name: "Rotisserie Chicken", note: "", stores: [0], history: [day(21), day(14), day(7)] },
+          { name: "Kirkland Olive Oil", note: "Extra virgin", stores: [0], history: [day(90), day(45)] },
+          { name: "Whole Milk", note: "1 gallon", stores: [3], history: [day(49), day(42), day(35), day(28), day(21), day(15)] },  // weekly cadence, last bought 15 days ago -> needs purchase
+          { name: "Sourdough Bread", note: "", stores: [2], history: [day(10), day(3)] },
+          { name: "Greek Yogurt", note: "Plain, 32oz", stores: [1], history: [] },  // never bought
+
+          // 5 items with 2 stores
+          { name: "Bananas", note: "1 bunch", stores: [0, 3], history: [day(35), day(28), day(21), day(15)] },  // weekly cadence, last 15 days ago -> needs purchase
+          { name: "Large Eggs", note: "Dozen", stores: [1, 2], history: [day(28), day(14)] },
+          { name: "Cheddar Cheese", note: "Sharp, block", stores: [0, 1], history: [day(60), day(30), day(5)] },
+          { name: "Orange Juice", note: "No pulp", stores: [2, 3], history: [] },  // never bought
+          { name: "Ground Coffee", note: "Medium roast", stores: [0, 4], history: [day(30), day(15)] },
+
+          // 5 items with 3 stores
+          { name: "Ibuprofen", note: "200mg", stores: [3, 4, 1], history: [day(90)] },
+          { name: "Trash Bags", note: "13 gal", stores: [0, 3, 4], history: [day(60), day(30), day(3)] },
+          { name: "Laundry Detergent", note: "Free & Clear", stores: [0, 1, 3], history: [day(45), day(20)] },
+          { name: "Butter", note: "Unsalted", stores: [0, 1, 2], history: [day(42), day(35), day(28), day(21), day(15)] },  // weekly, last 15 days -> needs purchase
+          { name: "Toothpaste", note: "", stores: [3, 4, 2], history: [] }  // never bought
+        ];
+
+        let added = 0;
+
+        populateItems.forEach((p) => {
+          const item = {
+            id: nextId++,
+            name: p.name,
+            note: p.note,
+            done: false,
+            purchaseHistory: p.history,
+            selectedStoreIds: p.stores.map((i) => storeIds[i])
+          };
+          catalog.unshift(item);
+          itemsById.set(item.id, item);
+          createCatalogItemElement(item);
+          added++;
+        });
+
+        persistState();
+        renderCatalogSection();
+        syncCatalogVisibleList();
+        syncShoppingVisibleList();
+        refreshShoppingButtons();
+        renderStoreGrid();
+        updateDebugToolbar();
+
+        alert(`Populated ${added} items and ${storeNames.length} stores`);
       });
 
       function renderCatalogAddSuggestion() {
