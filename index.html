@@ -2,7 +2,7 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
     <title>Grocery List</title>
     <style>
       :root {
@@ -330,7 +330,6 @@
         font-size: 0.85rem;
         cursor: pointer;
         padding: 8px 0;
-        opacity: 0.6;
       }
 
       .quick-add-btn {
@@ -593,6 +592,8 @@
 
       .import-textarea:focus {
         border-color: var(--fresh);
+        outline: 3px solid rgba(41, 99, 71, 0.24);
+        outline-offset: 2px;
       }
 
       .import-result {
@@ -619,7 +620,6 @@
         font-size: 0.8rem;
         cursor: pointer;
         padding: 0;
-        opacity: 0.5;
       }
 
       .debug-toolbar {
@@ -685,10 +685,16 @@
         font-size: 1.08rem;
       }
 
+      .search-box:focus-within,
+      .add-field:focus-within {
+        outline: 3px solid rgba(41, 99, 71, 0.24);
+        outline-offset: 2px;
+      }
+
       .search-box input::placeholder,
       .add-form input::placeholder,
       .store-form input::placeholder {
-        color: #7c8677;
+        color: var(--muted);
       }
 
       .toolbar {
@@ -1223,7 +1229,14 @@
       .store-group-icon:focus-visible,
       .action-btn:focus-visible,
       .nav-btn:focus-visible,
-      .tab-btn:focus-visible {
+      .tab-btn:focus-visible,
+      .about-link:focus-visible,
+      .about-tab:focus-visible,
+      .theme-option:focus-visible,
+      .about-debug-btn:focus-visible,
+      .filter-chip:focus-visible,
+      .about-close-btn:focus-visible,
+      .catalog-add-btn:focus-visible {
         outline: 3px solid rgba(41, 99, 71, 0.24);
         outline-offset: 3px;
       }
@@ -1460,6 +1473,8 @@
 
       .catalog-note-input:focus {
         border-color: var(--fresh);
+        outline: 3px solid rgba(41, 99, 71, 0.24);
+        outline-offset: 2px;
       }
 
       .catalog-delete-btn {
@@ -2304,36 +2319,36 @@
 
               <div id="import-panel" class="import-panel" hidden>
                 <div class="about-header">
-                  <h2 class="about-title">Import Items</h2>
+                  <h2 class="about-title" id="import-heading">Import Items</h2>
                   <button id="import-close" class="about-close-btn" type="button" aria-label="Close">&times;</button>
                 </div>
                 <p class="about-tagline">Paste your items below, one per line. Duplicates will be skipped automatically.</p>
-                <textarea id="import-textarea" class="import-textarea" rows="10" placeholder="Bananas&#10;Whole milk&#10;Eggs&#10;Sourdough bread"></textarea>
+                <textarea id="import-textarea" class="import-textarea" rows="10" placeholder="Bananas&#10;Whole milk&#10;Eggs&#10;Sourdough bread" aria-labelledby="import-heading"></textarea>
                 <button id="import-submit" class="action-btn" type="button" style="width:100%;margin-top:12px;">Import</button>
                 <div id="import-result" class="import-result" hidden></div>
               </div>
 
               <div id="export-panel" class="import-panel" hidden>
                 <div class="about-header">
-                  <h2 class="about-title">Export</h2>
+                  <h2 class="about-title" id="export-heading">Export</h2>
                   <button id="export-close" class="about-close-btn" type="button" aria-label="Close">&times;</button>
                 </div>
                 <p class="about-tagline">Your full grocery list data. Copy and save it to back up or transfer to another device.</p>
-                <textarea id="export-textarea" class="import-textarea" rows="12" readonly></textarea>
+                <textarea id="export-textarea" class="import-textarea" rows="12" readonly aria-labelledby="export-heading"></textarea>
                 <button id="export-copy" class="action-btn" type="button" style="width:100%;margin-top:12px;">Copy to clipboard</button>
                 <div id="export-result" class="import-result" hidden></div>
               </div>
 
               <div id="about-panel" class="about-panel" hidden>
                 <div class="about-header">
-                  <h2 class="about-title">glist</h2>
+                  <h1 class="about-title">glist</h1>
                   <button id="about-close" class="about-close-btn" type="button" aria-label="Close">&times;</button>
                 </div>
-                <div class="about-tabs">
-                  <button type="button" class="about-tab active" data-about-tab="info">About</button>
-                  <button type="button" class="about-tab" data-about-tab="themes">Themes</button>
+                <div class="about-tabs" role="tablist">
+                  <button type="button" class="about-tab active" data-about-tab="info" role="tab" aria-selected="true" aria-controls="about-tab-info">About</button>
+                  <button type="button" class="about-tab" data-about-tab="themes" role="tab" aria-selected="false" aria-controls="about-tab-themes">Themes</button>
                 </div>
-                <div id="about-tab-info" class="about-tab-content">
+                <div id="about-tab-info" class="about-tab-content" role="tabpanel">
                   <h3 style="margin:0 0 12px;font-size:1.05rem;color:var(--ink);">The way I shop</h3>
                   <p class="about-tagline">glist models how <a href="https://github.com/sri" target="_blank" style="color:var(--fresh);text-decoration:none;font-weight:700;">I (sri)</a> do grocery shopping.</p>
                   <p class="about-tagline"> Sometimes I need to look at the entire list of items to be reminded of what to buy. And other times, a thought comes and I have to quickly add it.</p>
@@ -2347,7 +2362,7 @@
                     <button id="debug-toggle" class="about-debug-btn" type="button">Enable Debug Toolbar</button>
                   </div>
                 </div>
-                <div id="about-tab-themes" class="about-tab-content" hidden>
+                <div id="about-tab-themes" class="about-tab-content" role="tabpanel" hidden>
                   <p class="about-tagline">Pick a look that suits you. Your choice is saved and applied automatically on every visit.</p>
                   <div class="theme-list" id="theme-pills">
                     <button type="button" class="theme-option active" data-theme="system">
@@ -2421,7 +2436,7 @@
               </div>
 
               <section id="tab-content-items" class="tab-content active" role="tabpanel" aria-labelledby="tab-items">
-                <div class="filter-chips">
+                <div class="filter-chips" role="group" aria-label="Filter items">
                   <button type="button" class="filter-chip" data-filter="in-cart">In Cart</button>
                   <button type="button" class="filter-chip" data-filter="just-removed">Just Removed</button>
                   <button type="button" class="filter-chip" data-filter="recent">Recent</button>
@@ -2430,7 +2445,7 @@
                   <button type="button" class="filter-chip" data-filter="needs-purchase">Needs Purchase</button>
                 </div>
 
-                <ul id="catalog-list" class="list"></ul>
+                <ul id="catalog-list" class="list" aria-live="polite"></ul>
                 <div id="catalog-empty" class="empty" hidden>No matching items.</div>
                 <div class="bottom-actions" style="margin-top:12px;">
                   <button id="delete-all-items" class="action-btn alt" type="button">Delete all items</button>
@@ -4716,8 +4731,12 @@
 
       aboutTabs.forEach((tab) => {
         tab.addEventListener("click", () => {
-          aboutTabs.forEach((t) => t.classList.remove("active"));
+          aboutTabs.forEach((t) => {
+            t.classList.remove("active");
+            t.setAttribute("aria-selected", "false");
+          });
           tab.classList.add("active");
+          tab.setAttribute("aria-selected", "true");
           const target = tab.dataset.aboutTab;
           aboutTabInfo.hidden = target !== "info";
           aboutTabThemes.hidden = target !== "themes";
