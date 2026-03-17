@@ -2870,13 +2870,15 @@
             if (!aLast) return activeCatalogFilter === "recent" ? 1 : -1; // Never purchased: end for recent, top for old
             if (!bLast) return activeCatalogFilter === "recent" ? -1 : 1;
 
+            const aTime = Date.parse(aLast);
+            const bTime = Date.parse(bLast);
             if (activeCatalogFilter === "recent") {
-              return bLast - aLast; // Most recent first
+              return bTime - aTime; // Most recent first
             } else {
-              return aLast - bLast; // Oldest first
+              return aTime - bTime; // Oldest first
             }
           }
-          return 0; // Keep original order
+          return a.name.localeCompare(b.name); // Default: alphabetical
         });
       }
 
