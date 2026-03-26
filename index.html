@@ -1290,6 +1290,8 @@
         cursor: pointer;
         transition: transform 150ms ease, box-shadow 150ms ease, background 150ms ease;
         -webkit-tap-highlight-color: transparent;
+        position: relative;
+        overflow: visible;
       }
 
       .catalog-main {
@@ -1304,6 +1306,13 @@
         align-items: center;
         gap: 8px;
         flex-wrap: wrap;
+        position: relative;
+        overflow: visible;
+      }
+
+      .catalog-item {
+        position: relative;
+        isolation: isolate;
       }
 
       .catalog-store-tools {
@@ -1314,10 +1323,12 @@
         margin-left: auto;
         flex-wrap: wrap;
         position: relative;
+        overflow: visible;
+        z-index: 2;
       }
 
       .catalog-item.menu-open {
-        z-index: 50;
+        z-index: 300;
         position: relative;
       }
 
@@ -1522,7 +1533,8 @@
         background: var(--panel-strong);
         border: 1px solid rgba(68, 81, 66, 0.12);
         box-shadow: 0 18px 32px rgba(90, 72, 40, 0.16);
-        z-index: 100;
+        z-index: 1000;
+        pointer-events: auto;
       }
 
       .catalog-store-menu[hidden] {
