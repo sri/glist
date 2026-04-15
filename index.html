@@ -372,6 +372,34 @@
         padding: 0 0 10px;
       }
 
+      .quick-add-stores {
+        display: grid;
+        gap: 8px;
+        padding: 0 0 12px;
+      }
+
+      .quick-add-stores-label {
+        text-align: center;
+        color: var(--muted);
+        font-size: 0.8rem;
+        font-weight: 700;
+      }
+
+      .quick-add-stores-list {
+        display: flex;
+        gap: 8px;
+        flex-wrap: wrap;
+        justify-content: center;
+      }
+
+      .quick-add-stores-list .store-circle.active {
+        box-shadow:
+          0 0 0 4px rgba(230, 184, 0, 0.95),
+          0 8px 18px rgba(230, 184, 0, 0.22);
+        border: 2px solid #fff7c2;
+        transform: translateY(-1px);
+      }
+
       .quick-add-matches {
         display: flex;
         flex-direction: column;
@@ -2325,6 +2353,7 @@
               <div id="quick-add-panel" class="quick-add-panel" hidden>
                 <div class="quick-add-hint">Quickly add items to your shopping cart. Type and press Enter.</div>
                 <div id="quick-add-count" class="quick-add-count" hidden></div>
+                <div id="quick-add-stores" class="quick-add-stores" hidden></div>
                 <div id="quick-add-matches" class="quick-add-matches"></div>
               </div>
 
@@ -2446,6 +2475,7 @@
               <div id="quick-add-panel-catalog" class="quick-add-panel" hidden>
                 <div class="quick-add-hint">Quickly add items to your shopping cart. Type and press Enter.</div>
                 <div id="quick-add-count-catalog" class="quick-add-count" hidden></div>
+                <div id="quick-add-stores-catalog" class="quick-add-stores" hidden></div>
                 <div id="quick-add-matches-catalog" class="quick-add-matches"></div>
               </div>
 
@@ -2896,6 +2926,24 @@
         return getItemStores(item).map((store) => store.name);
       }
 
+      function normalizeStoreSelection(storeIds) {
+        const idSet = new Set(
+          (Array.isArray(storeIds) ? storeIds : [])
+            .map(Number)
+            .filter((id) => stores.some((store) => store.id === id))
+        );
+        return sortedStores().filter((store) => idSet.has(store.id)).map((store) => store.id);
+      }
+
+      function normalizeItemName(name) {
+        const trimmed = String(name || "").trim().replace(/\s+/g, " ");
+        if (!trimmed) {
+          return "";
+        }
+
+        return trimmed.replace(/^\p{L}/u, (letter) => letter.toUpperCase());
+      }
+
       function getStoreBrand(store) {
         if (!store?.brandKey) {
           return null;
@@ -3159,6 +3207,9 @@
 
         storeGrid.replaceChildren(fragment);
         storeCount.textContent = stores.length;
+        if (typeof renderAllQuickAddStorePickers === "function") {
+          renderAllQuickAddStorePickers();
+        }
         syncStageHeight();
       }
 
@@ -4275,14 +4326,17 @@
       // Quick Add (works on both shopping and catalog panels)
       let quickAddMode = false;
       let activeQuickAdd = null; // which panel is active
+      let quickAddSelectedStoreIds = [];
+      var quickAddConfigs = null;
 
-      const quickAddConfigs = {
+      quickAddConfigs = {
         shopping: {
           btn: document.getElementById("quick-add-btn"),
           close: document.getElementById("quick-add-close"),
           panel: document.getElementById("quick-add-panel"),
           matches: document.getElementById("quick-add-matches"),
           count: document.getElementById("quick-add-count"),
+          stores: document.getElementById("quick-add-stores"),
           search: shoppingSearch,
           navBtns: [showCatalogButton],
           hiddenEls: () => [document.getElementById("shopping-list"), shoppingEmpty, document.querySelector(".bottom-actions")],
@@ -4295,6 +4349,7 @@
           panel: document.getElementById("quick-add-panel-catalog"),
           matches: document.getElementById("quick-add-matches-catalog"),
           count: document.getElementById("quick-add-count-catalog"),
+          stores: document.getElementById("quick-add-stores-catalog"),
           search: catalogSearch,
           navBtns: [showShoppingButton],
           hiddenEls: () => [document.querySelector(".tab-bar"), tabContentItems, tabContentStores, document.getElementById("catalog-add-suggestion")],
@@ -4302,6 +4357,74 @@
           onExit: () => { setFlipped(false); syncShoppingVisibleList(); }
         }
       };
+
+      function renderQuickAddStorePicker(config) {
+        if (!config?.stores) {
+          return;
+        }
+
+        quickAddSelectedStoreIds = normalizeStoreSelection(quickAddSelectedStoreIds);
+
+        if (stores.length === 0) {
+          config.stores.hidden = true;
+          config.stores.replaceChildren();
+          return;
+        }
+
+        const label = document.createElement("div");
+        label.className = "quick-add-stores-label";
+        label.textContent = "Stores for this quick add";
+
+        const list = document.createElement("div");
+        list.className = "quick-add-stores-list";
+
+        sortedStores().forEach((store) => {
+          const button = document.createElement("button");
+          button.type = "button";
+          button.className = `store-circle store-pill${quickAddSelectedStoreIds.includes(store.id) ? " active" : ""}`;
+          button.textContent = store.name;
+          button.title = quickAddSelectedStoreIds.includes(store.id)
+            ? `Remove ${store.name} from quick add`
+            : `Use ${store.name} for quick add`;
+          button.setAttribute("aria-pressed", String(quickAddSelectedStoreIds.includes(store.id)));
+          button.addEventListener("click", () => {
+            if (quickAddSelectedStoreIds.includes(store.id)) {
+              quickAddSelectedStoreIds = quickAddSelectedStoreIds.filter((id) => id !== store.id);
+            } else {
+              quickAddSelectedStoreIds = normalizeStoreSelection([...quickAddSelectedStoreIds, store.id]);
+            }
+            renderAllQuickAddStorePickers();
+          });
+          applyStoreCircleStyle(button, store);
+          list.append(button);
+        });
+
+        config.stores.replaceChildren(label, list);
+        config.stores.hidden = false;
+      }
+
+      function renderAllQuickAddStorePickers() {
+        if (!quickAddConfigs) {
+          return;
+        }
+        Object.values(quickAddConfigs).forEach((config) => renderQuickAddStorePicker(config));
+      }
+
+      function applyQuickAddStores(item) {
+        const nextStoreIds = normalizeStoreSelection(quickAddSelectedStoreIds);
+        if (!nextStoreIds.length) {
+          return;
+        }
+
+        const currentStoreIds = normalizeStoreSelection(getItemStoreIds(item));
+        if (currentStoreIds.length === nextStoreIds.length && currentStoreIds.every((id, index) => id === nextStoreIds[index])) {
+          return;
+        }
+
+        item.selectedStoreIds = nextStoreIds;
+        updateCatalogItemElement(item);
+        updateShoppingItemElement(item);
+      }
 
       function setQuickAddMode(configKey, active) {
         const config = quickAddConfigs[configKey];
@@ -4315,15 +4438,19 @@
         config.hiddenEls().forEach((el) => { if (el) el.hidden = active; });
 
         if (active) {
+          quickAddSelectedStoreIds = [];
           config.count.hidden = true;
           config.search.placeholder = "Quick add item...";
           config.search.value = "";
           config.search.focus();
           config.matches.replaceChildren();
+          renderAllQuickAddStorePickers();
         } else {
+          quickAddSelectedStoreIds = [];
           config.search.placeholder = config.defaultPlaceholder;
           config.search.value = "";
           config.matches.replaceChildren();
+          renderAllQuickAddStorePickers();
           config.onExit();
         }
       }
@@ -4349,6 +4476,7 @@
               config.count.hidden = false;
               config.count.textContent = `Removed ${item.name} from cart`;
             } else {
+              applyQuickAddStores(item);
               addToShoppingList(item.id);
               config.count.hidden = false;
               config.count.textContent = `Added ${item.name} to cart`;
@@ -4360,24 +4488,17 @@
 
         const exactMatch = matches.some((item) => item.name.toLowerCase() === q);
         if (!exactMatch && query.trim()) {
+          const normalizedName = normalizeItemName(query);
           const createBtn = document.createElement("button");
           createBtn.type = "button";
           createBtn.className = "quick-add-create";
-          createBtn.innerHTML = `<span>Create "${query.trim()}" and add to cart</span><span>+</span>`;
+          createBtn.innerHTML = `<span>Create "${normalizedName}" and add to cart</span><span>+</span>`;
           createBtn.addEventListener("click", () => {
-            const item = {
-              id: nextId++,
-              name: query.trim(),
-              note: "",
-              done: false,
-              purchaseHistory: [],
-              selectedStoreIds: []
-            };
-            catalog.unshift(item);
-            itemsById.set(item.id, item);
-            createCatalogItemElement(item);
+            const item = addNewCatalogItem(normalizedName, quickAddSelectedStoreIds);
+            if (!item) {
+              return;
+            }
             addToShoppingList(item.id);
-            renderCatalogSection();
             config.count.hidden = false;
             config.count.textContent = `Added ${item.name} to cart`;
             config.search.value = "";
@@ -4415,6 +4536,7 @@
         const target = exactMatch || singleMatch;
 
         if (target && !shoppingSet.has(target.id)) {
+          applyQuickAddStores(target);
           addToShoppingList(target.id);
           config.count.hidden = false;
           config.count.textContent = `Added ${target.name} to cart`;
@@ -4443,6 +4565,7 @@
               config.count.hidden = false;
               config.count.textContent = `Removed ${item.name} from cart`;
             } else {
+              applyQuickAddStores(item);
               addToShoppingList(itemId);
               config.count.hidden = false;
               config.count.textContent = `Added ${item.name} to cart`;
@@ -4463,6 +4586,7 @@
               const itemId = Number(highlighted.dataset.itemId);
               const item = itemsById.get(itemId);
               if (!shoppingSet.has(itemId)) {
+                applyQuickAddStores(item);
                 addToShoppingList(itemId);
                 config.count.hidden = false;
                 config.count.textContent = `Added ${item.name} to cart`;
@@ -4955,26 +5079,32 @@
           return;
         }
 
+        const normalizedName = normalizeItemName(query);
         const btn = document.createElement("button");
         btn.type = "button";
         btn.className = "catalog-add-btn";
-        btn.textContent = `Add "${query}"`;
+        btn.textContent = `Add "${normalizedName}"`;
         btn.addEventListener("click", () => {
-          addNewCatalogItem(query);
+          addNewCatalogItem(normalizedName);
         });
 
         catalogAddSuggestion.replaceChildren(btn);
         catalogAddSuggestion.classList.add("active");
       }
 
-      function addNewCatalogItem(name) {
+      function addNewCatalogItem(name, selectedStoreIds = []) {
+        const normalizedName = normalizeItemName(name);
+        if (!normalizedName) {
+          return null;
+        }
+
         const item = {
           id: nextId++,
-          name,
+          name: normalizedName,
           note: "",
           done: false,
           purchaseHistory: [],
-          selectedStoreIds: []
+          selectedStoreIds: normalizeStoreSelection(selectedStoreIds)
         };
 
         catalog.unshift(item);
@@ -4986,6 +5116,7 @@
         syncCatalogVisibleList();
         renderCatalogAddSuggestion();
         catalogSearch.focus();
+        return item;
       }
 
       window.addEventListener("resize", syncStageHeight);
