@@ -3401,6 +3401,7 @@
           return;
         }
 
+        parts.name.textContent = item.name;
         parts.li.classList.toggle("done", item.done);
         parts.button.setAttribute("aria-pressed", String(item.done));
         parts.button.setAttribute(
@@ -3417,6 +3418,9 @@
         if (!parts) {
           return;
         }
+
+        parts.name.textContent = item.name;
+        parts.name.title = `Edit ${item.name}`;
 
         const onList = shoppingSet.has(item.id);
         parts.li.classList.toggle("on-list", onList);
@@ -3569,7 +3573,7 @@
         button.append(main);
         li.append(button);
 
-        shoppingElements.set(item.id, { li, button, note, store });
+        shoppingElements.set(item.id, { li, button, name, note, store });
         updateShoppingItemElement(item);
       }
 
@@ -3593,6 +3597,10 @@
         const name = document.createElement("div");
         name.className = "item-name";
         name.textContent = item.name;
+        name.addEventListener("click", (event) => {
+          event.stopPropagation();
+          editCatalogItemName(item.id);
+        });
 
         const note = document.createElement("div");
         note.className = "item-note";
@@ -3705,6 +3713,7 @@
         catalogElements.set(item.id, {
           li,
           card,
+          name,
           note,
           meta,
           state,
@@ -4043,6 +4052,40 @@
           const item = itemsById.get(expandedCatalogItemId);
           if (item) updateCatalogItemElement(item);
         }
+      }
+
+      function editCatalogItemName(id) {
+        const item = itemsById.get(id);
+        if (!item) {
+          return;
+        }
+
+        const nextNameInput = window.prompt("Edit item name", item.name);
+        if (nextNameInput === null) {
+          return;
+        }
+
+        const nextName = normalizeItemName(nextNameInput);
+        if (!nextName) {
+          alert("Item name can't be empty.");
+          return;
+        }
+
+        const duplicate = catalog.find((candidate) =>
+          candidate.id !== item.id && candidate.name.toLowerCase() === nextName.toLowerCase()
+        );
+        if (duplicate) {
+          alert(`"${duplicate.name}" already exists.`);
+          return;
+        }
+
+        item.name = nextName;
+        updateCatalogItemElement(item);
+        updateShoppingItemElement(item);
+        persistState();
+        syncCatalogVisibleList();
+        syncShoppingVisibleList();
+        renderCatalogAddSuggestion();
       }
 
       function deleteCatalogItem(id) {
@@ -4426,6 +4469,22 @@
         updateShoppingItemElement(item);
       }
 
+      function getQuickAddStoreCtaSuffix() {
+        const selectedStores = normalizeStoreSelection(quickAddSelectedStoreIds)
+          .map((storeId) => getStoreById(storeId))
+          .filter(Boolean);
+
+        if (selectedStores.length === 0) {
+          return "";
+        }
+
+        if (selectedStores.length === 1) {
+          return ` for ${selectedStores[0].name}`;
+        }
+
+        return ` for ${selectedStores[0].name} + ${selectedStores.length - 1} more`;
+      }
+
       function setQuickAddMode(configKey, active) {
         const config = quickAddConfigs[configKey];
         quickAddMode = active;
@@ -4489,10 +4548,11 @@
         const exactMatch = matches.some((item) => item.name.toLowerCase() === q);
         if (!exactMatch && query.trim()) {
           const normalizedName = normalizeItemName(query);
+          const storeSuffix = getQuickAddStoreCtaSuffix();
           const createBtn = document.createElement("button");
           createBtn.type = "button";
           createBtn.className = "quick-add-create";
-          createBtn.innerHTML = `<span>Create "${normalizedName}" and add to cart</span><span>+</span>`;
+          createBtn.innerHTML = `<span>Create "${normalizedName}"${storeSuffix} and add to cart</span><span>+</span>`;
           createBtn.addEventListener("click", () => {
             const item = addNewCatalogItem(normalizedName, quickAddSelectedStoreIds);
             if (!item) {
@@ -4535,11 +4595,22 @@
         const singleMatch = matches.length === 1 ? matches[0] : null;
         const target = exactMatch || singleMatch;
 
-        if (target && !shoppingSet.has(target.id)) {
+        if (target) {
           applyQuickAddStores(target);
           addToShoppingList(target.id);
           config.count.hidden = false;
           config.count.textContent = `Added ${target.name} to cart`;
+          config.search.value = "";
+          renderQuickAddMatches(config, "");
+          config.search.focus();
+          return;
+        }
+
+        const item = addNewCatalogItem(query, quickAddSelectedStoreIds);
+        if (item) {
+          addToShoppingList(item.id);
+          config.count.hidden = false;
+          config.count.textContent = `Added ${item.name} to cart`;
           config.search.value = "";
           renderQuickAddMatches(config, "");
           config.search.focus();
@@ -4585,12 +4656,10 @@
             if (highlighted) {
               const itemId = Number(highlighted.dataset.itemId);
               const item = itemsById.get(itemId);
-              if (!shoppingSet.has(itemId)) {
-                applyQuickAddStores(item);
-                addToShoppingList(itemId);
-                config.count.hidden = false;
-                config.count.textContent = `Added ${item.name} to cart`;
-              }
+              applyQuickAddStores(item);
+              addToShoppingList(itemId);
+              config.count.hidden = false;
+              config.count.textContent = `Added ${item.name} to cart`;
               config.search.value = "";
               renderQuickAddMatches(config, "");
               config.search.focus();
